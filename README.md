@@ -72,7 +72,10 @@ form drafted. Tech stack decided; team split into four parallel tracks above.
 
 ## Team
 
-Project lead: [@zxvozayy](https://github.com/zxvozayy)
+- Project lead: Hasan Özay Yılmaz ([@zxvozayy](https://github.com/zxvozayy))
+- Ezgi ([@ezgiscodess](https://github.com/ezgiscodess))
+- Fatmanur ([@fatmanurdurak](https://github.com/fatmanurdurak))
+- Yiğithan ([@DeFultt](https://github.com/DeFultt))
 
 ## License
 
