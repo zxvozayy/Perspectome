@@ -1,0 +1,25 @@
+{
+  "scenario_id": "unemployment_shock_v1",
+  "round": 3,
+  "n_personas": 15,
+  "response_distribution": {
+    "support": 0.40,
+    "oppose": 0.33,
+    "uncertain": 0.27
+  },
+  "by_subgroup": {
+    "age_band": {
+      "18-24": {"support": 0.55, "oppose": 0.20, "uncertain": 0.25},
+      "25-34": {"support": 0.45, "oppose": 0.30, "uncertain": 0.25},
+      "35-44": {"support": 0.35, "oppose": 0.35, "uncertain": 0.30},
+      "45-54": {"support": 0.35, "oppose": 0.35, "uncertain": 0.30},
+      "55-64": {"support": 0.30, "oppose": 0.40, "uncertain": 0.30},
+      "65+":   {"support": 0.25, "oppose": 0.50, "uncertain": 0.25}
+    }
+  },
+  "metadata": {
+    "model": "mock",
+    "n_rounds": 3,
+    "timestamp": "2026-10-10T00:00:00Z"
+  }
+}

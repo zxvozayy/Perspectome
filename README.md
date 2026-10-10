@@ -28,10 +28,35 @@ against historical data.
 - How do public attitudes shift when unemployment rises?
 - How do younger and older groups react to rapid AI adoption?
 
+## Tech stack
+
+Python, pandas/numpy/scipy, pytest. Mesa is available for agent-based
+modeling scaffolding if a track finds it useful — not required.
+
+## Team workstreams
+
+The project splits into three independent tracks connected by two fixed data
+contracts, so no one has to wait on anyone else to start. Each track's full
+spec — scope, the exact schema it ships or consumes, sample fixture data, and
+definition of done — lives in its own README:
+
+| Track | Owns | Spec |
+|---|---|---|
+| **A — Data & Persona Layer** | Survey ingestion, calibration, the synthetic population | [`src/personas/README.md`](src/personas/README.md) |
+| **B — Scenario Simulation Engine** | Turning a population + scenario into a response distribution | [`src/simulation/README.md`](src/simulation/README.md) |
+| **C — Validation & Model Comparison** | Scoring accuracy, the equation-based and ML baselines | [`src/validation/README.md`](src/validation/README.md) |
+
+Each track ships against a frozen schema (see its README) and a small
+fabricated fixture file so the other two tracks can build and test against it
+from day one, before any real data or code exists. Changing a schema is a PR
++ a heads-up to the other two tracks, not a silent edit.
+
 ## Status
 
-Early-stage — team formation, literature review, and scope definition in progress.
-See [`docs/`](docs/) for research notes and methodology as they develop.
+Repo and workflow scaffolded (branch protection, issue/PR templates, 3
+GitHub Projects boards), literature review and calibration data source survey
+done (see [`docs/`](docs/)), field research presentation and TÜBİTAK 2209-B
+form drafted. Tech stack decided; team split into three parallel tracks above.
 
 ## Team
 
