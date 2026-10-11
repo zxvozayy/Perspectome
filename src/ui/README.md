@@ -12,6 +12,16 @@ about how they were produced.
 > (teammates count). Open questions: best way to show "effect vs. noise
 > floor"; how to make warnings noticeable without cluttering.
 
+## Your branch
+
+- Work **only** on the `ezgi` branch, inside `src/ui/`. Don't commit to
+  anyone else's branch, and never push to `main` — it only accepts pull
+  requests with a teammate's approval.
+- Start every session with `git pull origin main`.
+- Finished an issue? Push to `ezgi` and open a PR into `main` with
+  `Closes #<issue>` in the description. Don't wait for the sprint to end.
+- Full workflow: [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+
 ## Scope
 
 A Streamlit dashboard (pure Python, no separate frontend stack) that reads

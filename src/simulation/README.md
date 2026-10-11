@@ -15,6 +15,16 @@ it's scored afterward.
 > dynamics; social network structure between personas; newer
 > distribution-level prompting or fine-tuned persona models.
 
+## Your branch
+
+- Work **only** on the `yigithan` branch, inside `src/simulation/`. Don't commit to
+  anyone else's branch, and never push to `main` — it only accepts pull
+  requests with a teammate's approval.
+- Start every session with `git pull origin main`.
+- Finished an issue? Push to `yigithan` and open a PR into `main` with
+  `Closes #<issue>` in the description. Don't wait for the sprint to end.
+- Full workflow: [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+
 ## Two kinds of run
 
 - **`probe`** — ask the population a real survey item whose true answers sit

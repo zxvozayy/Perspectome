@@ -13,6 +13,16 @@ and nothing downstream of that.
 > (TÜİK, ISSP, LiTS) to enrich conditioning; how fine the archetype cells
 > should be.
 
+## Your branch
+
+- Work **only** on the `fatmanur` branch, inside `src/personas/`. Don't commit to
+  anyone else's branch, and never push to `main` — it only accepts pull
+  requests with a teammate's approval.
+- Start every session with `git pull origin main`.
+- Finished an issue? Push to `fatmanur` and open a PR into `main` with
+  `Closes #<issue>` in the description. Don't wait for the sprint to end.
+- Full workflow: [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+
 ## Scope
 
 - Ingest and clean the calibration sources in

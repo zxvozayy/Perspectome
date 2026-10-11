@@ -15,6 +15,16 @@ against. You also own [`docs/findings.md`](../../docs/findings.md).
 > baselines; real historical before/after data (e.g. two survey waves around
 > an economic shock) for true retrospective validation.
 
+## Your branch
+
+- Work **only** on the `hasan` branch, inside `src/validation/` and `docs/findings.md`. Don't commit to
+  anyone else's branch, and never push to `main` — it only accepts pull
+  requests with a teammate's approval.
+- Start every session with `git pull origin main`.
+- Finished an issue? Push to `hasan` and open a PR into `main` with
+  `Closes #<issue>` in the description. Don't wait for the sprint to end.
+- Full workflow: [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+
 ## Scope
 
 ### Probes — does the engine match reality?
