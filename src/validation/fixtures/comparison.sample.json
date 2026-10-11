@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-10-11T00:00:00Z",
+  "persona_set_hash": "sha256:fixture",
+  "noise_floor_tvd": 0.04,
+  "probes": [
+    {
+      "item": "trust_institutions",
+      "options": ["1", "2", "3", "4", "5"],
+      "real": {"1": 0.10, "2": 0.20, "3": 0.30, "4": 0.25, "5": 0.15},
+      "methods": {
+        "engine":            {"distribution": {"1": 0.07, "2": 0.20, "3": 0.33, "4": 0.27, "5": 0.13}, "tvd": 0.05},
+        "vanilla":           {"distribution": {"1": 0.00, "2": 0.05, "3": 0.85, "4": 0.10, "5": 0.00}, "tvd": 0.55},
+        "equation_baseline": {"distribution": {"1": 0.05, "2": 0.15, "3": 0.45, "4": 0.25, "5": 0.10}, "tvd": 0.15},
+        "ml_baseline":       {"distribution": {"1": 0.08, "2": 0.17, "3": 0.40, "4": 0.23, "5": 0.12}, "tvd": 0.10}
+      },
+      "models": {"mock-0": {"tvd": 0.05}}
+    }
+  ],
+  "rank_agreement": {
+    "metric": "kendall_tau",
+    "n_items": 5,
+    "methods": {"engine": 0.6, "vanilla": 0.2, "ml_baseline": 0.4}
+  },
+  "scenarios": [
+    {
+      "scenario_id": "unemployment_shock_v1",
+      "effect_vs_placebo": {"support": 0.14, "oppose": -0.07, "uncertain": -0.07},
+      "effect_tvd": 0.14,
+      "measurable": true,
+      "saturated": false,
+      "equation_baseline_effect": {"support": 0.08, "oppose": -0.08, "uncertain": 0.00},
+      "subgroup_direction": {
+        "age_band": {"18-24": "+", "25-34": "0", "35-44": "0", "45-54": "+", "55-64": "0", "65+": "0"}
+      },
+      "small_cells": ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"],
+      "models_agree": null
+    }
+  ],
+  "warnings": [
+    "Fixture data: every subgroup cell is below n=30; subgroup directions are not tested.",
+    "Single model only; cross-model agreement not measured."
+  ]
+}

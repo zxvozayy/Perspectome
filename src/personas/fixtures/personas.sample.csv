@@ -1,0 +1,16 @@
+persona_id,cell_id,weight,age_band,gender,education_level,region,settlement_type,marital_status,employment_status,income_decile
+p01,18-24|female|bachelor,0.82,18-24,female,bachelor,Marmara,urban,single,student,4
+p02,25-34|male|vocational,1.10,25-34,male,vocational,Ege,urban,married,employed,6
+p03,35-44|female|secondary,1.35,35-44,female,secondary,Ic Anadolu,rural,married,homemaker,3
+p04,45-54|male|primary,1.20,45-54,male,primary,Karadeniz,rural,married,employed,5
+p05,55-64|female|secondary,0.95,55-64,female,secondary,Akdeniz,urban,widowed,retired,4
+p06,65+|male|primary,1.40,65+,male,primary,Dogu Anadolu,rural,married,retired,2
+p07,25-34|female|graduate,0.60,25-34,female,graduate,Marmara,urban,single,employed,8
+p08,18-24|male|secondary,1.05,18-24,male,secondary,Guneydogu Anadolu,urban,single,unemployed,2
+p09,35-44|male|bachelor,0.75,35-44,male,bachelor,Ege,urban,married,employed,7
+p10,45-54|female|vocational,0.90,45-54,female,vocational,Ic Anadolu,urban,divorced,employed,5
+p11,55-64|male|secondary,1.00,55-64,male,secondary,Karadeniz,rural,married,employed,4
+p12,25-34|female|bachelor,0.85,25-34,female,bachelor,Akdeniz,urban,married,employed,6
+p13,65+|female|primary,1.50,65+,female,primary,Dogu Anadolu,rural,widowed,retired,1
+p14,18-24|male|vocational,0.98,18-24,male,vocational,Marmara,urban,single,student,3
+p15,35-44|female|graduate,0.55,35-44,female,graduate,Guneydogu Anadolu,urban,married,employed,7

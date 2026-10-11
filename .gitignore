@@ -1,3 +1,8 @@
+# Local-only AI assistant context/scratch (never pushed)
+CLAUDE.md
+.codex/
+tmp/
+
 # OS
 .DS_Store
 Thumbs.db
