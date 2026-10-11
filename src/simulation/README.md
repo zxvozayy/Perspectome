@@ -1,78 +1,136 @@
 # Track B — Scenario Simulation Engine
 
-**You own:** turning a population + a scenario into a population-level
-response distribution — and nothing about where the population came from or
-how it's scored afterward.
+**Owner:** Yiğithan ([@DeFultt](https://github.com/DeFultt))
+
+**You own:** turning a population + a question into population-level answer
+distributions — and nothing about where the population came from or how
+it's scored afterward.
+
+## Two kinds of run
+
+- **`probe`** — ask the population a real survey item whose true answers sit
+  in Track A's `heldout.csv` (e.g. institutional trust). This is how the
+  engine gets validated: Track C compares it to the real distribution.
+- **`scenario`** — a counterfactual shock (unemployment rises, rapid AI
+  adoption…). There's no ground truth, so the output that matters is the
+  **difference from the placebo arm**, not the absolute shares.
+
+Both produce the same `results.json` shape.
 
 ## Scope
 
-- Define a scenario format (YAML or JSON) describing a policy shift, economic
-  shock, or demographic change to test.
-- **Round 1 — independent stance:** each persona takes an initial position,
-  independently.
-- **Round 2 — calibrated deliberation:** do **not** just average independent
-  votes. The literature review (`docs/literature-review.md`, Ozkan 2026) found
-  that treating personas as fully independent agents causes "modal collapse"
-  toward the majority answer. Use a distribution-first approach instead: model
-  the population's response distribution directly and let each persona's
-  `risk_tolerance` / `economic_optimism` (from Track A's held-out fields,
-  used only at validation/analysis time, never fed back into generation)
-  inform how much it shifts.
-- **Round 3 — settle:** aggregate to a final population-level distribution,
-  overall and broken out by at least one demographic subgroup (e.g. age_band).
+- Define a scenario format (YAML or JSON): the shock text, the question in
+  its exact wording, the options, and a matching **placebo** text of similar
+  length that changes nothing relevant.
+- **Three arms on every run** (see
+  [rule 5](../../docs/methodology-rules.md)): `treatment` (personas +
+  scenario), `placebo` (personas + placebo text), `vanilla` (no persona). For
+  probes, `placebo` may be `null`.
+- **Query per archetype, not per persona.** Track A gives every persona a
+  `cell_id`. Ask the model once per cell (a few repeats), turn the answers
+  into a probability per option, and let each persona sample from its cell's
+  distribution ([rule 33](../../docs/methodology-rules.md)). Cost stays
+  flat as the population grows.
+- **Round 1 — independent stance:** each persona's initial answer, as above.
+- **Round 2 — update in code, not in the prompt.** Never show the model other
+  agents' opinions and re-ask — that produces artificial cascades toward one
+  answer. Update positions numerically (e.g. a Friedkin–Johnsen-style rule:
+  each persona moves partly toward its neighbours, anchored to its own
+  initial stance). The model may only be used to *score how strong an
+  argument is*. The update must not let a persona end up outside the range
+  of initial opinions.
+- **Round 3 — settle:** final distribution, overall and by at least one
+  subgroup (e.g. `age_band`), with the cell count `n` next to every subgroup.
+- **Held-out fields are off limits.** Nothing in `heldout.csv` may influence
+  generation or simulation — not even to set how much a persona shifts. Only
+  the conditioning fields in `personas.csv` exist for this track.
 - Never output an individual-level prediction — only population-level
-  distributions. That's a hard project boundary, not a style preference.
+  distributions.
+
+## Question and prompt rules
+
+From [`docs/methodology-rules.md`](../../docs/methodology-rules.md),
+rules 15–25. The short version:
+- Exact survey wording, no paraphrase, identical across arms.
+- Reverse option order for half the panel; record which half got which.
+- Two concrete options beat agree/disagree. Labels are symmetric actions;
+  costs go in the question.
+- No rationale alongside the choice. No base-rate hints.
+- Concrete stakes ("this tax does not apply to your income bracket") beat
+  abstract instructions ("consider your situation").
+- **Expect `uncertain` to be almost never chosen.** That's why
+  `option_usage` is in the output — report it, don't hide it.
+- Pin the model snapshot. Record seed and `persona_set_hash` every run. If
+  the model gives token log-probabilities, read the distribution from those
+  instead of sampling — check support first.
+- Expect a status-quo reflex on "new regulation" questions; keep a placebo
+  regulation in mind when designing policy scenarios.
+- Avoid scenarios whose headline is a political-party direction — that's
+  the area where simulated opinion is least trustworthy.
 
 ## What you ship
 
-A scenario runner under `src/simulation/` that takes a `personas.csv` (any
-file matching Track A's schema) and a scenario definition, and produces one
-`results/<scenario_id>.json` per run, matching the schema below.
+A runner under `src/simulation/` that takes a `personas.csv` (any file
+matching Track A's schema) and a scenario/probe definition, and writes one
+`results/<run_id>.json` per run. Paid model calls: dry-run by default,
+explicit flag to spend, hard call cap ([rule 31](../../docs/methodology-rules.md)).
 
 ## The contract (freeze this on day 1)
 
 ```json
 {
-  "scenario_id": "string, unique",
-  "round": 3,
+  "run_id": "string, unique",
+  "run_type": "probe | scenario",
+  "scenario_id": "string",
+  "target_item": "heldout field name for probes, null for scenarios",
+  "options": ["support", "oppose", "uncertain"],
   "n_personas": 500,
-  "response_distribution": {
-    "support": 0.42,
-    "oppose": 0.31,
-    "uncertain": 0.27
-  },
-  "by_subgroup": {
-    "age_band": {
-      "18-24": {"support": 0.55, "oppose": 0.20, "uncertain": 0.25},
-      "65+":   {"support": 0.30, "oppose": 0.45, "uncertain": 0.25}
+  "arms": {
+    "treatment": {
+      "response_distribution": {"support": 0.42, "oppose": 0.55, "uncertain": 0.03},
+      "option_usage": {"support": 210, "oppose": 275, "uncertain": 15},
+      "by_subgroup": {
+        "age_band": {
+          "18-24": {"n": 80, "distribution": {"support": 0.55, "oppose": 0.43, "uncertain": 0.02}}
+        }
+      }
+    },
+    "placebo": { "same shape as treatment, or null for probes" },
+    "vanilla": {
+      "response_distribution": {"support": 0.90, "oppose": 0.10, "uncertain": 0.00}
     }
   },
   "metadata": {
-    "model": "mock | <real model name>",
+    "model": "mock | <provider>/<model>",
+    "model_snapshot": "exact pinned version",
+    "seed": 42,
+    "persona_set_hash": "sha256 of personas.csv",
+    "option_order": "fixed | reversed_half",
     "n_rounds": 3,
     "timestamp": "ISO 8601"
   }
 }
 ```
 
-A sample file matching this schema is in [`fixtures/`](fixtures/) — fabricated
-numbers, just so Track C has something to validate against from day 1.
+Distributions are as produced; Track C decides what may be claimed from
+them. A sample is in [`fixtures/`](fixtures/) — fabricated numbers.
 
 ## Don't wait for anyone
 
 Use [`../personas/fixtures/personas.sample.csv`](../personas/fixtures/personas.sample.csv)
-to develop against. You do not need Track A's real pipeline finished — only
-the schema, which is already frozen above. Swap in the real `personas.csv`
-once it exists; nothing else should need to change.
+and a `mock` model to develop against. You don't need Track A's real
+pipeline or any API key to build and test the whole three-round loop.
 
 ## If you need to change the contract
 
-Open a PR and say so in the team channel — Track C is coding its validation
-step against `results.json`'s shape from day one.
+Open a PR and say so in the team channel — Tracks C and D are coding against
+`results.json`'s shape from day one.
 
 ## Definition of done
 
-- [ ] Scenario definition format documented with at least 2 example scenarios
-- [ ] Three-round simulation implemented (independent stance → calibrated deliberation → settle)
-- [ ] Output matches the `results.json` schema above, including at least one subgroup breakdown
+- [ ] Scenario format documented, with at least 2 scenarios and their placebo texts, and 1 probe
+- [ ] Per-archetype querying with a `mock` model
+- [ ] Three rounds implemented, Round 2 updating in code
+- [ ] All three arms emitted; output matches the schema above
+- [ ] Prompt-payload test: captures what is actually sent and checks the persona block and exact question wording are in it
 - [ ] Runs end-to-end against both the fixture personas and Track A's real `personas.csv`

@@ -1,25 +1,50 @@
 {
+  "run_id": "unemployment_shock_v1__seed42",
+  "run_type": "scenario",
   "scenario_id": "unemployment_shock_v1",
-  "round": 3,
+  "target_item": null,
+  "options": ["support", "oppose", "uncertain"],
   "n_personas": 15,
-  "response_distribution": {
-    "support": 0.40,
-    "oppose": 0.33,
-    "uncertain": 0.27
-  },
-  "by_subgroup": {
-    "age_band": {
-      "18-24": {"support": 0.55, "oppose": 0.20, "uncertain": 0.25},
-      "25-34": {"support": 0.45, "oppose": 0.30, "uncertain": 0.25},
-      "35-44": {"support": 0.35, "oppose": 0.35, "uncertain": 0.30},
-      "45-54": {"support": 0.35, "oppose": 0.35, "uncertain": 0.30},
-      "55-64": {"support": 0.30, "oppose": 0.40, "uncertain": 0.30},
-      "65+":   {"support": 0.25, "oppose": 0.50, "uncertain": 0.25}
+  "arms": {
+    "treatment": {
+      "response_distribution": {"support": 0.47, "oppose": 0.53, "uncertain": 0.00},
+      "option_usage": {"support": 7, "oppose": 8, "uncertain": 0},
+      "by_subgroup": {
+        "age_band": {
+          "18-24": {"n": 3, "distribution": {"support": 0.67, "oppose": 0.33, "uncertain": 0.00}},
+          "25-34": {"n": 3, "distribution": {"support": 0.67, "oppose": 0.33, "uncertain": 0.00}},
+          "35-44": {"n": 3, "distribution": {"support": 0.33, "oppose": 0.67, "uncertain": 0.00}},
+          "45-54": {"n": 2, "distribution": {"support": 0.50, "oppose": 0.50, "uncertain": 0.00}},
+          "55-64": {"n": 2, "distribution": {"support": 0.50, "oppose": 0.50, "uncertain": 0.00}},
+          "65+":   {"n": 2, "distribution": {"support": 0.00, "oppose": 1.00, "uncertain": 0.00}}
+        }
+      }
+    },
+    "placebo": {
+      "response_distribution": {"support": 0.33, "oppose": 0.60, "uncertain": 0.07},
+      "option_usage": {"support": 5, "oppose": 9, "uncertain": 1},
+      "by_subgroup": {
+        "age_band": {
+          "18-24": {"n": 3, "distribution": {"support": 0.33, "oppose": 0.67, "uncertain": 0.00}},
+          "25-34": {"n": 3, "distribution": {"support": 0.67, "oppose": 0.33, "uncertain": 0.00}},
+          "35-44": {"n": 3, "distribution": {"support": 0.33, "oppose": 0.33, "uncertain": 0.34}},
+          "45-54": {"n": 2, "distribution": {"support": 0.00, "oppose": 1.00, "uncertain": 0.00}},
+          "55-64": {"n": 2, "distribution": {"support": 0.50, "oppose": 0.50, "uncertain": 0.00}},
+          "65+":   {"n": 2, "distribution": {"support": 0.00, "oppose": 1.00, "uncertain": 0.00}}
+        }
+      }
+    },
+    "vanilla": {
+      "response_distribution": {"support": 0.95, "oppose": 0.05, "uncertain": 0.00}
     }
   },
   "metadata": {
     "model": "mock",
+    "model_snapshot": "mock-0",
+    "seed": 42,
+    "persona_set_hash": "sha256:fixture",
+    "option_order": "reversed_half",
     "n_rounds": 3,
-    "timestamp": "2026-10-10T00:00:00Z"
+    "timestamp": "2026-10-11T00:00:00Z"
   }
 }

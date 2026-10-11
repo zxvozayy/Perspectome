@@ -55,6 +55,13 @@ file so the others can build and test against it from day one, before any
 real data or code exists. Changing a schema is a PR + a heads-up to the
 tracks that consume it, not a silent edit.
 
+Shared ground for all tracks:
+- [`docs/methodology-rules.md`](docs/methodology-rules.md) — what we may
+  claim, how experiments are designed, prompt and engineering rules.
+- [`docs/findings.md`](docs/findings.md) — every measurement, the day it runs.
+- [`src/common/schema.py`](src/common/schema.py) — the one place category
+  values and field lists are defined.
+
 ## Status
 
 Repo and workflow scaffolded (branch protection, issue/PR templates, 3
