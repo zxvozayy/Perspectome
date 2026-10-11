@@ -6,6 +6,15 @@
 distributions — and nothing about where the population came from or how
 it's scored afterward.
 
+> **Room to improve.** Fixed: no held-out fields, the three arms, the
+> contract. Everything else — the update rule, the prompt format, archetype
+> querying, even whether an LLM is the best response model — is a starting
+> default. Research current work first and beat the default with a test
+> ([how](../../docs/methodology-rules.md#research-first-then-test-then-adopt)).
+> Open questions: Friedkin–Johnsen vs. bounded-confidence vs. other opinion
+> dynamics; social network structure between personas; newer
+> distribution-level prompting or fine-tuned persona models.
+
 ## Two kinds of run
 
 - **`probe`** — ask the population a real survey item whose true answers sit

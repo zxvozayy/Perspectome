@@ -1,8 +1,48 @@
 # Methodology rules
 
-These apply to every track. Each track README points to the rules that matter
-most for it, but all of them hold everywhere. If a rule blocks you, raise it
-in a PR, don't quietly skip it.
+Most of this file is **defaults**, not law: the best approach we currently
+know of, so nobody starts from zero. You are expected to look for better
+ones. Only a handful of rules are fixed, because breaking them makes every
+result untrustworthy no matter how clever the method.
+
+## Invariants — these don't bend
+
+- **Held-out fields never reach persona generation or simulation.** Only
+  Track C reads `heldout.csv`.
+- **No absolute-share claims, no individual-level outputs** (rules 1–2).
+- **Every claimed effect has a control** — placebo for scenarios, vanilla for
+  the persona layer (rule 5) — and must clear the noise floor (rule 6).
+- **Criterion before run, record after** (rules 9 and 32). Partial or
+  rate-limited runs are not results.
+- **Fit and measure on different data** (rule 10).
+- **Contracts change only by PR** with a heads-up to the tracks that consume
+  them.
+
+Everything else below is a default.
+
+## Research first, then test, then adopt
+
+Before building anything non-trivial — a generator, an update rule, a
+metric, a prompt format, a chart — **search for current work first**: recent
+papers (arXiv, ACL/NeurIPS/ICWSM, journals), official docs, maintained open
+source projects. The field moves fast; a method from this year may beat
+anything here. Link what you found in your PR.
+
+If you find something that looks better than a default here, **don't swap
+it in directly**:
+
+1. Write the idea and a success criterion into [`findings.md`](findings.md)
+   *before* testing ("beats the default by more than the noise floor on
+   TVD for probes X, Y, Z").
+2. Run it **against the current default** on the same personas, same seeds,
+   same items, with the invariants intact.
+3. Record the result either way. A good idea that didn't beat the default is
+   still a finding — it saves the next person from re-trying it.
+4. If it wins, open a PR that changes the code *and* updates the default in
+   this file, linking the finding.
+
+A default that turns out wrong gets the same treatment: show it with a test,
+record it, change it here.
 
 ## What we can and can't claim
 

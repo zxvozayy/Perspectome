@@ -5,6 +5,13 @@
 **You own:** making the results legible — and honest — to a human. Nothing
 about how they were produced.
 
+> **Room to improve.** Fixed: the honesty rules below and reading only from
+> the contracts. Layout, charts, interaction and even Streamlit itself are
+> yours to choose — look at how current survey/forecast dashboards show
+> uncertainty and comparisons, and try alternatives with real users
+> (teammates count). Open questions: best way to show "effect vs. noise
+> floor"; how to make warnings noticeable without cluttering.
+
 ## Scope
 
 A Streamlit dashboard (pure Python, no separate frontend stack) that reads

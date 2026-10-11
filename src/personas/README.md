@@ -5,6 +5,14 @@
 **You own:** turning real survey data into a synthetic, calibrated population —
 and nothing downstream of that.
 
+> **Room to improve.** Only the held-out split and the contract are fixed.
+> Methods below are starting defaults — research current work first and
+> beat them with a test ([how](../../docs/methodology-rules.md#research-first-then-test-then-adopt)).
+> Open questions worth exploring: raking vs. MRP vs. iterative proportional
+> fitting vs. newer synthetic-population methods; extra data sources
+> (TÜİK, ISSP, LiTS) to enrich conditioning; how fine the archetype cells
+> should be.
+
 ## Scope
 
 - Ingest and clean the calibration sources in

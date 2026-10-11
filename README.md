@@ -56,8 +56,9 @@ real data or code exists. Changing a schema is a PR + a heads-up to the
 tracks that consume it, not a silent edit.
 
 Shared ground for all tracks:
-- [`docs/methodology-rules.md`](docs/methodology-rules.md) — what we may
-  claim, how experiments are designed, prompt and engineering rules.
+- [`docs/methodology-rules.md`](docs/methodology-rules.md) — a few fixed
+  invariants plus starting defaults. Research current work before building,
+  and replace a default only after a recorded test shows something better.
 - [`docs/findings.md`](docs/findings.md) — every measurement, the day it runs.
 - [`src/common/schema.py`](src/common/schema.py) — the one place category
   values and field lists are defined.

@@ -6,6 +6,15 @@
 scoring it against reality, and building the baselines it's compared
 against. You also own [`docs/findings.md`](../../docs/findings.md).
 
+> **Room to improve.** Fixed: the invariants and the `comparison.json`
+> contract. Metrics and baselines below are starting defaults — research
+> current work and beat them with a test
+> ([how](../../docs/methodology-rules.md#research-first-then-test-then-adopt)).
+> Open questions: Wasserstein / earth mover's distance for ordinal items
+> instead of TVD; better-calibrated uncertainty intervals; stronger ML
+> baselines; real historical before/after data (e.g. two survey waves around
+> an economic shock) for true retrospective validation.
+
 ## Scope
 
 ### Probes — does the engine match reality?
