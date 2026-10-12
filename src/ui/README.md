@@ -78,6 +78,19 @@ Everything you need already exists as fixtures:
 Swap in real files once Tracks B and C produce them; the dashboard code
 shouldn't change, only its inputs.
 
+## How to run
+
+```bash
+pip install -r src/ui/requirements.txt
+cd src/ui && streamlit run app.py     # http://localhost:8501
+python -m pytest src/ui/tests         # from the repo root
+```
+
+Run it from `src/ui/` so `.streamlit/config.toml` (the theme) is picked up.
+With no `results/*.json` at the repo root the dashboard reads the fixtures and
+shows a "Fixture verisi" badge. Point it at real output with
+`PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`.
+
 ## Definition of done
 
 - [ ] Scenario view: treatment vs. placebo, effect headline, vanilla reference, subgroup arrows
