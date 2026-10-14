@@ -333,12 +333,19 @@ def slope(run: dict, scored: dict | None) -> str:
     )
 
 
+TURKEY_JSON = _TURKEY.read_text(encoding="utf-8")  # the outline as-is, for the intro page scripts
+
+
+def turkey_outline() -> tuple[str, int, int]:
+    """SVG path data for the Natural Earth outline, plus its viewBox size."""
+    geo = json.loads(_TURKEY.read_text(encoding="utf-8"))
+    d = "".join("M" + "L".join(f"{x},{y}" for x, y in ring) + "Z" for ring in geo["rings"])
+    return d, geo["width"], geo["height"]
+
+
 def turkey_map(scored: dict | None) -> str:
     """Region directions go here once the contracts carry a region breakdown."""
-    geo = json.loads(_TURKEY.read_text(encoding="utf-8"))
-    d = "".join(
-        "M" + "L".join(f"{x},{y}" for x, y in ring) + "Z" for ring in geo["rings"]
-    )
+    d, w, h = turkey_outline()
     has_region = "region" in ((scored or {}).get("subgroup_direction") or {})
     msg = (
         "Bölge yönleri aşağıdaki alt grup kartlarında."
@@ -348,7 +355,7 @@ def turkey_map(scored: dict | None) -> str:
     )
     return card(
         '<div class="pt-map">'
-        f'<svg class="pt-svg" viewBox="0 0 {geo["width"]} {geo["height"]}" role="img"><path d="{d}"/></svg>'
+        f'<svg class="pt-svg" viewBox="0 0 {w} {h}" role="img"><path d="{d}"/></svg>'
         f'<div class="msg">{esc(msg)}</div></div>',
         "Bölgesel görünüm",
     )

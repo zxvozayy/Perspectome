@@ -81,15 +81,23 @@ shouldn't change, only its inputs.
 ## How to run
 
 ```bash
-pip install -r src/ui/requirements.txt
-cd src/ui && streamlit run app.py     # http://localhost:8501
-python -m pytest src/ui/tests         # from the repo root
+python3 -m src.ui.server              # from the repo root → http://localhost:8501
+python3 -m pytest src/ui/tests        # tests (pytest is the only extra)
 ```
 
-Run it from `src/ui/` so `.streamlit/config.toml` (the theme) is picked up.
-With no `results/*.json` at the repo root the dashboard reads the fixtures and
+The site runs on the Python standard library alone: an intro page (`/`), a
+sign-in page (`/giris`) and the analysis panel (`/panel`). Accounts, the
+session key and chat history live in `src/ui/.cache/` (gitignored) and stay on
+this machine; it is a local dashboard, not something to expose to the internet.
+Set `PORT` to use another port.
+
+With no `results/*.json` at the repo root the panel reads the fixtures and
 shows a "Fixture verisi" badge. Point it at real output with
 `PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`.
+
+Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
+the server), `answers.py` (question → run), `auth.py`, `store.py`, `web/`
+(pages, CSS, a few lines of JS, fonts: Playfair Display and Manrope, OFL).
 
 ## Definition of done
 
