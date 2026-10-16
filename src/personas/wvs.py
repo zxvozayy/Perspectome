@@ -244,6 +244,36 @@ def map_region(code) -> Optional[str]:
         return None
 
 
+# Same 12 NUTS-1 regions keyed by Eurostat's alpha codes (TR1..TRC), so the
+# post-stratification margins (issue #10) collapse to the same 7 regions as the
+# WVS personas. Kept next to REGION_MAP so the two never drift apart.
+NUTS1_ALPHA_TO_REGION = {
+    "TR1": "Marmara", "TR2": "Marmara", "TR3": "Ege", "TR4": "Marmara",
+    "TR5": "Ic Anadolu", "TR6": "Akdeniz", "TR7": "Ic Anadolu",
+    "TR8": "Karadeniz", "TR9": "Karadeniz", "TRA": "Dogu Anadolu",
+    "TRB": "Dogu Anadolu", "TRC": "Guneydogu Anadolu",
+}
+
+
+# Coarse 3-level education axis (ISCED 0-2 / 3-4 / 5-8) used only for
+# post-stratification (issue #10). Both the personas (via raw Q275) and the
+# Eurostat education margins (ED0-2 / ED3_4 / ED5-8) collapse to it, so the two
+# sides share a grouping even though the schema's 5 education_level categories
+# don't line up with the Eurostat ISCED aggregates. Not an output field.
+def edu3_from_isced(code) -> Optional[str]:
+    """Raw Q275 ISCED level -> 'low' (0-2) / 'mid' (3-4) / 'high' (5-8)."""
+    if is_missing(code):
+        return None
+    level = int(code)
+    if level <= 2:
+        return "low"
+    if level <= 4:
+        return "mid"
+    if level <= 8:
+        return "high"
+    return None
+
+
 # --- held-out (heldout.csv) attitude mappings -------------------------------
 # Each held-out field is a 1-5 score in the schema. The source WVS item and
 # rescaling below are DEFAULTS and need Track C sign-off (persona README's

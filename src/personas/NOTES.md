@@ -51,6 +51,21 @@ committed.
   (and harmonize Eurostat's 5-year age groups to the schema bands -- 18-24 is
   not a clean Eurostat group) in #10. This source choice is not a silent swap.
 
+## Calibration result (issue #10)
+
+- Raking / IPF on four marginals (age_band, gender, region, edu3) against the
+  Eurostat targets converges to **max calibration error ≈ 0.00 pp** — raking
+  matches each marginal exactly by construction. Joint fit is not claimed; only
+  marginals are calibrated.
+- 2415 personas, deterministic (no sampling) -> stable `persona_set_hash`.
+  10 respondents missing a raking variable keep weight 1.0 (warned, not dropped).
+- The targets are Eurostat (TÜİK-sourced) + the 18-24 age approximation and the
+  national-only education split noted above. **Verify against TÜİK's own tables
+  before any calibration claim**, and re-run (the hash will change, which
+  invalidates earlier Track B measurements -- so it's a PR, not a quiet rerun).
+- This belongs in `docs/findings.md` too, but that file is Track C's (Hasan's)
+  per CONTRIBUTING.md -- record it there via him / a small shared-file PR.
+
 ## Still needs a cross-track decision
 
 - The conditioning-vs-held-out split of the WVS value items needs **Track C
