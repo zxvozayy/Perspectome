@@ -84,10 +84,30 @@ hash and invalidates every earlier Track B measurement, so it is a PR with a
 heads-up, never a quiet rerun. NB: the hash above is from the current Eurostat
 margins; it will change once margins are verified/replaced against TÜİK.
 
-## Still needs a cross-track decision
+## Held-out split -- RESOLVED (Track C / Hasan sign-off)
 
-- The conditioning-vs-held-out split of the WVS value items needs **Track C
-  (Hasan) sign-off** before it is locked into `src/common/schema.py` (persona
-  README's "first decision"). The current held-out attitude mappings
-  (`Q240/Q164/Q50/Q47` + the confidence battery) are defaults pending that.
+Locked into `src/common/schema.py` (`HELDOUT_FIELDS` + `HELDOUT_ROLE`). Two
+items per topic -- one FIT, one TEST -- so accuracy is measured on items never
+used to calibrate:
+
+| topic        | fit                      | test                         |
+|--------------|--------------------------|------------------------------|
+| institutions | trust_government (Q71), trust_courts (Q70) | trust_police (Q69), trust_parliament (Q73) |
+| religion     | religiosity (Q164)       | religious_identity (Q173)    |
+| wellbeing    | happiness (Q46)          | life_satisfaction (Q49)      |
+| economy      | income_equality (Q106)   | competition (Q109)           |
+| politics     | —                        | political_leaning (Q240)     |
+| finances     | —                        | financial_satisfaction (Q50) |
+
+- Trust items and religious_identity are stored as **categorical** labels, not
+  averaged and not reverse-coded (Hasan). Other held-out fields keep their **raw
+  survey scale** (no rescaling) so Track C validates on the original scale.
+- **Dropped:** `risk_tolerance` (Q47 is self-reported health, not risk -- no
+  WVS-7 risk item found) and `economic_optimism` (no forward-looking economy
+  item in WVS-7). If a real risk item turns up, tell Hasan.
+- This changed shared files (schema.py, heldout.sample.csv) -> small separate
+  PR, with a heads-up to Tracks B (Yiğithan) and D (Ezgi); Hasan approves.
+- The persona_set_hash is unaffected (it hashes personas.csv only, and
+  conditioning fields did not change).
+
 - WVS Turkey fieldwork is 2018 — note time drift wherever results are shown.

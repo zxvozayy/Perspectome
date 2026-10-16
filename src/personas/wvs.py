@@ -18,12 +18,20 @@ verified by value-range check against the real Turkey file (n=2415):
     H_URBRURAL         1 Urban, 2 Rural
     N_REG_NUTS1        region, İBBS Düzey-1 / NUTS-1, coded 792NN
                        (N_REGION_ISO is all -5 for Turkey -- do not use it)
-  held-out attitudes (DEFAULTS, pending Track C sign-off):
-    Q240  left-right self-placement 1-10
-    Q164  importance of God 1-10
-    Q50   satisfaction with household finances 1-10 (economic-optimism proxy)
-    Q47   Schwartz 'adventure/risk important to me' 1-6 (reversed)
-    Q69/Q70/Q71/Q73  confidence in police/courts/government/parliament 1-4
+  held-out attitudes (Track C sign-off; two items per topic, fit vs. test):
+    Q71/Q70  confidence in government/courts 1-4 categorical   (fit)
+    Q69/Q73  confidence in police/parliament 1-4 categorical   (test)
+    Q164  importance of God 1-10                               (fit)
+    Q173  religious person / not / atheist 1-3 categorical     (test)
+    Q46   feeling of happiness 1-4                             (fit)
+    Q49   life satisfaction 1-10                               (test)
+    Q106  incomes more equal .. larger differences 1-10        (fit)
+    Q109  competition good .. harmful 1-10                     (test)
+    Q240  left-right self-placement 1-10                       (test)
+    Q50   satisfaction with household finances 1-10            (test)
+  (Q47 is self-reported health, not a risk item -- no WVS-7 risk item exists,
+   so risk_tolerance was dropped. Held-out values keep their raw survey scale;
+   trust and religious_identity are stored as categorical labels.)
 
 Missing-value sentinels are negative across WVS (-1 don't know, -2 no answer,
 -3 not applicable, -4 not asked, -5 missing). They are recoded to null in
@@ -65,8 +73,9 @@ def is_missing(value) -> bool:
 
 
 # --- source column names in the raw WVS-7 file -----------------------------
-# The raw export uses these column names. Kept together so a codebook revision
-# is a one-line change.
+# Conditioning (personas.csv) source columns. Kept together so a codebook
+# revision is a one-line change. Held-out source columns live in
+# ingest.HELDOUT_SRC (one field per column, no aggregation).
 SRC = {
     "age": "Q262",
     "gender": "Q260",
@@ -78,18 +87,7 @@ SRC = {
     # N_REGION_ISO is entirely missing (-5) for Turkey in WVS-7; the region is
     # carried in N_REG_NUTS1 (İBBS Düzey-1 / NUTS-1, 12 regions), coded 792NN.
     "region": "N_REG_NUTS1",
-    # held-out attitudes (see HELDOUT_SRC below for the per-field detail)
-    "political_leaning": "Q240",
-    "religiosity": "Q164",
-    "economic_optimism": "Q50",
-    "risk_tolerance": "Q47",
 }
-
-# Confidence battery items averaged into the single trust_institutions score.
-# WVS confidence is 1 "a great deal" .. 4 "none at all" (reversed below so
-# higher = more trust). VERIFY the item set with Track C before it is used on
-# real data -- which institutions belong in the index is a design choice.
-TRUST_INSTITUTION_ITEMS = ("Q71", "Q73", "Q70", "Q69")  # govt, parliament, courts, police
 
 
 # --- conditioning (personas.csv) mappings ----------------------------------
@@ -275,54 +273,39 @@ def edu3_from_isced(code) -> Optional[str]:
 
 
 # --- held-out (heldout.csv) attitude mappings -------------------------------
-# Each held-out field is a 1-5 score in the schema. The source WVS item and
-# rescaling below are DEFAULTS and need Track C sign-off (persona README's
-# "first decision"): which value items condition vs. are held out is a
-# decision we do not get to make silently.
+# Per Track C sign-off: held-out values keep their RAW survey scale (no
+# rescaling -- Track C validates against the original scale). Trust and
+# religious_identity are stored as categorical labels. Nothing is averaged and
+# nothing is reverse-coded, so the scale direction is whatever the codebook says
+# (documented per field in schema.HELDOUT_FIELDS).
 
-def _rescale(value, src_lo: int, src_hi: int, *, reverse: bool = False) -> Optional[int]:
-    """Linearly map a value on [src_lo, src_hi] onto the 1-5 schema scale.
-
-    reverse=True flips the source scale first (for items where a low raw code
-    means "more" of the construct).
-    """
-    if is_missing(value):
+def keep_scale(code) -> Optional[int]:
+    """Keep a numeric held-out item at its raw survey value; missing -> None."""
+    if is_missing(code):
         return None
     try:
-        v = float(value)
+        return int(code)
     except (TypeError, ValueError):
         return None
-    if not (src_lo <= v <= src_hi):
+
+
+# WVS confidence battery (Q69-Q73): 1 a great deal .. 4 none at all.
+_CONFIDENCE = {1: "a_great_deal", 2: "quite_a_lot", 3: "not_very_much", 4: "none"}
+
+
+def map_confidence(code) -> Optional[str]:
+    """Confidence item (Q69/Q70/Q71/Q73) -> categorical label. Missing -> None."""
+    if is_missing(code):
         return None
-    if reverse:
-        v = src_hi - (v - src_lo)
-    frac = (v - src_lo) / (src_hi - src_lo)
-    return int(round(1 + frac * 4))  # -> 1..5
+    return _CONFIDENCE.get(int(code))
 
 
-def map_political_leaning(code) -> Optional[int]:
-    """Q240 left-right self-placement (1-10) -> 1-5 (1 left .. 5 right)."""
-    return _rescale(code, 1, 10)
+# Q173: 1 a religious person, 2 not a religious person, 3 a convinced atheist.
+_RELIGIOUS_IDENTITY = {1: "religious", 2: "not_religious", 3: "atheist"}
 
 
-def map_religiosity(code) -> Optional[int]:
-    """Q164 importance of God (1-10) -> 1-5."""
-    return _rescale(code, 1, 10)
-
-
-def map_economic_optimism(code) -> Optional[int]:
-    """Q50 satisfaction with household financial situation (1-10) -> 1-5.
-
-    VERIFY: this is a *current satisfaction* proxy, not a forward-looking
-    optimism item; confirm with Track C or substitute a better item.
-    """
-    return _rescale(code, 1, 10)
-
-
-def map_risk_tolerance(code) -> Optional[int]:
-    """Q47 Schwartz 'adventure/taking risks is important to me' (1-6) -> 1-5.
-
-    WVS codes 1 'very much like me' .. 6 'not at all like me', so reverse:
-    higher output = more risk-tolerant.
-    """
-    return _rescale(code, 1, 6, reverse=True)
+def map_religious_identity(code) -> Optional[str]:
+    """Q173 religious self-identification -> categorical label. Missing -> None."""
+    if is_missing(code):
+        return None
+    return _RELIGIOUS_IDENTITY.get(int(code))

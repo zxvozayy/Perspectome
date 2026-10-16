@@ -55,13 +55,22 @@ _CONDITIONING = {
     "income_decile": ("income", wvs.map_income_decile),
 }
 
-# held-out field -> (source column key, mapper). trust_institutions is handled
-# separately because it is an index over several columns.
-_HELDOUT = {
-    "political_leaning": ("political_leaning", wvs.map_political_leaning),
-    "religiosity": ("religiosity", wvs.map_religiosity),
-    "economic_optimism": ("economic_optimism", wvs.map_economic_optimism),
-    "risk_tolerance": ("risk_tolerance", wvs.map_risk_tolerance),
+# held-out field -> (raw WVS column, mapper). One field per column, no
+# aggregation (Track C sign-off). Trust/religious_identity are categorical;
+# the rest keep their raw survey scale via wvs.keep_scale.
+HELDOUT_SRC = {
+    "trust_government": ("Q71", wvs.map_confidence),
+    "trust_courts": ("Q70", wvs.map_confidence),
+    "trust_police": ("Q69", wvs.map_confidence),
+    "trust_parliament": ("Q73", wvs.map_confidence),
+    "religiosity": ("Q164", wvs.keep_scale),
+    "religious_identity": ("Q173", wvs.map_religious_identity),
+    "happiness": ("Q46", wvs.keep_scale),
+    "life_satisfaction": ("Q49", wvs.keep_scale),
+    "income_equality": ("Q106", wvs.keep_scale),
+    "competition": ("Q109", wvs.keep_scale),
+    "political_leaning": ("Q240", wvs.keep_scale),
+    "financial_satisfaction": ("Q50", wvs.keep_scale),
 }
 
 
@@ -102,24 +111,6 @@ def _persona_ids(df: pd.DataFrame, id_col) -> pd.Series:
         return df[id_col].astype(str).map(lambda s: f"p{s}")
     width = max(2, len(str(len(df))))
     return pd.Series([f"p{i:0{width}d}" for i in range(1, len(df) + 1)], index=df.index)
-
-
-def _trust_institutions(df: pd.DataFrame) -> pd.Series:
-    """Mean of the confidence battery, reversed and rescaled to 1-5.
-
-    WVS confidence is 1 'a great deal' .. 4 'none at all', so a low raw value
-    means more trust; we reverse per item then average. Missing items are
-    skipped; a row with no usable items becomes NaN.
-    """
-    items = [c for c in wvs.TRUST_INSTITUTION_ITEMS if c in df.columns]
-    if not items:
-        return pd.Series(np.nan, index=df.index)
-    # reverse 1..4 -> 4..1 so higher = more trust, then rescale 1..4 onto 1..5
-    reversed_items = (5 - df[items])  # valid only where 1<=x<=4
-    reversed_items = reversed_items.where((df[items] >= 1) & (df[items] <= 4))
-    mean_1_4 = reversed_items.mean(axis=1, skipna=True)
-    rescaled = 1 + (mean_1_4 - 1) / 3 * 4  # [1,4] -> [1,5]
-    return rescaled.round()
 
 
 def _warn_inconsistencies(personas: pd.DataFrame) -> None:
@@ -165,14 +156,12 @@ def to_personas_and_heldout(df: pd.DataFrame, id_col: str | None = "D_INTERVIEW"
     personas = personas.reindex(columns=PERSONA_COLUMNS)
 
     heldout = pd.DataFrame({"persona_id": pid.values})
-    for field, (src_key, mapper) in _HELDOUT.items():
-        src_col = wvs.SRC[src_key]
+    for field, (src_col, mapper) in HELDOUT_SRC.items():
         if src_col in df.columns:
             heldout[field] = df[src_col].map(mapper).values
         else:
             log.warning("source column %s (%s) missing from raw file", src_col, field)
             heldout[field] = None
-    heldout["trust_institutions"] = _trust_institutions(df).values
     heldout = heldout.reindex(columns=HELDOUT_COLUMNS)
 
     _warn_inconsistencies(personas)
