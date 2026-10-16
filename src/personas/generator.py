@@ -16,6 +16,7 @@ coarse ISCED grouping) is used only for calibration, never written out.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import logging
 from pathlib import Path
@@ -141,3 +142,29 @@ def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
         "max_calibration_error": float(fit["abs_error"].max()),
         "fit": fit,
     }
+
+
+def main():
+    """Documented, reproducible generation command (issue #14).
+
+        python -m src.personas.generator            # default seed 0
+        python -m src.personas.generator --seed 0
+    """
+    ap = argparse.ArgumentParser(description="Generate the frozen persona set.")
+    ap.add_argument("--turkey-csv", default="data/raw/wvs7_turkey.csv")
+    ap.add_argument("--out-dir", default=str(PROCESSED_DIR))
+    ap.add_argument("--seed", type=int, default=0)
+    args = ap.parse_args()
+
+    s = generate(args.turkey_csv, args.out_dir, args.seed)
+    print(f"n_personas        : {s['n_personas']}")
+    print(f"seed              : {s['seed']}")
+    print(f"max_calib_error   : {s['max_calibration_error']*100:.4f} pp")
+    print(f"personas          : {s['personas_path']}")
+    print(f"heldout           : {s['heldout_path']}")
+    print(f"persona_set_hash  : {s['persona_set_hash']}")
+    print("Track B pins this persona_set_hash on every run; regenerating is a PR.")
+
+
+if __name__ == "__main__":
+    main()

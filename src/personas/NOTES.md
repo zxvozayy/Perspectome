@@ -66,6 +66,24 @@ committed.
 - This belongs in `docs/findings.md` too, but that file is Track C's (Hasan's)
   per CONTRIBUTING.md -- record it there via him / a small shared-file PR.
 
+## Frozen persona set (issue #14)
+
+Reproducible generation command (fixed seed, deterministic):
+
+    python -m src.personas.generator --seed 0
+
+Produces (git-ignored): `data/processed/personas.csv` + `data/processed/heldout.csv`.
+
+    seed              : 0
+    n_personas        : 2415
+    persona_set_hash  : 30961ad5ebfcda7a838e416dbb60250b0333caef61940283f5945723f109bc67
+
+Track B records this `persona_set_hash` on every run. The set is frozen:
+regenerating it (new raw file, changed mapping/margins, or seed) changes the
+hash and invalidates every earlier Track B measurement, so it is a PR with a
+heads-up, never a quiet rerun. NB: the hash above is from the current Eurostat
+margins; it will change once margins are verified/replaced against TÜİK.
+
 ## Still needs a cross-track decision
 
 - The conditioning-vs-held-out split of the WVS value items needs **Track C
