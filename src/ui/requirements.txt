@@ -1,0 +1,3 @@
+# The site needs only the Python standard library (3.10+).
+# For the tests:
+pytest

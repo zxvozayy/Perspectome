@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giriş — Perspectome</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+<main class="auth" data-active="{{mode}}">
+  <aside class="auth-side">
+    <div class="hero-map" aria-hidden="true">
+      <div class="grid"></div>
+      <svg class="base" viewBox="0 0 {{mapw}} {{maph}}"><path d="{{map}}"/></svg>
+      <svg class="lit" viewBox="0 0 {{mapw}} {{maph}}"><path d="{{map}}"/></svg>
+    </div>
+    <a class="back" href="/"><span aria-hidden="true">←</span> Tanıtım sayfası</a>
+    <div>
+      <span class="rule"></span>
+      <h1>Perspectome</h1>
+      <p>Senaryoların tutumları nasıl kaydırdığını, her zaman bir karşılaştırmaya karşı okuyun.</p>
+    </div>
+  </aside>
+
+  <div class="auth-main">
+    <div class="auth-card">
+      <p class="kicker">Analiz paneli</p>
+      <h2 data-mode="giris">Tekrar hoş geldiniz</h2>
+      <h2 data-mode="kayit">Hesap oluşturun</h2>
+      <nav class="auth-tabs" aria-label="Giriş türü">
+        <a href="/giris" {{tab_giris}}>Giriş yap</a>
+        <a href="/giris?mod=kayit" {{tab_kayit}}>Hesap oluştur</a>
+      </nav>
+      {{error}}
+      <form data-mode="giris" method="post" action="/giris">
+        <label class="field"><span>Kullanıcı adı</span><input name="ad" value="{{name}}" autocomplete="username" required></label>
+        <label class="field"><span>Şifre</span><input type="password" name="sifre" autocomplete="current-password" required></label>
+        <button class="btn solid" type="submit">Giriş yap <span class="ar" aria-hidden="true">→</span></button>
+      </form>
+      <form data-mode="kayit" method="post" action="/kayit">
+        <label class="field"><span>Kullanıcı adı</span><input name="ad" value="{{name}}" autocomplete="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.\-]{3,32}"><small>Harf, rakam, nokta, tire ve alt çizgi.</small></label>
+        <label class="field"><span>Şifre</span><input type="password" name="sifre" autocomplete="new-password" required minlength="8"><small>En az 8 karakter.</small></label>
+        <label class="field"><span>Şifre (tekrar)</span><input type="password" name="sifre2" autocomplete="new-password" required minlength="8"></label>
+        <button class="btn solid" type="submit">Hesap oluştur <span class="ar" aria-hidden="true">→</span></button>
+      </form>
+      <p class="auth-foot">Hesaplar bu bilgisayarda yerel olarak tutulur.</p>
+    </div>
+  </div>
+</main>
+<script src="/static/site.js" defer></script>
+</body>
+</html>
