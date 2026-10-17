@@ -1,0 +1,30 @@
+scenario_id: ai_adoption_v1
+run_type: scenario
+
+question: >
+  A new government policy would require all public-sector offices to adopt
+  AI-assisted decision tools for routine administrative tasks within two years.
+  Employees whose tasks are automated would be retrained, not dismissed.
+  Should the government implement this policy?
+
+options:
+  - support
+  - oppose
+  - uncertain
+
+treatment_text: >
+  You have just learned that the government plans to require all public-sector
+  offices to adopt AI-assisted decision tools for routine tasks within two years.
+  Officials say employees whose tasks are automated will be retrained and
+  reassigned, not dismissed. Independent analysts estimate the policy would
+  reduce administrative processing times by 40% but require significant
+  retraining investment.
+
+placebo_text: >
+  You have just learned that the government plans to update the standard
+  filing system used by public-sector offices. All offices will transition
+  from the current alphanumeric document coding to a revised version within
+  two years. Officials say the new codes are designed to be more intuitive
+  and will require a brief orientation session for staff.
+
+target_item: null
