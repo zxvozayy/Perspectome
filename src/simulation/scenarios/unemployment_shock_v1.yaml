@@ -1,0 +1,28 @@
+scenario_id: unemployment_shock_v1
+run_type: scenario
+
+question: >
+  The national unemployment rate has risen from 10% to 18% over the past year,
+  and economists predict it will stay above 15% for at least two more years.
+  Should the government introduce a large-scale public employment programme
+  funded by increased borrowing?
+
+options:
+  - support
+  - oppose
+  - uncertain
+
+treatment_text: >
+  You have just learned that the national unemployment rate has risen sharply,
+  from 10% to 18%, over the past twelve months. Economists project it will
+  remain above 15% for at least two more years. Many sectors are cutting jobs,
+  and the effects are being felt across all regions.
+
+placebo_text: >
+  You have just learned that the national statistics office has updated its
+  annual report on household energy consumption. Average household electricity
+  usage rose by 4% last year, continuing a gradual upward trend observed over
+  the past decade. The report attributes most of the increase to greater
+  air-conditioning use during warmer summers.
+
+target_item: null
