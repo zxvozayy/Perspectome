@@ -78,6 +78,27 @@ Everything you need already exists as fixtures:
 Swap in real files once Tracks B and C produce them; the dashboard code
 shouldn't change, only its inputs.
 
+## How to run
+
+```bash
+python3 -m src.ui.server              # from the repo root → http://localhost:8501
+python3 -m pytest src/ui/tests        # tests (pytest is the only extra)
+```
+
+The site runs on the Python standard library alone: an intro page (`/`), a
+sign-in page (`/giris`) and the analysis panel (`/panel`). Accounts, the
+session key and chat history live in `src/ui/.cache/` (gitignored) and stay on
+this machine; it is a local dashboard, not something to expose to the internet.
+Set `PORT` to use another port.
+
+With no `results/*.json` at the repo root the panel reads the fixtures and
+shows a "Fixture verisi" badge. Point it at real output with
+`PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`.
+
+Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
+the server), `answers.py` (question → run), `auth.py`, `store.py`, `web/`
+(pages, CSS, a few lines of JS, fonts: Playfair Display and Manrope, OFL).
+
 ## Definition of done
 
 - [ ] Scenario view: treatment vs. placebo, effect headline, vanilla reference, subgroup arrows

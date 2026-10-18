@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perspectome — Türkiye için yapay toplum laboratuvarı</title>
+<meta name="description" content="Bir senaryonun Türkiye'de tutumları nasıl kaydırabileceğini model tabanlı personalarla karşılaştıran açık kaynak araştırma projesi.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/manrope-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/home.css?v=16">
+<script>try { var t = localStorage.getItem("pt-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geç</a>
+
+<header class="topbar">
+  <div class="topbar__in">
+    <a class="logo" href="/" aria-label="Perspectome ana sayfa"><span class="logo__dot" aria-hidden="true"></span>Perspectome</a>
+    <nav aria-label="Ana menü">
+      <ul class="topnav">
+        <li><a href="#proje">Proje</a></li>
+        <li><a href="#neler">Neler yapıyoruz</a></li>
+        <li><a class="nav-cta" href="/giris">Giriş</a></li>
+      </ul>
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="Açık temaya geç" title="Tema"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></button>
+    <button class="burger" type="button" aria-label="Menü" aria-expanded="false" aria-controls="drawer"><span></span></button>
+  </div>
+</header>
+<div class="drawer" id="drawer">
+  <button class="drawer__close" type="button">Kapat ✕</button>
+  <ul>
+    <li><a href="#proje">Proje</a></li>
+    <li><a href="#neler">Neler yapıyoruz</a></li>
+    <li><a href="/giris">Giriş</a></li>
+  </ul>
+</div>
+
+<main id="icerik">
+  <!-- Hero: the crowd animation. Scrolling through this section moves the light across the map. -->
+  <section class="hero" aria-label="Perspectome">
+    <div class="hero__stage">
+      <canvas id="hero-canvas" aria-label="Türkiye haritası üzerinde farklı renklerde insan toplulukları"></canvas>
+      <div class="hero__text">
+        <div class="hero__step is-on" data-step>
+          <p class="kicker">Türkiye için yapay toplum laboratuvarı</p>
+          <h1 class="title-xl">Bir senaryo,<br>seksen beş milyon bakış.</h1>
+          <a class="btn btn--main" href="#proje">Daha fazlasını keşfet</a>
+        </div>
+        <div class="hero__step" data-step aria-hidden="true">
+          <p class="kicker">Bireyleri değil, eğilimleri gösterir</p>
+          <p class="title-xl">Toplulukların<br>tepkisini sınayın.</p>
+        </div>
+        <div class="hero__step" data-step aria-hidden="true">
+          <p class="kicker">Her sonuç bir karşılaştırmaya karşı okunur</p>
+          <p class="title-xl">Gürültüyü ayıklayın,<br>farkı görün.</p>
+        </div>
+      </div>
+      <p class="hero__note">Figürler temsilidir, veri göstermez</p>
+      <button class="hero__skip" id="hero-skip" type="button">Geç</button>
+      <span class="hero__scroll" aria-hidden="true"><i></i>Kaydır</span>
+    </div>
+  </section>
+
+  <section class="section about" id="proje">
+    <h2 class="about__kicker" data-reveal>Perspectome nedir?</h2>
+    <p class="about__lede" data-reveal>Bir politikanın ya da bir şokun<br>toplumda nasıl yankılanacağını önceden sınayın.</p>
+    <h3 class="about__title" data-reveal><a href="#neler">Açık kaynak araştırma projesi</a></h3>
+    <p class="about__body" data-reveal>Buraya proje tanıtım metni gelecek. Perspectome, anket verisine göre kalibre edilmiş sentetik personalara bir senaryo gösterir ve tutumların nereye kaydığını ölçer. Amaç kesin bir tahmin değil; senaryonun yarattığı farkı, gürültüden ayırt edilebiliyorsa görünür kılmak.</p>
+    <p class="about__more" data-reveal><a href="#neler">Devamını oku <span aria-hidden="true">→</span></a></p>
+  </section>
+
+  <!-- Full-width video band. The file goes in src/ui/web/media/tanitim.mp4 -->
+  <section class="video-band" aria-label="Tanıtım videosu">
+    {{video}}
+    <div class="crowd" data-crowd aria-hidden="true"></div>
+    <div class="video-band__shade"></div>
+    <div class="video-band__copy" data-reveal>
+      <p class="kicker">Tanıtım</p>
+      <p class="title-lg">Toplumu tek bir ortalama<br>olarak değil, sesler olarak görün.</p>
+      <a class="btn btn--ghost" href="#nasil">Nasıl çalışır</a>
+    </div>
+  </section>
+
+  <section class="tiles" id="neler">
+    <div class="tiles__head" data-reveal>
+      <p class="kicker">Neler yapıyoruz</p>
+      <h2 class="title-lg">Senaryodan sonuca,<br>her adım şeffaf.</h2>
+    </div>
+    <div class="tiles__grid">
+      <article class="tile" data-reveal>
+        <div class="tile__media tr-map" data-people="16" data-seed="11"></div>
+        <div class="tile__copy"><h3>Sentetik toplum</h3><p>Buraya metin gelecek. Anket verisine göre kalibre edilmiş, Türkiye'nin çeşitliliğini taşıyan personalar.</p></div>
+      </article>
+      <article class="tile" data-reveal style="--d:.08s">
+        <div class="tile__media tr-map" data-people="26" data-seed="23" data-wave></div>
+        <div class="tile__copy"><h3>Senaryo testi</h3><p>Buraya metin gelecek. Bir şok ya da politika metni personalara gösterilir; tepkiler kollar arasında karşılaştırılır.</p></div>
+      </article>
+      <article class="tile" data-reveal style="--d:.16s">
+        <div class="tile__media viz" data-visual="validate"></div>
+        <div class="tile__copy"><h3>Doğrulama</h3><p>Buraya metin gelecek. Sonuçlar gerçek anket verisine ve istatistiksel karşılaştırmalara karşı sınanır.</p></div>
+      </article>
+    </div>
+    <p class="tiles__lead" data-reveal>Her persona bir sesi, her senaryo bir olasılığı temsil eder. Sonuç ise her zaman bir karşılaştırmaya karşı okunur.</p>
+    <p class="tiles__cta" data-reveal><a class="btn" href="/giris">Panele göz atın</a></p>
+  </section>
+
+
+  <section class="rail" id="nasil" data-rail aria-label="Nasıl çalışır">
+    <div class="rail__head" data-reveal>
+      <div><p class="kicker">Adım adım</p><h2 class="title-lg">Nasıl çalışır</h2></div>
+      <div class="rail__arrows"><button type="button" data-dir="-1" aria-label="Önceki">←</button><button type="button" data-dir="1" aria-label="Sonraki">→</button></div>
+    </div>
+    <ol class="rail__track">
+      <li class="card"><div class="card__media viz" data-visual="personas"></div><span class="card__n">01</span><h3>Persona seti</h3><p>Buraya metin gelecek.</p></li>
+      <li class="card"><div class="card__media viz" data-visual="scenario"></div><span class="card__n">02</span><h3>Senaryo</h3><p>Buraya metin gelecek.</p></li>
+      <li class="card"><div class="card__media viz" data-visual="arms"></div><span class="card__n">03</span><h3>Üç kol</h3><p>Buraya metin gelecek.</p></li>
+      <li class="card"><div class="card__media viz" data-visual="noise"></div><span class="card__n">04</span><h3>Gürültü tabanı</h3><p>Buraya metin gelecek.</p></li>
+      <li class="card"><div class="card__media viz" data-visual="curves"></div><span class="card__n">05</span><h3>Doğrulama</h3><p>Buraya metin gelecek.</p></li>
+      <li class="card"><div class="card__media viz" data-visual="models"></div><span class="card__n">06</span><h3>Model karşılaştırması</h3><p>Buraya metin gelecek.</p></li>
+    </ol>
+  </section>
+
+  <section class="quote">
+    <div class="quote__map tr-map" data-people="40" data-seed="777" data-size=".55"></div>
+    <div class="quote__copy" data-reveal>
+      <p class="quote__text"><span class="mark">“Toplum tek bir ortalama değildir;</span><br><span class="mark is-2"><em>milyonlarca farklı bakışın</em> toplamıdır.”</span></p>
+      <p class="quote__by">Perspectome</p>
+      <a class="btn btn--ghost" href="/giris">Panele giriş yap</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__id"><span class="logo"><span class="logo__dot" aria-hidden="true"></span>Perspectome</span>
+      <p>Açık kaynak araştırma projesi. Model tabanlı simülasyon; gerçek kişileri ya da nüfustaki kesin oranları göstermez.</p></div>
+    <ul>
+      <li><a href="#proje">Proje</a></li>
+      <li><a href="#neler">Neler yapıyoruz</a></li>
+        <li><a href="/giris">Giriş</a></li>
+      <li><a href="/giris?mod=kayit">Hesap oluştur</a></li>
+    </ul>
+  </div>
+  <div class="footer__row"><span>© 2026 Perspectome</span><span>Harita: Natural Earth (kamu malı)</span></div>
+</footer>
+<script>window.TR = {{turkey}};</script>
+<script src="/static/people.js?v=16" defer></script>
+<script src="/static/hero.js?v=16" defer></script>
+<script src="/static/home.js?v=16" defer></script>
+</body>
+</html>

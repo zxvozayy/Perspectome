@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analiz — Perspectome</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="stylesheet" href="/static/panel.css">
+</head>
+<body class="panel-page">
+<header class="bar">
+  <div class="wrap">
+    <a class="mark" href="/"><b>Perspectome</b><span>Analiz paneli</span></a>
+    <div class="user">
+      {{badge}}
+      <span class="who">Hesap: <b>{{user}}</b></span>
+      <button class="side-toggle" type="button" aria-controls="side" aria-expanded="false">Geçmiş</button>
+      <a class="btn-gold" href="/cikis">Çıkış</a>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <main class="main">
+    <div class="thread" id="thread" aria-live="polite"></div>
+    <div class="composer">
+      <form id="ask">
+        <label class="sr" for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Soru</label>
+        <input id="q" name="q" autocomplete="off" maxlength="500" placeholder="Bir senaryo hakkında sorun…">
+        <button type="submit">Sor</button>
+      </form>
+      <p>Hazır çalıştırmalar üzerinden yanıt verir; yeni simülasyon başlatmaz.</p>
+    </div>
+  </main>
+  <aside class="side" id="side" aria-label="Geçmiş sohbetler">
+    <button class="btn" type="button" id="new">+ Yeni sohbet</button>
+    <h2>Geçmiş sohbetler</h2>
+    <ul class="history" id="history"></ul>
+  </aside>
+</div>
+<script src="/static/panel.js" defer></script>
+</body>
+</html>
