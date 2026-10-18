@@ -1,0 +1,18 @@
+scenario_id: probe_trust_institutions
+run_type: probe
+
+question: >
+  On a scale from 1 to 5, where 1 means "no trust at all" and 5 means
+  "a great deal of trust," how much trust do you have in the major
+  institutions of this country (parliament, courts, civil service)?
+
+options:
+  - "1"
+  - "2"
+  - "3"
+  - "4"
+  - "5"
+
+treatment_text: null
+placebo_text: null
+target_item: trust_institutions
