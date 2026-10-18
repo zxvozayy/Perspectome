@@ -93,12 +93,12 @@ class TestScenarioEndToEnd:
 
 
 class TestProbeEndToEnd:
-    def test_trust_institutions(self):
+    def test_trust_police(self):
         result = _run_and_validate(
-            SCENARIOS_DIR / "probe_trust_institutions.yaml", "probe"
+            SCENARIOS_DIR / "probe_trust_police.yaml", "probe"
         )
-        assert result["target_item"] == "trust_institutions"
+        assert result["target_item"] == "trust_police"
         # Probes have placebo = null.
         assert result["arms"]["placebo"] is None
-        # Options are 1-5.
-        assert result["options"] == ["1", "2", "3", "4", "5"]
+        # Options are the four WVS confidence categories.
+        assert result["options"] == ["a_great_deal", "quite_a_lot", "not_very_much", "none"]

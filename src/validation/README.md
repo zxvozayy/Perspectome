@@ -95,16 +95,16 @@ and Track A's `heldout.csv` (see [`../personas/README.md`](../personas/README.md
   "noise_floor_tvd": 0.04,
   "probes": [
     {
-      "item": "trust_institutions",
-      "options": ["1", "2", "3", "4", "5"],
-      "real": {"1": 0.10, "2": 0.20, "3": 0.30, "4": 0.25, "5": 0.15},
+      "item": "trust_police",
+      "options": ["a_great_deal", "quite_a_lot", "not_very_much", "none"],
+      "real": {"a_great_deal": 0.25, "quite_a_lot": 0.35, "not_very_much": 0.25, "none": 0.15},
       "methods": {
-        "engine":            {"distribution": {"1": 0.07, "2": 0.20, "3": 0.33, "4": 0.27, "5": 0.13}, "tvd": 0.05},
-        "vanilla":           {"distribution": {"1": 0.00, "2": 0.05, "3": 0.85, "4": 0.10, "5": 0.00}, "tvd": 0.55},
+        "engine":            {"distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13}, "tvd": 0.07},
+        "vanilla":           {"distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}, "tvd": 0.50},
         "equation_baseline": {"distribution": {"...": 0}, "tvd": 0.12},
         "ml_baseline":       {"distribution": {"...": 0}, "tvd": 0.09}
       },
-      "models": {"<model_snapshot>": {"tvd": 0.05}}
+      "models": {"<model_snapshot>": {"tvd": 0.07}}
     }
   ],
   "rank_agreement": {

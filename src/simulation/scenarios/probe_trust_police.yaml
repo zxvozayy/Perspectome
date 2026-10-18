@@ -1,0 +1,16 @@
+scenario_id: probe_trust_police
+run_type: probe
+
+question: >
+  How much confidence do you have in the police: a great deal, quite a lot,
+  not very much, or none at all?
+
+options:
+  - "a_great_deal"
+  - "quite_a_lot"
+  - "not_very_much"
+  - "none"
+
+treatment_text: null
+placebo_text: null
+target_item: trust_police

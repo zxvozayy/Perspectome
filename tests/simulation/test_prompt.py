@@ -16,7 +16,7 @@ from src.simulation.prompt import (
 
 FIXTURE_PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
 FIXTURE_SCENARIO = Path("src/simulation/scenarios/unemployment_shock_v1.yaml")
-FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_institutions.yaml")
+FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_police.yaml")
 
 
 class TestBuildPersonaBlock:
