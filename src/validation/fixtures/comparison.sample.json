@@ -4,16 +4,16 @@
   "noise_floor_tvd": 0.04,
   "probes": [
     {
-      "item": "trust_institutions",
-      "options": ["1", "2", "3", "4", "5"],
-      "real": {"1": 0.10, "2": 0.20, "3": 0.30, "4": 0.25, "5": 0.15},
+      "item": "trust_police",
+      "options": ["a_great_deal", "quite_a_lot", "not_very_much", "none"],
+      "real": {"a_great_deal": 0.25, "quite_a_lot": 0.35, "not_very_much": 0.25, "none": 0.15},
       "methods": {
-        "engine":            {"distribution": {"1": 0.07, "2": 0.20, "3": 0.33, "4": 0.27, "5": 0.13}, "tvd": 0.05},
-        "vanilla":           {"distribution": {"1": 0.00, "2": 0.05, "3": 0.85, "4": 0.10, "5": 0.00}, "tvd": 0.55},
-        "equation_baseline": {"distribution": {"1": 0.05, "2": 0.15, "3": 0.45, "4": 0.25, "5": 0.10}, "tvd": 0.15},
-        "ml_baseline":       {"distribution": {"1": 0.08, "2": 0.17, "3": 0.40, "4": 0.23, "5": 0.12}, "tvd": 0.10}
+        "engine":            {"distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13}, "tvd": 0.07},
+        "vanilla":           {"distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}, "tvd": 0.50},
+        "equation_baseline": {"distribution": {"a_great_deal": 0.15, "quite_a_lot": 0.45, "not_very_much": 0.30, "none": 0.10}, "tvd": 0.15},
+        "ml_baseline":       {"distribution": {"a_great_deal": 0.17, "quite_a_lot": 0.45, "not_very_much": 0.25, "none": 0.13}, "tvd": 0.10}
       },
-      "models": {"mock-0": {"tvd": 0.05}}
+      "models": {"mock-0": {"tvd": 0.07}}
     }
   ],
   "rank_agreement": {

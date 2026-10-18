@@ -1,28 +1,28 @@
 {
-  "run_id": "probe_trust_institutions__seed42",
+  "run_id": "probe_trust_police__seed42",
   "run_type": "probe",
-  "scenario_id": "probe_trust_institutions",
-  "target_item": "trust_institutions",
-  "options": ["1", "2", "3", "4", "5"],
+  "scenario_id": "probe_trust_police",
+  "target_item": "trust_police",
+  "options": ["a_great_deal", "quite_a_lot", "not_very_much", "none"],
   "n_personas": 15,
   "arms": {
     "treatment": {
-      "response_distribution": {"1": 0.07, "2": 0.20, "3": 0.33, "4": 0.27, "5": 0.13},
-      "option_usage": {"1": 1, "2": 3, "3": 5, "4": 4, "5": 2},
+      "response_distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13},
+      "option_usage": {"a_great_deal": 3, "quite_a_lot": 6, "not_very_much": 4, "none": 2},
       "by_subgroup": {
         "age_band": {
-          "18-24": {"n": 3, "distribution": {"1": 0.33, "2": 0.33, "3": 0.33, "4": 0.00, "5": 0.00}},
-          "25-34": {"n": 3, "distribution": {"1": 0.00, "2": 0.33, "3": 0.67, "4": 0.00, "5": 0.00}},
-          "35-44": {"n": 3, "distribution": {"1": 0.00, "2": 0.33, "3": 0.33, "4": 0.33, "5": 0.00}},
-          "45-54": {"n": 2, "distribution": {"1": 0.00, "2": 0.00, "3": 0.50, "4": 0.50, "5": 0.00}},
-          "55-64": {"n": 2, "distribution": {"1": 0.00, "2": 0.00, "3": 0.00, "4": 1.00, "5": 0.00}},
-          "65+":   {"n": 2, "distribution": {"1": 0.00, "2": 0.00, "3": 0.00, "4": 0.00, "5": 1.00}}
+          "18-24": {"n": 3, "distribution": {"a_great_deal": 0.00, "quite_a_lot": 0.33, "not_very_much": 0.33, "none": 0.33}},
+          "25-34": {"n": 3, "distribution": {"a_great_deal": 0.00, "quite_a_lot": 0.33, "not_very_much": 0.67, "none": 0.00}},
+          "35-44": {"n": 3, "distribution": {"a_great_deal": 0.33, "quite_a_lot": 0.33, "not_very_much": 0.00, "none": 0.33}},
+          "45-54": {"n": 2, "distribution": {"a_great_deal": 0.00, "quite_a_lot": 1.00, "not_very_much": 0.00, "none": 0.00}},
+          "55-64": {"n": 2, "distribution": {"a_great_deal": 0.50, "quite_a_lot": 0.50, "not_very_much": 0.00, "none": 0.00}},
+          "65+":   {"n": 2, "distribution": {"a_great_deal": 0.50, "quite_a_lot": 0.00, "not_very_much": 0.50, "none": 0.00}}
         }
       }
     },
     "placebo": null,
     "vanilla": {
-      "response_distribution": {"1": 0.00, "2": 0.05, "3": 0.85, "4": 0.10, "5": 0.00}
+      "response_distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}
     }
   },
   "metadata": {

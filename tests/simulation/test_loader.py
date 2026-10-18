@@ -14,7 +14,7 @@ from src.simulation.loader import (
 
 FIXTURE_PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
 FIXTURE_SCENARIO = Path("src/simulation/scenarios/unemployment_shock_v1.yaml")
-FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_institutions.yaml")
+FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_police.yaml")
 
 
 class TestLoadPersonas:
@@ -60,7 +60,7 @@ class TestLoadScenario:
     def test_reads_probe(self):
         s = load_scenario(FIXTURE_PROBE)
         assert s["run_type"] == "probe"
-        assert s["target_item"] == "trust_institutions"
+        assert s["target_item"] == "trust_police"
 
     def test_rejects_invalid_run_type(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
