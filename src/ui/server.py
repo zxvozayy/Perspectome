@@ -29,7 +29,7 @@ from src.ui.data import load  # noqa: E402
 WEB = Path(__file__).parent / "web"
 COOKIE = "pt_session"
 STATIC_TYPES = {".css", ".js", ".svg", ".woff2", ".png", ".webp", ".ico", ".jpg", ".mp4", ".webm"}
-VIDEO = WEB / "media" / "tanitim.mp4"  # the intro video; a placeholder shows until it exists
+VIDEO = WEB / "media" / "tanitim.mp4"  # the hero video (Mixkit, free licence); a still shows if it's missing
 _lock = threading.Lock()  # one writer at a time for the chat files
 
 
@@ -39,8 +39,17 @@ MAP = {"map": _MAP, "mapw": str(_MAP_W), "maph": str(_MAP_H), "turkey": views.TU
 
 def video() -> str:
     if VIDEO.is_file():
-        return f'<video src="/static/media/{VIDEO.name}" muted loop playsinline preload="metadata" data-auto></video>'
-    return '<div class="video-band__placeholder"></div>'
+        poster = f' poster="/static/media/{VIDEO.stem}.jpg"' if VIDEO.with_suffix(".jpg").is_file() else ""
+        return f'<video src="/static/media/{VIDEO.name}"{poster} muted loop playsinline preload="auto"></video>'
+    return '<div class="hero__still"></div>'
+
+
+def counts(bundle) -> dict:
+    """How much there is to look at — file counts for the welcome cards, not metrics."""
+    probes = (bundle.comparison or {}).get("probes") or []
+    models = {m for p in probes for m in (p.get("models") or {})}
+    models = models or {r["model_snapshot"] for r in bundle.results.values() if r.get("model_snapshot")}
+    return {"scenarios": len(bundle.runs("scenario")), "probes": len(probes), "models": len(models)}
 
 
 def page(file: str, **values: str) -> bytes:
@@ -94,7 +103,7 @@ class Handler(BaseHTTPRequestHandler):
         msg = f'<p class="form-error" role="alert">{html.escape(error)}</p>' if error else ""
         current = 'aria-current="page"'
         tabs = {"tab_giris": current if mode == "giris" else "", "tab_kayit": current if mode == "kayit" else ""}
-        self.send(page("giris.html", mode=mode, error=msg, name=html.escape(name), **tabs), status=status)
+        self.send(page("giris.html", video=video(), mode=mode, error=msg, name=html.escape(name), **tabs), status=status)
 
     def log_message(self, fmt: str, *args) -> None:  # quiet console
         pass
@@ -121,7 +130,7 @@ class Handler(BaseHTTPRequestHandler):
             if not user:
                 return self.redirect("/giris")
             badge = '<span class="badge">Fixture verisi</span>' if load().is_fixture else ""
-            return self.send(page("panel.html", user=html.escape(user), badge=badge))
+            return self.send(page("panel.html", user=html.escape(user), initial=html.escape(user[:1].upper()), badge=badge))
         if path.startswith("/api/"):
             return self.api_get(path, parse_qs(url.query))
         if path.startswith("/static/"):
@@ -182,7 +191,7 @@ class Handler(BaseHTTPRequestHandler):
         bundle = load()
         if path == "/api/state":
             chats = [{"id": c["id"], "title": c["title"]} for c in store.load(user)]
-            return self.json({"suggestions": answers.suggestions(bundle), "chats": chats})
+            return self.json({"suggestions": answers.suggestions(bundle), "chats": chats, "counts": counts(bundle)})
         if path == "/api/chat":
             cid = (query.get("id") or [""])[0]
             chat = next((c for c in store.load(user) if c["id"] == cid), None)

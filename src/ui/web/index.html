@@ -4,151 +4,158 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Perspectome — Türkiye için yapay toplum laboratuvarı</title>
-<meta name="description" content="Bir senaryonun Türkiye'de tutumları nasıl kaydırabileceğini model tabanlı personalarla karşılaştıran açık kaynak araştırma projesi.">
-<meta name="theme-color" content="#000000">
+<meta name="description" content="Bir senaryonun Türkiye'de tutumları nasıl kaydırabileceğini, anket verisine göre kalibre edilmiş sentetik personalarla karşılaştıran açık kaynak araştırma projesi.">
+<meta name="theme-color" content="#03060B">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="/static/fonts/manrope-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/home.css?v=16">
-<script>try { var t = localStorage.getItem("pt-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="preload" href="/static/fonts/ibmplexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/home.css?v=22">
+<script>document.documentElement.classList.add("js"); try { var t = localStorage.getItem("pt-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
 <body>
 <a class="skip" href="#icerik">İçeriğe geç</a>
 
 <header class="topbar">
-  <div class="topbar__in">
-    <a class="logo" href="/" aria-label="Perspectome ana sayfa"><span class="logo__dot" aria-hidden="true"></span>Perspectome</a>
-    <nav aria-label="Ana menü">
-      <ul class="topnav">
-        <li><a href="#proje">Proje</a></li>
-        <li><a href="#neler">Neler yapıyoruz</a></li>
-        <li><a class="nav-cta" href="/giris">Giriş</a></li>
-      </ul>
+  <div class="wrap topbar__in">
+    <a class="logo" href="/" aria-label="Perspectome ana sayfa">
+      <svg class="logo__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="3"/><rect x="13" y="2" width="9" height="9" rx="4.5"/><rect x="2" y="13" width="9" height="9" rx="4.5"/><rect class="dim" x="13" y="13" width="9" height="9" rx="3"/></svg>
+      Perspectome
+    </a>
+    <nav class="topnav" aria-label="Ana menü">
+      <a href="#gorunumler">İki görünüm</a>
+      <a href="#nasil">Nasıl çalışır</a>
     </nav>
-    <button class="theme-toggle" type="button" aria-label="Açık temaya geç" title="Tema"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></button>
-    <button class="burger" type="button" aria-label="Menü" aria-expanded="false" aria-controls="drawer"><span></span></button>
+    <div class="topbar__actions">
+      <button class="icon-btn theme-toggle" type="button" aria-label="Temayı değiştir" title="Tema">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <a class="btn btn--outline btn--sm" href="/giris?mod=kayit">Kayıt ol</a>
+      <a class="btn btn--accent btn--sm" href="/giris">Giriş yap <span class="ar" aria-hidden="true">→</span></a>
+    </div>
   </div>
 </header>
-<div class="drawer" id="drawer">
-  <button class="drawer__close" type="button">Kapat ✕</button>
-  <ul>
-    <li><a href="#proje">Proje</a></li>
-    <li><a href="#neler">Neler yapıyoruz</a></li>
-    <li><a href="/giris">Giriş</a></li>
-  </ul>
-</div>
 
 <main id="icerik">
-  <!-- Hero: the crowd animation. Scrolling through this section moves the light across the map. -->
-  <section class="hero" aria-label="Perspectome">
-    <div class="hero__stage">
-      <canvas id="hero-canvas" aria-label="Türkiye haritası üzerinde farklı renklerde insan toplulukları"></canvas>
-      <div class="hero__text">
-        <div class="hero__step is-on" data-step>
-          <p class="kicker">Türkiye için yapay toplum laboratuvarı</p>
-          <h1 class="title-xl">Bir senaryo,<br>seksen beş milyon bakış.</h1>
-          <a class="btn btn--main" href="#proje">Daha fazlasını keşfet</a>
+  <section class="hero tone-deep" aria-labelledby="hero-title">
+    <div class="hero__media" aria-hidden="true">{{video}}</div>
+    <div class="wrap">
+      <div class="hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Senaryo simülasyonu — Türkiye toplumu</p>
+          <h1 id="hero-title">Bir politikayı uygulamadan önce, toplumda nasıl yankılanacağını gör.</h1>
+          <p class="lede">Perspectome, tek bir ortalama vermek yerine senaryonu anket verisine göre kalibre edilmiş 2.415 sentetik persona ile sınar. Senaryo, placebo ve personasız model kollarını karşılaştırır; farkı gürültüden ayırır ve gerçek anket yanıtlarıyla doğrular.</p>
+          <div class="hero__cta">
+            <a class="btn btn--accent" href="/giris">Panele gir <span class="ar" aria-hidden="true">→</span></a>
+            <a class="btn btn--text" href="#nasil">Nasıl çalışır <span aria-hidden="true">↓</span></a>
+          </div>
+          <p class="hero__note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg>Gerçek anketin yerini almaz. Bireyleri değil, eğilimleri gösterir.</p>
         </div>
-        <div class="hero__step" data-step aria-hidden="true">
-          <p class="kicker">Bireyleri değil, eğilimleri gösterir</p>
-          <p class="title-xl">Toplulukların<br>tepkisini sınayın.</p>
-        </div>
-        <div class="hero__step" data-step aria-hidden="true">
-          <p class="kicker">Her sonuç bir karşılaştırmaya karşı okunur</p>
-          <p class="title-xl">Gürültüyü ayıklayın,<br>farkı görün.</p>
-        </div>
+
       </div>
-      <p class="hero__note">Figürler temsilidir, veri göstermez</p>
-      <button class="hero__skip" id="hero-skip" type="button">Geç</button>
-      <span class="hero__scroll" aria-hidden="true"><i></i>Kaydır</span>
+
+      <dl class="stats">
+        <div><dt>sentetik persona</dt><dd>2.415</dd></div>
+        <div><dt>karşılaştırılan deney kolu</dt><dd>3</dd></div>
+        <div><dt>alt grup test eşiği</dt><dd>n ≥ 30</dd></div>
+      </dl>
     </div>
   </section>
 
-  <section class="section about" id="proje">
-    <h2 class="about__kicker" data-reveal>Perspectome nedir?</h2>
-    <p class="about__lede" data-reveal>Bir politikanın ya da bir şokun<br>toplumda nasıl yankılanacağını önceden sınayın.</p>
-    <h3 class="about__title" data-reveal><a href="#neler">Açık kaynak araştırma projesi</a></h3>
-    <p class="about__body" data-reveal>Buraya proje tanıtım metni gelecek. Perspectome, anket verisine göre kalibre edilmiş sentetik personalara bir senaryo gösterir ve tutumların nereye kaydığını ölçer. Amaç kesin bir tahmin değil; senaryonun yarattığı farkı, gürültüden ayırt edilebiliyorsa görünür kılmak.</p>
-    <p class="about__more" data-reveal><a href="#neler">Devamını oku <span aria-hidden="true">→</span></a></p>
-  </section>
-
-  <!-- Full-width video band. The file goes in src/ui/web/media/tanitim.mp4 -->
-  <section class="video-band" aria-label="Tanıtım videosu">
-    {{video}}
-    <div class="crowd" data-crowd aria-hidden="true"></div>
-    <div class="video-band__shade"></div>
-    <div class="video-band__copy" data-reveal>
-      <p class="kicker">Tanıtım</p>
-      <p class="title-lg">Toplumu tek bir ortalama<br>olarak değil, sesler olarak görün.</p>
-      <a class="btn btn--ghost" href="#nasil">Nasıl çalışır</a>
+  <section class="section split tone-navy" id="neden">
+    <div class="wrap split__grid">
+      <div data-reveal>
+        <p class="eyebrow eyebrow--rule">Tek ortalamadan fazlası</p>
+        <h2 class="display">Sonucu açıklamadan önce sına.</h2>
+      </div>
+      <ol class="numbered" data-reveal>
+        <li><span class="n">01</span><div><h3>Kolları karşılaştır</h3><p>Aynı personalara bir kez senaryo, bir kez ilgisiz bir placebo metni gösterilir. Başlık, ikisi arasındaki farktır; mutlak bir “Türkiye'nin yüzde X'i” değil.</p></div></li>
+        <li><span class="n">02</span><div><h3>Gürültüyü ayıkla</h3><p>Aynı ayar iki kez çalıştırıldığında kendiliğinden çıkan farka gürültü tabanı denir. Bundan küçük bir etki “ölçülebilir etki yok” olarak gösterilir.</p></div></li>
+        <li><span class="n">03</span><div><h3>Gerçeğe karşı doğrula</h3><p>Yanıtı bilinen anket soruları (WVS-7 Türkiye) motora sorulur. Denklem ve makine öğrenmesi temel modelleriyle karşılaştırılır.</p></div></li>
+      </ol>
     </div>
   </section>
 
-  <section class="tiles" id="neler">
-    <div class="tiles__head" data-reveal>
-      <p class="kicker">Neler yapıyoruz</p>
-      <h2 class="title-lg">Senaryodan sonuca,<br>her adım şeffaf.</h2>
-    </div>
-    <div class="tiles__grid">
-      <article class="tile" data-reveal>
-        <div class="tile__media tr-map" data-people="16" data-seed="11"></div>
-        <div class="tile__copy"><h3>Sentetik toplum</h3><p>Buraya metin gelecek. Anket verisine göre kalibre edilmiş, Türkiye'nin çeşitliliğini taşıyan personalar.</p></div>
-      </article>
-      <article class="tile" data-reveal style="--d:.08s">
-        <div class="tile__media tr-map" data-people="26" data-seed="23" data-wave></div>
-        <div class="tile__copy"><h3>Senaryo testi</h3><p>Buraya metin gelecek. Bir şok ya da politika metni personalara gösterilir; tepkiler kollar arasında karşılaştırılır.</p></div>
-      </article>
-      <article class="tile" data-reveal style="--d:.16s">
-        <div class="tile__media viz" data-visual="validate"></div>
-        <div class="tile__copy"><h3>Doğrulama</h3><p>Buraya metin gelecek. Sonuçlar gerçek anket verisine ve istatistiksel karşılaştırmalara karşı sınanır.</p></div>
-      </article>
-    </div>
-    <p class="tiles__lead" data-reveal>Her persona bir sesi, her senaryo bir olasılığı temsil eder. Sonuç ise her zaman bir karşılaştırmaya karşı okunur.</p>
-    <p class="tiles__cta" data-reveal><a class="btn" href="/giris">Panele göz atın</a></p>
-  </section>
-
-
-  <section class="rail" id="nasil" data-rail aria-label="Nasıl çalışır">
-    <div class="rail__head" data-reveal>
-      <div><p class="kicker">Adım adım</p><h2 class="title-lg">Nasıl çalışır</h2></div>
-      <div class="rail__arrows"><button type="button" data-dir="-1" aria-label="Önceki">←</button><button type="button" data-dir="1" aria-label="Sonraki">→</button></div>
-    </div>
-    <ol class="rail__track">
-      <li class="card"><div class="card__media viz" data-visual="personas"></div><span class="card__n">01</span><h3>Persona seti</h3><p>Buraya metin gelecek.</p></li>
-      <li class="card"><div class="card__media viz" data-visual="scenario"></div><span class="card__n">02</span><h3>Senaryo</h3><p>Buraya metin gelecek.</p></li>
-      <li class="card"><div class="card__media viz" data-visual="arms"></div><span class="card__n">03</span><h3>Üç kol</h3><p>Buraya metin gelecek.</p></li>
-      <li class="card"><div class="card__media viz" data-visual="noise"></div><span class="card__n">04</span><h3>Gürültü tabanı</h3><p>Buraya metin gelecek.</p></li>
-      <li class="card"><div class="card__media viz" data-visual="curves"></div><span class="card__n">05</span><h3>Doğrulama</h3><p>Buraya metin gelecek.</p></li>
-      <li class="card"><div class="card__media viz" data-visual="models"></div><span class="card__n">06</span><h3>Model karşılaştırması</h3><p>Buraya metin gelecek.</p></li>
-    </ol>
-  </section>
-
-  <section class="quote">
-    <div class="quote__map tr-map" data-people="40" data-seed="777" data-size=".55"></div>
-    <div class="quote__copy" data-reveal>
-      <p class="quote__text"><span class="mark">“Toplum tek bir ortalama değildir;</span><br><span class="mark is-2"><em>milyonlarca farklı bakışın</em> toplamıdır.”</span></p>
-      <p class="quote__by">Perspectome</p>
-      <a class="btn btn--ghost" href="/giris">Panele giriş yap</a>
+  <!-- People of every kind walking past, side by side. Plain SVG strips moved by a CSS transform only. -->
+  <section class="section tone-blue" id="toplum" aria-labelledby="toplum-title">
+    <div class="wrap">
+      <div class="crowd__head" data-reveal>
+        <div><p class="eyebrow eyebrow--rule">Sentetik toplum</p><h2 class="display" id="toplum-title">Bir senaryo,<br>seksen beş milyon bakış.</h2></div>
+        <p>Her figür bir sesi temsil eder. Sonuç tek bir ortalama değil, bu seslerin karşılaştırmalı okumasıdır.</p>
+      </div>
+      <div class="people-band" data-reveal>
+        <div class="crowd" data-crowd aria-hidden="true"></div>
+        <p class="people-band__note">Figürler temsilidir, veri göstermez</p>
+      </div>
     </div>
   </section>
 
+  <section class="section tone-sky" id="gorunumler">
+    <div class="wrap">
+      <div data-reveal>
+        <p class="eyebrow eyebrow--rule">İki görünüm</p>
+        <h2 class="display">İki soru, iki farklı<br>okuma biçimi</h2>
+      </div>
+      <div class="duo">
+        <article class="duo__card" data-reveal>
+          <div class="duo__top"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg></span><span class="duo__n">01</span></div>
+          <h3>Senaryo görünümü</h3>
+          <p>Bir şokun ya da politikanın tutumları ne yöne kaydırdığını gösterir: senaryo ve placebo kolları yan yana, personasız model gri referans olarak, alt gruplar yalnızca ok yönleriyle.</p>
+          <a class="btn btn--outline btn--sm" href="/giris">Senaryoyu incele <span class="ar" aria-hidden="true">→</span></a>
+        </article>
+        <article class="duo__card duo__card--accent" data-reveal style="--d:.08s">
+          <div class="duo__top"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg></span><span class="duo__n">02</span></div>
+          <h3>Doğrulama görünümü</h3>
+          <p>“Bu sonuçlara ne kadar güvenebiliriz?” sorusunu yanıtlar: gerçek anket, motor, personasız model ve iki temel model aynı soruda; her biri için TVD ve sıralama uyumu.</p>
+          <a class="btn btn--dark btn--sm" href="/giris">Doğrulamayı incele <span class="ar" aria-hidden="true">→</span></a>
+        </article>
+      </div>
+      <ul class="features" data-reveal>
+        <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 4l8 4.5-8 4.5-8-4.5zM4 13l8 4.5 8-4.5"/></svg></span><h3>Uyarılar olduğu gibi</h3><p>Doğrulama ekibinin her uyarısı, kelimesi kelimesine ve yanıtın en üstünde gösterilir.</p></li>
+        <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 19V9M10 19V5M15 19v-7M20 19v-4"/></svg></span><h3>Gürültü tabanı</h3><p>Etki her zaman aynı ayarın kendi oynaklığıyla birlikte okunur.</p></li>
+        <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M9 9.5v10"/></svg></span><h3>Model karşılaştırması</h3><p>Aynı deney farklı dil modelleriyle tekrarlanır; ayrıştıkları yer açıkça işaretlenir.</p></li>
+        <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 5h10l4 4v10H5zM14 5v5h5M8 13h8M8 16.5h5"/></svg></span><h3>Çalıştırma detayı</h3><p>Her sonuçtan, onu üreten çalıştırmaya inilir: model, seed, persona seti özeti, seçenek sırası.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section tone-mist" id="nasil">
+    <div class="wrap">
+      <div class="steps__head" data-reveal>
+        <div><p class="eyebrow eyebrow--rule">Dört adımda</p><h2 class="display">Senaryodan sonuca</h2></div>
+        <p class="muted">Gerçek anketin yerini almaz. Karar öncesi kör noktaları görünür kılar.</p>
+      </div>
+      <ol class="steps" data-reveal>
+        <li><span class="n">01</span><h3>Persona seti</h3><p>WVS-7 Türkiye yanıtları, nüfus marjlarına göre ağırlıklandırılarak sabit bir sentetik topluma dönüştürülür.</p></li>
+        <li><span class="n">02</span><h3>Senaryo ve kollar</h3><p>Senaryo metni bir kola, ilgisiz placebo metni diğerine verilir; personasız model referans olarak çalışır.</p></li>
+        <li><span class="n">03</span><h3>Gürültüyü ayır</h3><p>Kollar arasındaki fark, aynı ayarın tekrarındaki oynaklıkla karşılaştırılır.</p></li>
+        <li><span class="n">04</span><h3>Doğrula ve oku</h3><p>Gerçek anket sorularındaki isabet, uyarılar ve çalıştırma detayları tek ekranda.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap cta-band__in" data-reveal>
+      <div>
+        <p class="eyebrow">Perspectome</p>
+        <h2 class="display">Senaryonu anlatmadan<br>önce test et.</h2>
+        <p>Kolları karşılaştır, gürültüyü ayıkla ve sonucun gerçek veriye ne kadar yakın olduğunu dakikalar içinde gör.</p>
+      </div>
+      <a class="btn btn--dark" href="/giris">Panele gir <span class="ar" aria-hidden="true">→</span></a>
+    </div>
+  </section>
 </main>
 
 <footer class="footer">
-  <div class="footer__inner">
-    <div class="footer__id"><span class="logo"><span class="logo__dot" aria-hidden="true"></span>Perspectome</span>
-      <p>Açık kaynak araştırma projesi. Model tabanlı simülasyon; gerçek kişileri ya da nüfustaki kesin oranları göstermez.</p></div>
-    <ul>
-      <li><a href="#proje">Proje</a></li>
-      <li><a href="#neler">Neler yapıyoruz</a></li>
-        <li><a href="/giris">Giriş</a></li>
-      <li><a href="/giris?mod=kayit">Hesap oluştur</a></li>
-    </ul>
+  <div class="wrap footer__in">
+    <div class="footer__id">
+      <span class="logo"><svg class="logo__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="3"/><rect x="13" y="2" width="9" height="9" rx="4.5"/><rect x="2" y="13" width="9" height="9" rx="4.5"/><rect class="dim" x="13" y="13" width="9" height="9" rx="3"/></svg>Perspectome</span>
+      <p>Türkiye için yapay toplum laboratuvarı · açık kaynak araştırma projesi</p>
+    </div>
+    <nav aria-label="Alt menü"><a href="#gorunumler">İki görünüm</a><a href="#nasil">Nasıl çalışır</a><a href="/giris">Giriş</a><a href="/giris?mod=kayit">Hesap oluştur</a></nav>
   </div>
-  <div class="footer__row"><span>© 2026 Perspectome</span><span>Harita: Natural Earth (kamu malı)</span></div>
+  <div class="wrap footer__row"><span>© 2026 Perspectome · Model tabanlı simülasyon; gerçek kişileri ya da nüfustaki kesin oranları göstermez.</span><span>Video: Mixkit (ücretsiz lisans)</span></div>
 </footer>
-<script>window.TR = {{turkey}};</script>
-<script src="/static/people.js?v=16" defer></script>
-<script src="/static/hero.js?v=16" defer></script>
-<script src="/static/home.js?v=16" defer></script>
+<script src="/static/people.js?v=22" defer></script>
+<script src="/static/home.js?v=22" defer></script>
 </body>
 </html>
