@@ -10,7 +10,6 @@
       "methods": {
         "engine":            {"distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13}, "tvd": 0.07},
         "vanilla":           {"distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}, "tvd": 0.50},
-        "equation_baseline": {"distribution": {"a_great_deal": 0.15, "quite_a_lot": 0.45, "not_very_much": 0.30, "none": 0.10}, "tvd": 0.15},
         "ml_baseline":       {"distribution": {"a_great_deal": 0.17, "quite_a_lot": 0.45, "not_very_much": 0.25, "none": 0.13}, "tvd": 0.10}
       },
       "models": {"mock-0": {"tvd": 0.07}}
