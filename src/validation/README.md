@@ -101,7 +101,6 @@ and Track A's `heldout.csv` (see [`../personas/README.md`](../personas/README.md
       "methods": {
         "engine":            {"distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13}, "tvd": 0.07},
         "vanilla":           {"distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}, "tvd": 0.50},
-        "equation_baseline": {"distribution": {"...": 0}, "tvd": 0.12},
         "ml_baseline":       {"distribution": {"...": 0}, "tvd": 0.09}
       },
       "models": {"<model_snapshot>": {"tvd": 0.07}}
@@ -132,6 +131,38 @@ and Track A's `heldout.csv` (see [`../personas/README.md`](../personas/README.md
 `real` appears only for probes. Scenarios carry effects, never absolute
 shares. A sample is in [`fixtures/`](fixtures/) — fabricated numbers.
 
+The builder also writes these **additive** keys (Track D may ignore them):
+
+| Where | Key | Meaning |
+|---|---|---|
+| probe | `role` | `"fit"` or `"test"` from `schema.HELDOUT_ROLE`; pass/fail uses test items only |
+| probe | `ordinal`, `n_real`, `n_eff_real` | scale type, real respondents, Kish effective n |
+| probe method | `calibration_error` | mean absolute share gap per option |
+| probe method | `wasserstein` | ordinal items only: earth mover's distance on the scale, 0–1 |
+| `rank_agreement` | `items` | which probe items the tau was computed on |
+| scenario | `option_of_interest` | option used for saturation, MDD and subgroup tests |
+| scenario | `minimum_detectable_difference` | smallest effect detectable at α=.05, power .8 |
+
+There is **no `equation_baseline` inside probes**: a probe has no shock, so
+an ODE has no input to work with. The equation baseline is scenario-only
+(`equation_baseline_effect`); ML is the probe baseline.
+
+## How to run
+
+```bash
+python -m src.validation.report              # results/*.json + data/processed/* if present, else fixtures
+python -m src.validation.report --fixtures   # force fixture inputs
+python -m pytest src/validation              # statistics core, baselines, report
+```
+
+Output goes to `reports/comparison.json` (`--out` to change). Code map:
+`metrics.py` (TVD, calibration error, Wasserstein, Kendall tau-b, Kish n_eff,
+BH, MDD, saturation), `real.py` (weighted held-out distributions — the only
+place held-out data is joined to personas), `baselines.py` (cross-fitted
+multinomial regression; closed-form ODE), `equation_params.yaml`
+(pre-registered equation priors per scenario), `report.py` (the builder).
+Pass/fail thresholds: [`findings.md` F-1](../../docs/findings.md).
+
 ## Don't wait for anyone
 
 Build against [`../simulation/fixtures/`](../simulation/fixtures/) (one
@@ -142,10 +173,10 @@ shouldn't need to change, only its inputs.
 
 ## Definition of done
 
-- [ ] Signed off Track A's conditioning vs. held-out item lists
-- [ ] TVD, calibration error, rank agreement, effect vs. placebo — tested against hand-computed values
-- [ ] Noise floor, saturation screen, minimum detectable difference, BH + small-cell flags
-- [ ] Equation-based and ML baselines producing comparable output
-- [ ] `comparison.json` matching the schema above, generated from the fixtures
-- [ ] Pass/fail thresholds written in `findings.md` before the first real run
+- [x] Signed off Track A's conditioning vs. held-out item lists
+- [x] TVD, calibration error, rank agreement, effect vs. placebo — tested against hand-computed values
+- [x] Noise floor, saturation screen, minimum detectable difference, BH + small-cell flags
+- [x] Equation-based and ML baselines producing comparable output
+- [x] `comparison.json` matching the schema above, generated from the fixtures
+- [x] Pass/fail thresholds written in `findings.md` before the first real run
 - [ ] End-to-end report on real A + B outputs, at least two models
