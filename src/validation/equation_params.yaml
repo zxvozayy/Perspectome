@@ -1,0 +1,30 @@
+# Equation-baseline priors per scenario (see baselines.py). Written down BEFORE
+# any real run (methodology rule 9) and never tuned on engine output. They are
+# deliberately simple, literature-direction assumptions -- the point of this
+# baseline is to be the boring, honest comparison, not to be right.
+#
+#   target_option : option the shock pushes the population toward
+#   intensity     : s in [0, 1], share of the distance to the target covered at equilibrium
+#   rate          : lambda, adjustment speed per deliberation round
+#   rationale     : why this direction, with a source
+
+unemployment_shock_v1:
+  target_option: support
+  intensity: 0.10
+  rate: 1.0
+  rationale: >
+    Demand for government intervention and redistribution rises when
+    unemployment rises (economic-insecurity literature, e.g. Margalit 2019,
+    "Economic Insecurity and the Causes of Populism, Reconsidered", JEP).
+    Intensity kept small: one-shot information treatments in survey
+    experiments typically move policy support by single-digit points.
+
+ai_adoption_v1:
+  target_option: oppose
+  intensity: 0.05
+  rate: 1.0
+  rationale: >
+    Automation-risk information tends to lower support for workplace
+    automation and raise worry about job loss (e.g. Pew Research Center,
+    "AI in Hiring and Evaluating Workers", 2023). The policy text promises
+    retraining, so the assumed push is half the unemployment one.
