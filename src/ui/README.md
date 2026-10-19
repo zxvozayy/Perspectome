@@ -97,7 +97,9 @@ shows a "Fixture verisi" badge. Point it at real output with
 
 Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
 the server), `answers.py` (question → run), `auth.py`, `store.py`, `web/`
-(pages, CSS, a few lines of JS, fonts: Playfair Display and Manrope, OFL).
+(pages, CSS, a few lines of JS, `people.js` for the walking people band, IBM Plex
+Sans font (OFL), and `media/tanitim.mp4`, the intro video: a network of connected
+points, from Mixkit under its free licence).
 
 ## Definition of done
 

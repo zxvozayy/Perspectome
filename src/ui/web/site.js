@@ -1,21 +1,15 @@
-// Perspectome — small interaction layer for the intro page. No cookies, storage or tracking.
+// Perspectome — sign-in page and panel chrome. Only the theme choice is stored (localStorage); no cookies or tracking.
 (() => {
-  // Sections fade in once as they enter the viewport.
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
-  }, { rootMargin: "0px 0px -10% 0px", threshold: .06 });
-  document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+  const root = document.documentElement;
 
-  // The hero light only moves while the hero is on screen.
-  const hero = document.querySelector(".hero, .auth-side");
-  if (hero) new IntersectionObserver(([e]) => hero.classList.toggle("is-off", !e.isIntersecting)).observe(hero);
+  // Theme: light by default in the app, the choice is remembered.
+  document.querySelectorAll('.theme-toggle').forEach((b) => b.addEventListener('click', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('pt-app-theme', next); } catch (e) {}
+  }));
 
-  // Menu: underline the section in view.
-  const links = [...document.querySelectorAll('.menu ul a[href^="#"]')];
-  const spy = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting) {
-      links.forEach((a) => a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + e.target.id)));
-    }
-  }, { rootMargin: "-45% 0px -50% 0px" });
-  links.forEach((a) => { const s = document.querySelector(a.getAttribute("href")); if (s) spy.observe(s); });
+  // Side video on the sign-in page: never with reduced motion.
+  const video = document.querySelector('.auth-side video');
+  if (video && !matchMedia('(prefers-reduced-motion: reduce)').matches) video.play().catch(() => {});
 })();
