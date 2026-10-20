@@ -139,7 +139,7 @@ The builder also writes these **additive** keys (Track D may ignore them):
 | probe | `ordinal`, `n_real`, `n_eff_real` | scale type, real respondents, Kish effective n |
 | probe method | `calibration_error` | mean absolute share gap per option |
 | probe method | `wasserstein` | ordinal items only: earth mover's distance on the scale, 0–1 |
-| `rank_agreement` | `items` | which probe items the tau was computed on |
+| `rank_agreement` | `items`, `scales` | items the headline tau used; every same-scale group with its own tau (items are never ranked across answer scales) |
 | scenario | `option_of_interest` | option used for saturation, MDD and subgroup tests |
 | scenario | `minimum_detectable_difference` | smallest effect detectable at α=.05, power .8 |
 

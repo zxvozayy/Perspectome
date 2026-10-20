@@ -39,11 +39,17 @@ Newest at the bottom. Write the success criterion **before** the run
     answers; landing within 5 points of that ceiling is the realistic target.
     Reported, not required for a pass.
   - **P3 — rankings survive.** Kendall tau-b between real and engine orderings
-    of the test items (by mean scale position) is at least 0.6, and higher
-    than vanilla's tau. Rankings, not shares, are what we claim (rule 1). With
-    6 items tau >= 0.733 is needed for one-sided p < .05 (exact permutation
-    test: n=6 -> 0.733, n=7 -> 0.619, n=8 -> 0.571), so 0.6 is reported as
-    "directional", 0.733+ as "significant".
+    (by mean scale position) is at least 0.6, and higher than vanilla's tau.
+    Rankings, not shares, are what we claim (rule 1). Items are ranked only
+    against items on the same answer scale: the four 1–10 test items
+    (life_satisfaction, competition, political_leaning, financial_satisfaction)
+    form the scored group; the trust battery (4-point, only 2 test items) is
+    reported as a development check. With 4 items only tau = 1 reaches
+    one-sided p < .05 (exact permutation test: n=4 -> 1.0, n=5 -> 0.8,
+    n=6 -> 0.733), so 0.6 is reported as "directional", 1.0 as "significant".
+    *Revised 2026-10-21, before any real run: the first version ranked all six
+    ordinal test items together, mixing 4-point and 1–10 scales, whose mean
+    positions aren't comparable.*
   - **P4 — two models agree.** P1 and P3 hold for at least two model
     snapshots (rule 14); where they disagree, the result is "model-dependent",
     not a pass.
