@@ -62,3 +62,25 @@ Newest at the bottom. Write the success criterion **before** the run
   Wasserstein distance, which recent survey-simulation papers report next to
   TVD. If Wasserstein and TVD disagree on P1, both are reported and P1 is
   judged on TVD as registered here.
+
+### F-2 — Real persona set: calibration and weight cost  (2026-10-21, Hasan)
+- Question: how well does the frozen persona set match the population margins,
+  and what do the post-stratification weights cost?
+- Success criterion (written before running): every raked margin within 1 pp of
+  its target; Kish n_eff reported next to n.
+- Config: `python -m src.personas.generator --seed 0`, WVS-7 Turkey v6 (n=2,415),
+  Eurostat 2024 margins (age band, gender, NUTS-1 region, education), raking on
+  four one-way margins. persona_set_hash
+  `sha256:30961ad5ebfcda7a838e416dbb60250b0333caef61940283f5945723f109bc67`.
+- Result: max calibration error 0.0000 pp on all four margins. Kish n_eff 1,022
+  of 2,415 (42%); weights 0.52–16.36. The 65+ band has only 30 respondents, each
+  carrying a mean weight of 11.1; every other band has 369–584 respondents with
+  mean weights 0.71–1.03. 35 archetype cells (age × gender × education), 9 with
+  fewer than 30 personas. 10 personas have no cell (a cell-defining field missing)
+  and are left out of simulation runs.
+- Status: valid
+- Notes: anything said about the 65+ band rests on 30 people; report it as such
+  or merge 55–64 and 65+ for subgroup tests. Margins match by construction, so
+  this is a check on the raking, not evidence that the joint distribution is
+  right. Eurostat re-publishes TÜİK figures; still to verify against TÜİK's own
+  tables.
