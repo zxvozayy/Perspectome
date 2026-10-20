@@ -62,6 +62,8 @@ Shared ground for all tracks:
 - [`docs/findings.md`](docs/findings.md) — every measurement, the day it runs.
 - [`src/common/schema.py`](src/common/schema.py) — the one place category
   values and field lists are defined.
+- [`docs/database.md`](docs/database.md) — the shared PostgreSQL database:
+  who can read what, setup, and the push/pull commands for each track.
 
 ## Status
 
