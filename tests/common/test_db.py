@@ -64,6 +64,12 @@ def test_user_url_swaps_login_and_keeps_host():
     assert url == "postgresql://hasan.abcdref:abc123@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
 
 
+def test_clean_url_drops_prisma_params_only():
+    url = ADMIN.replace(":5432", ":6543") + "?pgbouncer=true&sslmode=require"
+    assert db.clean_url(url) == ADMIN.replace(":5432", ":6543") + "?sslmode=require"
+    assert db.clean_url(ADMIN) == ADMIN
+
+
 def test_redact_hides_password():
     assert "s3cret" not in db.redact(ADMIN) and "***" in db.redact(ADMIN)
 

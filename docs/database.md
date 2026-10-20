@@ -35,9 +35,10 @@ simulation" invariant, enforced by the database.
 
 3. Check it: `python -m src.common.db status` shows your user and what you can read.
 
-Use the **session pooler** address (port 5432 on `pooler.supabase.com`). The
-"direct connection" address is IPv6-only on the free plan and fails on most
-home networks.
+Use a **pooler** address on `pooler.supabase.com` — session (port 5432) or
+transaction (port 6543) both work; `db.py` turns off prepared statements on
+6543 and drops Prisma-style `?pgbouncer=true`. The "direct connection"
+address is IPv6-only on the free plan and fails on most home networks.
 
 ## Daily use
 

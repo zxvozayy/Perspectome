@@ -82,11 +82,27 @@ def redact(url: str) -> str:
     return urlunsplit(parts._replace(netloc=netloc))
 
 
+TRANSACTION_POOLER_PORT = 6543
+# Query parameters some tools add to Supabase URLs that libpq doesn't know.
+_NON_LIBPQ_PARAMS = {"pgbouncer", "connection_limit", "pool_timeout", "schema"}
+
+
+def clean_url(url: str) -> str:
+    """Drop non-libpq query parameters (e.g. Prisma's ?pgbouncer=true)."""
+    parts = urlsplit(url)
+    kept = [q for q in parts.query.split("&")
+            if q and q.split("=", 1)[0].lower() not in _NON_LIBPQ_PARAMS]
+    return urlunsplit(parts._replace(query="&".join(kept)))
+
+
 def connect(url: Optional[str] = None):
     import psycopg  # optional dependency: pip install "psycopg[binary]"
+    url = clean_url(url or database_url())
+    # Supabase's transaction pooler (port 6543) can't keep prepared statements.
+    kwargs = {"prepare_threshold": None} if urlsplit(url).port == TRANSACTION_POOLER_PORT else {}
     try:
-        return psycopg.connect(url or database_url(), connect_timeout=15)
-    except psycopg.OperationalError as e:
+        return psycopg.connect(url, connect_timeout=15, **kwargs)
+    except psycopg.Error as e:
         # psycopg errors can echo the DSN; never let the password reach a log.
         raise RuntimeError(f"Could not connect to the database: {redact(str(e))}") from None
 
