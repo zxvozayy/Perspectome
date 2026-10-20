@@ -1,16 +1,17 @@
 """End-to-end demo: personas -> simulation -> validation report -> dashboard.
 
-    python -m src.demo            # mock model, no API key, no cost
+    python -m src.demo            # fixtures, mock model, no API key, no cost
+    python -m src.demo --real     # Track A's real personas under data/processed/
     python -m src.ui.server       # then open http://localhost:8501
 
-Uses Track A's real persona files if they exist under data/processed/,
-otherwise the fabricated fixtures. Every scenario and probe runs at two seeds
+Runs on the fabricated fixtures unless --real is given. Every scenario and probe runs at two seeds
 so the noise floor is measured, then Track C's report is written to
 reports/comparison.json, where Track D's site picks it up.
 """
 
 from __future__ import annotations
 
+import argparse
 import contextlib
 import json
 import io
@@ -26,11 +27,17 @@ SEEDS = (1, 2)
 
 
 def main():
-    personas = Path("data/processed/personas.csv")
-    heldout = Path("data/processed/heldout.csv")
-    fixtures = not (personas.exists() and heldout.exists())
-    if fixtures:
-        personas, heldout = real.PERSONAS_FIXTURE, real.HELDOUT_FIXTURE
+    ap = argparse.ArgumentParser(description="End-to-end demo on fixtures (default) or real personas.")
+    ap.add_argument("--real", action="store_true", help="use data/processed/personas.csv and heldout.csv")
+    args = ap.parse_args()
+
+    personas, heldout = real.PERSONAS_FIXTURE, real.HELDOUT_FIXTURE
+    fixtures = True
+    if args.real:
+        personas, heldout = Path("data/processed/personas.csv"), Path("data/processed/heldout.csv")
+        if not (personas.exists() and heldout.exists()):
+            raise SystemExit("No real persona files under data/processed/ (pull them: python -m src.common.db pull-personas).")
+        fixtures = False
 
     RESULTS.mkdir(exist_ok=True)
     for old in RESULTS.glob("*.json"):

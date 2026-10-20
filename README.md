@@ -79,8 +79,9 @@ python -m src.ui.server     # dashboard on http://localhost:8501
 python -m pytest            # all tests
 ```
 
-Without Track A's real data on disk the demo runs on the fabricated fixtures,
-and the dashboard says so.
+The demo runs on the fabricated fixtures, and the dashboard says so.
+`python -m src.demo --real` uses the real persona set under `data/processed/`
+(pull it with `python -m src.common.db pull-personas`).
 
 ## Status
 
