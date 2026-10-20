@@ -1,8 +1,13 @@
 """Three-round simulation engine.
 
-Round 1 — independent stance (LLM query per archetype cell).
-Round 2 — Friedkin-Johnsen numerical update in code (no LLM calls).
-Round 3 — settle: sample final choice from updated distributions.
+Round 1 — independent stance: the LLM is queried once per archetype cell and
+          every persona starts from its cell's answer distribution.
+Rounds 2..n — Friedkin–Johnsen update in code (no LLM calls), on probability
+          vectors: x(t+1) = s * x(0) + (1 - s) * mean(neighbours' x(t)).
+
+Opinions stay probability vectors throughout; nothing is sampled. The
+population result is the weighted mean of the final vectors (aggregator.py),
+which is less noisy than counting one sampled choice per persona.
 """
 
 from __future__ import annotations
@@ -25,147 +30,87 @@ def run_round_1(
 ) -> dict[str, dict[str, float]]:
     """Query the model once per cell_id.
 
-    Returns {cell_id: {option: probability}}.
+    Returns {cell_id: {option: probability}}. The model returns probabilities
+    keyed by option name, so the displayed (possibly reversed) order doesn't
+    matter here.
     """
     distributions: dict[str, dict[str, float]] = {}
     for entry in prompts:
-        cell_id = entry["cell_id"]
-        options = entry["options_order"]
-        dist = model.query(entry["prompt"], options, n_repeats, seed)
-        # Normalise keys back to canonical option names (in case of reversal
-        # the model returns probabilities keyed by the displayed order, but
-        # we always store in canonical order).
-        distributions[cell_id] = dist
+        distributions[entry["cell_id"]] = model.query(entry["prompt"], entry["options_order"], n_repeats, seed)
     return distributions
 
 
-def assign_personas_round_1(
+def initial_vectors(
     personas: pd.DataFrame,
     cell_distributions: dict[str, dict[str, float]],
     options: list[str],
-    seed: int,
-) -> pd.DataFrame:
-    """Sample a concrete choice for each persona from their cell's distribution."""
-    rng = np.random.default_rng(seed)
-    df = personas.copy()
-    choices = []
-    for _, row in df.iterrows():
-        dist = cell_distributions[row["cell_id"]]
-        probs = np.array([dist.get(opt, 0.0) for opt in options])
-        probs = probs / probs.sum()  # safety normalise
-        choice = rng.choice(options, p=probs)
-        choices.append(choice)
-    df["round_1_choice"] = choices
-    return df
+) -> np.ndarray:
+    """Each persona's round-1 opinion: its cell's distribution, shape (n, k)."""
+    out = np.empty((len(personas), len(options)))
+    for i, cell in enumerate(personas["cell_id"].to_numpy()):
+        dist = cell_distributions[cell]
+        v = np.array([dist.get(opt, 0.0) for opt in options], dtype=float)
+        out[i] = v / v.sum() if v.sum() > 0 else 1.0 / len(options)
+    return out
 
 
 # ---------------------------------------------------------------------------
-# Round 2 — Friedkin-Johnsen update
+# Rounds 2..n — Friedkin–Johnsen update
 # ---------------------------------------------------------------------------
 
-def _age_band_index(band: str) -> int:
-    return AGE_BANDS.index(band)
+def _neighbour_groups(personas: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """Group index per persona (region x age band) and each group's band index."""
+    regions = personas["region"].astype("string").fillna("__unknown__").to_numpy()
+    bands = personas["age_band"].map(lambda b: AGE_BANDS.index(b) if b in AGE_BANDS else -10).to_numpy()
+    keys = pd.Series(list(zip(regions, bands)))
+    codes, uniques = pd.factorize(keys)
+    return codes, uniques
 
 
-def _are_adjacent(band_a: str, band_b: str) -> bool:
-    return abs(_age_band_index(band_a) - _age_band_index(band_b)) <= 1
-
-
-def _choice_to_soft_vector(choice: str, options: list[str], epsilon: float = 0.02) -> np.ndarray:
-    """Convert a discrete choice to a softened probability vector."""
-    k = len(options)
-    vec = np.full(k, epsilon)
-    idx = options.index(choice)
-    vec[idx] = 1.0 - epsilon * (k - 1)
-    return vec
-
-
-def run_round_2_fj(
+def run_fj(
     personas: pd.DataFrame,
-    options: list[str],
+    x0: np.ndarray,
     stubbornness: float = 0.6,
-    seed: int = 42,
-) -> pd.DataFrame:
-    """Friedkin-Johnsen numerical update.
+    steps: int = 1,
+) -> np.ndarray:
+    """Friedkin–Johnsen update on probability vectors, vectorized.
 
-    Each persona's opinion is a probability vector over options.
-    Neighbours share the same region and have adjacent age bands.
-    Update: x_new = s * x_initial + (1 - s) * mean(neighbours).
-    Clamped so no option exceeds the range of initial opinions in the
-    neighbourhood.
+    Neighbours share the same region and an adjacent (or the same) age band.
+    Each step: x(t+1) = s * x0 + (1 - s) * mean of neighbours' x(t), the
+    persona itself excluded. A persona with no neighbours keeps x0. Results
+    are clipped to the range of initial opinions in the neighbourhood and
+    re-normalised, so updates never invent opinions nobody held.
     """
-    df = personas.copy()
+    n, k = x0.shape
+    codes, uniques = _neighbour_groups(personas)
+    g = len(uniques)
+    # members of group a are neighbours of group b when same region and |band diff| <= 1
+    adj = np.zeros((g, g), dtype=bool)
+    for a, (ra, ba) in enumerate(uniques):
+        for b, (rb, bb) in enumerate(uniques):
+            adj[a, b] = ra == rb and abs(ba - bb) <= 1 and ba >= 0 and bb >= 0
+    member = np.zeros((g, n))
+    member[codes, np.arange(n)] = 1.0
+    hood = adj.astype(float) @ member            # (g, n): 1 if persona j is in group a's neighbourhood
+    hood_size = hood.sum(axis=1)[codes] - 1.0      # neighbours per persona, self excluded
 
-    # Build initial position vectors.
-    positions = np.array([
-        _choice_to_soft_vector(row["round_1_choice"], options)
-        for _, row in df.iterrows()
-    ])
+    # neighbourhood range of initial opinions (self included)
+    lo = np.empty((g, k))
+    hi = np.empty((g, k))
+    for a in range(g):
+        mask = hood[a] > 0
+        if mask.any():
+            lo[a], hi[a] = x0[mask].min(axis=0), x0[mask].max(axis=0)
+        else:  # unknown age band: no neighbourhood, nothing to clip against
+            lo[a], hi[a] = 0.0, 1.0
+    lo, hi = lo[codes], hi[codes]
 
-    initial_positions = positions.copy()
-    n = len(df)
-
-    # Precompute neighbourhood indices.
-    regions = df["region"].values
-    age_bands = df["age_band"].values
-    neighbours: list[list[int]] = [[] for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            if i != j and regions[i] == regions[j] and _are_adjacent(age_bands[i], age_bands[j]):
-                neighbours[i].append(j)
-
-    # Single FJ update step.
-    updated = np.empty_like(positions)
-    for i in range(n):
-        if neighbours[i]:
-            neighbour_mean = initial_positions[neighbours[i]].mean(axis=0)
-            updated[i] = stubbornness * initial_positions[i] + (1 - stubbornness) * neighbour_mean
-        else:
-            # Singleton — no neighbours, stays at initial position.
-            updated[i] = initial_positions[i]
-
-    # Clamp to convex hull of neighbourhood initial opinions.
-    for i in range(n):
-        if neighbours[i]:
-            all_in_neighbourhood = np.vstack([
-                initial_positions[neighbours[i]],
-                initial_positions[i:i+1],
-            ])
-            lo = all_in_neighbourhood.min(axis=0)
-            hi = all_in_neighbourhood.max(axis=0)
-            updated[i] = np.clip(updated[i], lo, hi)
-
-    # Re-normalise to valid probability distributions.
-    row_sums = updated.sum(axis=1, keepdims=True)
-    row_sums[row_sums == 0] = 1.0
-    updated = updated / row_sums
-
-    df["round_2_distribution"] = [
-        {opt: float(updated[i, j]) for j, opt in enumerate(options)}
-        for i in range(n)
-    ]
-
-    return df
-
-
-# ---------------------------------------------------------------------------
-# Round 3 — settle
-# ---------------------------------------------------------------------------
-
-def run_round_3_settle(
-    personas: pd.DataFrame,
-    options: list[str],
-    seed: int,
-) -> pd.DataFrame:
-    """Sample each persona's final choice from their round-2 distribution."""
-    rng = np.random.default_rng(seed + 1)  # offset to avoid reusing R1 seed
-    df = personas.copy()
-    choices = []
-    for _, row in df.iterrows():
-        dist = row["round_2_distribution"]
-        probs = np.array([dist[opt] for opt in options])
-        probs = probs / probs.sum()
-        choice = rng.choice(options, p=probs)
-        choices.append(choice)
-    df["final_choice"] = choices
-    return df
+    x = x0.copy()
+    has_nb = hood_size > 0
+    for _ in range(max(steps, 0)):
+        sums = (hood @ x)[codes] - x               # neighbours' sum, self excluded
+        mean = np.where(has_nb[:, None], sums / np.maximum(hood_size, 1)[:, None], x0)
+        x = stubbornness * x0 + (1 - stubbornness) * mean
+        x = np.clip(x, lo, hi)
+        x = x / x.sum(axis=1, keepdims=True)
+    return x

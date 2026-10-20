@@ -23,31 +23,17 @@ from src.simulation.loader import (
     persona_set_hash,
 )
 from src.simulation.model import MockModel, OpenAIModel
-from src.simulation.prompt import build_prompts_for_arm
-from src.simulation.rounds import (
-    assign_personas_round_1,
-    run_round_1,
-    run_round_2_fj,
-    run_round_3_settle,
-)
+from src.simulation.prompt import CELL_FIELDS, build_prompts_for_arm
+from src.simulation.rounds import initial_vectors, run_fj, run_round_1
 
 
 def _cell_representatives(cell_groups: dict) -> dict[str, dict]:
-    """Extract one representative row (as dict) per cell for prompt building."""
-    reps = {}
-    for cell_id, sub_df in cell_groups.items():
-        row = sub_df.iloc[0]
-        reps[cell_id] = {
-            "age_band": row["age_band"],
-            "gender": row["gender"],
-            "education_level": row["education_level"],
-            "region": row["region"],
-            "settlement_type": row["settlement_type"],
-            "marital_status": row["marital_status"],
-            "employment_status": row["employment_status"],
-            "income_decile": row["income_decile"],
-        }
-    return reps
+    """The fields that define each cell (identical for every member).
+
+    Other fields (region, income, ...) differ inside a cell, so taking one
+    member's value would describe that member, not the cell.
+    """
+    return {cell_id: {f: sub_df.iloc[0][f] for f in CELL_FIELDS} for cell_id, sub_df in cell_groups.items()}
 
 
 def _run_arm(
@@ -59,36 +45,26 @@ def _run_arm(
     seed: int,
     n_repeats: int,
     stubbornness: float,
+    n_rounds: int,
 ) -> dict:
-    """Run the full three-round pipeline for one arm."""
+    """Round 1 per cell, then Friedkin–Johnsen for rounds 2..n_rounds."""
     options = scenario["options"]
-
-    # Build prompts for this arm.
     prompts = build_prompts_for_arm(
         arm=arm,
         scenario=scenario,
         cell_representatives=cell_reps if arm != "vanilla" else {"__vanilla__": {}},
         reverse_half=True,
     )
-
-    # For vanilla: all personas map to the single vanilla cell.
-    if arm == "vanilla":
-        cell_dists = run_round_1(model, prompts, n_repeats, seed)
-        # All personas get the vanilla distribution.
-        vanilla_dist = cell_dists["__vanilla__"]
-        cell_dists_mapped = {cid: vanilla_dist for cid in personas["cell_id"].unique()}
-
-        df = assign_personas_round_1(personas, cell_dists_mapped, options, seed)
-        df = run_round_2_fj(df, options, stubbornness, seed)
-        df = run_round_3_settle(df, options, seed)
-        return aggregate_arm(df, options, include_subgroups=False)
-
-    # Treatment / placebo.
     cell_dists = run_round_1(model, prompts, n_repeats, seed)
-    df = assign_personas_round_1(personas, cell_dists, options, seed)
-    df = run_round_2_fj(df, options, stubbornness, seed)
-    df = run_round_3_settle(df, options, seed)
-    return aggregate_arm(df, options, include_subgroups=True)
+
+    if arm == "vanilla":
+        # The model's own prior: one answer for everyone, no persona, no deliberation.
+        x = initial_vectors(personas.assign(cell_id="__vanilla__"), cell_dists, options)
+        return aggregate_arm(personas, x, options, include_subgroups=False)
+
+    x0 = initial_vectors(personas, cell_dists, options)
+    x = run_fj(personas, x0, stubbornness, steps=n_rounds - 1)
+    return aggregate_arm(personas, x, options, include_subgroups=True)
 
 
 def run_simulation(
@@ -101,6 +77,7 @@ def run_simulation(
     max_calls: int = 200,
     n_repeats: int = 5,
     stubbornness: float = 0.6,
+    n_rounds: int = 3,
 ) -> dict:
     """Run the full simulation and return the result dict.
 
@@ -110,6 +87,11 @@ def run_simulation(
     personas = load_personas(personas_path)
     scenario = load_scenario(scenario_path)
     p_hash = persona_set_hash(personas_path)
+
+    # A persona without a cell (a cell-defining field missing) can't be queried.
+    no_cell = personas["cell_id"].isna()
+    n_excluded = int(no_cell.sum())
+    personas = personas[~no_cell].reset_index(drop=True)
 
     # Select model.
     if live:
@@ -139,6 +121,7 @@ def run_simulation(
             seed=seed,
             n_repeats=n_repeats,
             stubbornness=stubbornness,
+            n_rounds=n_rounds,
         )
 
     # Probes have placebo = null.
@@ -156,7 +139,8 @@ def run_simulation(
         seed=seed,
         persona_set_hash=p_hash,
         option_order="reversed_half",
-        n_rounds=3,
+        n_rounds=n_rounds,
+        extra_metadata={"n_excluded_no_cell": n_excluded, "model_stats": model.summary()},
     )
 
     # Write output.

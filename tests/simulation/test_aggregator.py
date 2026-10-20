@@ -1,59 +1,48 @@
 """Tests for src.simulation.aggregator."""
 
+import numpy as np
 import pandas as pd
 
 from src.simulation.aggregator import aggregate_arm, build_result
 
 
+ONE_HOT = np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 1.0]])
+
+
+def _df(weights=(1.0, 2.0, 1.0)):
+    return pd.DataFrame({
+        "persona_id": ["p1", "p2", "p3"],
+        "weight": list(weights),
+        "age_band": ["18-24", "18-24", "25-34"],
+        "gender": ["female", "male", "female"],
+    })
+
+
 class TestAggregateArm:
     def test_weighted_distribution(self):
-        options = ["a", "b"]
-        df = pd.DataFrame({
-            "persona_id": ["p1", "p2", "p3"],
-            "weight": [1.0, 2.0, 1.0],
-            "age_band": ["18-24", "18-24", "25-34"],
-            "final_choice": ["a", "b", "b"],
-        })
-        result = aggregate_arm(df, options)
+        result = aggregate_arm(_df(), ONE_HOT, ["a", "b"])
         # Weighted: a = 1/4 = 0.25, b = 3/4 = 0.75
         assert abs(result["response_distribution"]["a"] - 0.25) < 0.01
         assert abs(result["response_distribution"]["b"] - 0.75) < 0.01
 
-    def test_option_usage_is_raw_count(self):
-        options = ["a", "b"]
-        df = pd.DataFrame({
-            "persona_id": ["p1", "p2", "p3"],
-            "weight": [1.0, 2.0, 1.0],
-            "age_band": ["18-24", "18-24", "25-34"],
-            "final_choice": ["a", "b", "b"],
-        })
-        result = aggregate_arm(df, options)
-        assert result["option_usage"]["a"] == 1
-        assert result["option_usage"]["b"] == 2
+    def test_soft_vectors_are_averaged_not_counted(self):
+        x = np.array([[0.6, 0.4], [0.6, 0.4], [0.6, 0.4]])
+        result = aggregate_arm(_df((1.0, 1.0, 1.0)), x, ["a", "b"])
+        assert result["response_distribution"] == {"a": 0.6, "b": 0.4}
 
-    def test_subgroup_breakdown(self):
-        options = ["a", "b"]
-        df = pd.DataFrame({
-            "persona_id": ["p1", "p2", "p3"],
-            "weight": [1.0, 1.0, 1.0],
-            "age_band": ["18-24", "18-24", "25-34"],
-            "final_choice": ["a", "b", "b"],
-        })
-        result = aggregate_arm(df, options)
-        assert "by_subgroup" in result
-        assert "age_band" in result["by_subgroup"]
+    def test_option_usage_is_expected_count(self):
+        result = aggregate_arm(_df(), ONE_HOT, ["a", "b"])
+        assert result["option_usage"] == {"a": 1, "b": 2}
+
+    def test_subgroup_breakdown_by_cell_fields(self):
+        result = aggregate_arm(_df((1.0, 1.0, 1.0)), ONE_HOT, ["a", "b"])
         assert result["by_subgroup"]["age_band"]["18-24"]["n"] == 2
         assert result["by_subgroup"]["age_band"]["25-34"]["n"] == 1
+        assert result["by_subgroup"]["gender"]["female"]["distribution"] == {"a": 0.5, "b": 0.5}
+        assert "education_level" not in result["by_subgroup"]  # column absent -> skipped
 
     def test_no_subgroups_when_disabled(self):
-        options = ["a", "b"]
-        df = pd.DataFrame({
-            "persona_id": ["p1"],
-            "weight": [1.0],
-            "age_band": ["18-24"],
-            "final_choice": ["a"],
-        })
-        result = aggregate_arm(df, options, include_subgroups=False)
+        result = aggregate_arm(_df(), ONE_HOT, ["a", "b"], include_subgroups=False)
         assert "by_subgroup" not in result
 
 

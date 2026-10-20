@@ -3,6 +3,7 @@
 import tempfile
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from src.simulation.loader import (
@@ -90,3 +91,17 @@ class TestGroupByCell:
         groups = group_by_cell(df)
         # In the fixture each persona has a unique cell_id.
         assert len(groups) == 15
+
+
+class TestMissingValues:
+    def test_missing_fields_are_allowed(self, tmp_path):
+        """Track A keeps respondents with missing fields; the loader must accept them."""
+        df = pd.read_csv(FIXTURE_PERSONAS)
+        df.loc[0, "income_decile"] = None
+        df.loc[1, "employment_status"] = None
+        df.loc[2, "cell_id"] = None
+        path = tmp_path / "p.csv"
+        df.to_csv(path, index=False)
+        out = load_personas(path)
+        assert out["income_decile"].isna().sum() == 1 and str(out["income_decile"].dtype) == "Int64"
+        assert out["employment_status"].isna().sum() == 1

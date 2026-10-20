@@ -46,20 +46,35 @@ Both produce the same `results.json` shape.
   scenario), `placebo` (personas + placebo text), `vanilla` (no persona). For
   probes, `placebo` may be `null`.
 - **Query per archetype, not per persona.** Track A gives every persona a
-  `cell_id`. Ask the model once per cell (a few repeats), turn the answers
-  into a probability per option, and let each persona sample from its cell's
-  distribution ([rule 33](../../docs/methodology-rules.md)). Cost stays
-  flat as the population grows.
-- **Round 1 — independent stance:** each persona's initial answer, as above.
-- **Round 2 — update in code, not in the prompt.** Never show the model other
+  `cell_id` (age band × gender × education). Ask the model once per cell and
+  give every persona its cell's probability vector
+  ([rule 33](../../docs/methodology-rules.md)). Cost stays flat as the
+  population grows. Only the cell-defining fields describe the cell in the
+  prompt; other fields differ inside a cell. Personas without a `cell_id`
+  are left out and counted in `metadata.n_excluded_no_cell`.
+- **How the answer is read.** Options are labelled with single letters
+  (`A) support`, `B) oppose`, ...) and the model answers with one letter.
+  When the model returns token log-probabilities, one call gives the full
+  distribution over the letters (`top_logprobs`); otherwise `n_repeats`
+  answers are sampled at temperature 1. Never `temperature: 0` — it is not
+  deterministic and collapses every repeat onto one answer. Answers that
+  aren't a valid letter are counted in `metadata.model_stats.parse_failures`
+  and never assigned to an option.
+- **Round 1 — independent stance:** each persona's initial opinion is its
+  cell's probability vector. Nothing is sampled anywhere.
+- **Rounds 2..n — update in code, not in the prompt.** Never show the model other
   agents' opinions and re-ask — that produces artificial cascades toward one
-  answer. Update positions numerically (e.g. a Friedkin–Johnsen-style rule:
-  each persona moves partly toward its neighbours, anchored to its own
-  initial stance). The model may only be used to *score how strong an
-  argument is*. The update must not let a persona end up outside the range
-  of initial opinions.
-- **Round 3 — settle:** final distribution, overall and by at least one
-  subgroup (e.g. `age_band`), with the cell count `n` next to every subgroup.
+  answer. Opinions are updated numerically with Friedkin–Johnsen on the
+  probability vectors (`rounds.run_fj`): each persona moves partly toward the
+  mean of its neighbours (same region, adjacent age band), anchored to its own
+  initial stance, and never leaves the range of initial opinions in its
+  neighbourhood. The model may only be used to *score how strong an argument
+  is*.
+- **Result:** the weighted mean of the final vectors, overall and by
+  `age_band`, `gender` and `education_level` (the cell-defining fields), with
+  `n` next to every subgroup. `option_usage` is the expected number of
+  personas per option. `vanilla` is the model's raw answer with no persona and
+  no deliberation.
 - **Held-out fields are off limits.** Nothing in `heldout.csv` may influence
   generation or simulation — not even to set how much a persona shifts. Only
   the conditioning fields in `personas.csv` exist for this track.
