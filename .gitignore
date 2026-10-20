@@ -28,3 +28,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Generated pipeline output (demo / local runs; shared copies live in the database)
+/results/
+/reports/

@@ -30,9 +30,14 @@ against historical data.
 
 ## Tech stack
 
-Python, pandas/numpy/scipy, pytest. Streamlit for the dashboard. Mesa is
-available for agent-based modeling scaffolding if a track finds it useful —
-not required.
+- **Python** (pandas, numpy, PyYAML) for every track; **pytest** for tests,
+  run on every pull request by GitHub Actions.
+- **PostgreSQL** (Supabase, EU) as the shared store, with one schema and one
+  database role per track — see [`docs/database.md`](docs/database.md).
+- **Dashboard:** a small web app on the Python standard library (no frontend
+  build step).
+- **LLM:** pluggable; a deterministic mock model is the default, real models
+  only behind an explicit `--live` flag with a hard call cap.
 
 ## Team workstreams
 
@@ -65,12 +70,29 @@ Shared ground for all tracks:
 - [`docs/database.md`](docs/database.md) — the shared PostgreSQL database:
   who can read what, setup, and the push/pull commands for each track.
 
+## Quick start
+
+```bash
+pip install pandas numpy pyyaml pytest
+python -m src.demo          # personas -> simulation (mock model, 2 seeds) -> validation report
+python -m src.ui.server     # dashboard on http://localhost:8501
+python -m pytest            # all tests
+```
+
+Without Track A's real data on disk the demo runs on the fabricated fixtures,
+and the dashboard says so.
+
 ## Status
 
-Repo and workflow scaffolded (branch protection, issue/PR templates, 3
-GitHub Projects boards), literature review and calibration data source survey
-done (see [`docs/`](docs/)), field research presentation and TÜBİTAK 2209-B
-form drafted. Tech stack decided; team split into four parallel tracks above.
+| Track | Done | Next |
+|---|---|---|
+| A — Personas | WVS-7 Turkey ingest and cleaning, held-out split (12 items, fit/test roles), raked persona generator, frozen `persona_set_hash` | Publish the real persona set to the database; cross-tabulated raking |
+| B — Simulation | Probe/scenario runner, three arms (treatment / placebo / vanilla), per-archetype querying, Friedkin–Johnsen update in code | Real-model runs at two seeds on the real personas |
+| C — Validation | TVD, calibration error, Wasserstein, Kendall tau, noise floor, saturation, MDD, BH; ML and equation baselines; `comparison.json`; pass/fail thresholds pre-registered ([F-1](docs/findings.md)) | First end-to-end report on real data, two models |
+| D — Dashboard | Intro page, sign-in, scenario and validation views following the honesty rules | Real pipeline output; accounts in the database |
+| Shared | Supabase PostgreSQL with per-track roles (held-out readable by Track C only), CI | — |
+
+Sprints run weekly on the [Iterative Development board](https://github.com/users/zxvozayy/projects/2).
 
 ## Team
 
