@@ -48,3 +48,55 @@ class TestOpenAIModel:
             model._call_count = 2
             with pytest.raises(RuntimeError, match="Hard call cap reached"):
                 model.query("prompt", ["a", "b"], n_repeats=1, seed=42)
+
+
+class _Item:
+    def __init__(self, token, logprob):
+        self.token, self.logprob = token, logprob
+
+
+class _FakeClient:
+    """Stands in for openai.OpenAI(); records every request payload."""
+
+    def __init__(self, logprobs=None, answers=None):
+        self.requests, self._logprobs, self._answers = [], logprobs, list(answers or [])
+        self.chat = self
+        self.completions = self
+
+    def create(self, **kwargs):
+        from types import SimpleNamespace as NS
+        self.requests.append(kwargs)
+        if kwargs.get("logprobs"):
+            if self._logprobs is None:
+                raise ValueError("this model does not support logprobs")
+            top = [_Item(t, lp) for t, lp in self._logprobs]
+            return NS(choices=[NS(logprobs=NS(content=[NS(top_logprobs=top)]), message=NS(content=top[0].token))])
+        return NS(choices=[NS(message=NS(content=self._answers.pop(0)))])
+
+
+class TestOpenAIModelAnswers:
+    def _model(self, client, cap=50):
+        from src.simulation.model import OpenAIModel
+        return OpenAIModel(model_snapshot="test-snapshot", max_calls=cap, client=client)
+
+    def test_reads_distribution_from_logprobs(self):
+        import math
+        client = _FakeClient(logprobs=[("A", math.log(0.6)), (" B", math.log(0.3)), ("Hmm", math.log(0.1))])
+        dist = self._model(client).query("p", ["support", "oppose"], n_repeats=5, seed=1)
+        assert dist == pytest.approx({"support": 0.6 / 0.9, "oppose": 0.3 / 0.9})
+        assert len(client.requests) == 1 and client.requests[0]["max_tokens"] == 1
+        assert client.requests[0]["temperature"] == 1
+
+    def test_falls_back_to_sampling_and_counts_parse_failures(self):
+        client = _FakeClient(logprobs=None, answers=["A", "B", "maybe", "A"])
+        model = self._model(client)
+        dist = model.query("p", ["support", "oppose"], n_repeats=4, seed=1)
+        assert dist == {"support": 2 / 3, "oppose": 1 / 3}  # the unparseable answer goes nowhere
+        assert model.summary()["parse_failures"] == 1
+        assert all(r["temperature"] == 1 for r in client.requests)  # never temperature 0
+
+    def test_letters_follow_the_displayed_order(self):
+        import math
+        client = _FakeClient(logprobs=[("A", math.log(0.9)), ("B", math.log(0.1))])
+        dist = self._model(client).query("p", ["oppose", "support"], n_repeats=1, seed=1)
+        assert dist["oppose"] == pytest.approx(0.9)

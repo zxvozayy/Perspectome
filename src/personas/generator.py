@@ -99,10 +99,24 @@ def marginal_fit(frame: pd.DataFrame, weights: pd.Series, targets: dict,
 
 
 def persona_set_hash(path) -> str:
-    """SHA-256 of a file's bytes (the frozen persona_set_hash Track B records)."""
+    """"sha256:<hex>" of a file's bytes -- the same form Track B and the database record."""
     h = hashlib.sha256()
     h.update(Path(path).read_bytes())
-    return h.hexdigest()
+    return f"sha256:{h.hexdigest()}"
+
+
+def weight_diagnostics(weights: pd.Series, frame: pd.DataFrame) -> dict:
+    """How much the post-stratification weights cost: Kish n_eff and the extremes."""
+    w = weights.astype(float)
+    n_eff = float(w.sum() ** 2 / (w ** 2).sum()) if len(w) else 0.0
+    by_age = frame.assign(w=w.values).groupby("age_band")["w"].agg(["size", "mean", "max"])
+    return {
+        "n_eff": n_eff,
+        "max_weight": float(w.max()),
+        "min_weight": float(w.min()),
+        "by_age_band": {band: {"n": int(r["size"]), "mean_weight": round(float(r["mean"]), 3),
+                               "max_weight": round(float(r["max"]), 3)} for band, r in by_age.iterrows()},
+    }
 
 
 def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
@@ -140,6 +154,7 @@ def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
         "persona_set_hash": persona_set_hash(personas_path),
         "seed": seed,
         "max_calibration_error": float(fit["abs_error"].max()),
+        "weights": weight_diagnostics(weights, frame),
         "fit": fit,
     }
 
@@ -160,6 +175,11 @@ def main():
     print(f"n_personas        : {s['n_personas']}")
     print(f"seed              : {s['seed']}")
     print(f"max_calib_error   : {s['max_calibration_error']*100:.4f} pp")
+    wd = s["weights"]
+    print(f"Kish n_eff        : {wd['n_eff']:.0f} of {s['n_personas']} "
+          f"(weights {wd['min_weight']:.2f}..{wd['max_weight']:.2f})")
+    for band, r in wd["by_age_band"].items():
+        print(f"  {band:6} n={r['n']:4}  mean weight {r['mean_weight']:.2f}  max {r['max_weight']:.2f}")
     print(f"personas          : {s['personas_path']}")
     print(f"heldout           : {s['heldout_path']}")
     print(f"persona_set_hash  : {s['persona_set_hash']}")

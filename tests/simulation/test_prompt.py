@@ -6,6 +6,8 @@ and exact question wording are in it.
 
 from pathlib import Path
 
+import pytest
+
 from src.common.schema import HELDOUT_FIELDS
 from src.simulation.loader import load_personas, load_scenario, group_by_cell
 from src.simulation.prompt import (
@@ -99,8 +101,21 @@ class TestBuildPrompt:
             options=["support", "oppose"],
             reverse_options=True,
         )
-        assert "Options: support, oppose" in prompt_normal
-        assert "Options: oppose, support" in prompt_reversed
+        assert "A) support\nB) oppose" in prompt_normal
+        assert "A) oppose\nB) support" in prompt_reversed
+
+    def test_every_option_gets_a_single_letter(self):
+        """Rule 25: no option silently loses its label."""
+        options = [str(i) for i in range(1, 11)]
+        prompt = build_prompt(None, None, "Q?", options, reverse_options=False)
+        assert "J) 10" in prompt and "letter of exactly one option" in prompt
+        with pytest.raises(ValueError):
+            build_prompt(None, None, "Q?", [str(i) for i in range(27)], reverse_options=False)
+
+    def test_persona_block_skips_missing_fields(self):
+        block = build_persona_block({"age_band": "65+", "gender": "male", "education_level": "primary",
+                                     "income_decile": float("nan"), "region": None})
+        assert "nan" not in block and "None" not in block and "65+" in block
 
     def test_no_rationale_request(self):
         """Rule 19: don't ask for a rationale alongside the choice."""

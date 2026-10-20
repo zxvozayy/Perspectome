@@ -3,19 +3,44 @@
 from __future__ import annotations
 
 
+# Fields that define an archetype cell (Track A's cell_id). Only these describe a
+# cell; any other field would be one arbitrary member's value, not the cell's.
+CELL_FIELDS = ("age_band", "gender", "education_level")
+
+# Single-token option labels, so a model's answer can be read from its
+# next-token log-probabilities (rule 24). Rule 25: every option gets one.
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def option_letters(n: int) -> str:
+    if n > len(LETTERS):
+        raise ValueError(f"{n} options; at most {len(LETTERS)} can be labelled")
+    return LETTERS[:n]
+
+
 def build_persona_block(cell_fields: dict) -> str:
     """Natural-language persona description from conditioning fields only.
 
-    Never references held-out fields.
+    Never references held-out fields. Missing values are left out rather than
+    written as "nan".
     """
-    return (
+    def has(key):
+        v = cell_fields.get(key)
+        return v is not None and str(v) not in ("", "nan", "<NA>")
+
+    text = (
         f"You are a {cell_fields['age_band']} year old {cell_fields['gender']} "
-        f"with a {cell_fields['education_level']} level education, "
-        f"living in a {cell_fields['settlement_type']} area of {cell_fields['region']}. "
-        f"You are {cell_fields['marital_status']}, "
-        f"{cell_fields['employment_status']}, "
-        f"and in income decile {cell_fields['income_decile']}."
+        f"with a {cell_fields['education_level']} level education"
     )
+    if has("settlement_type") and has("region"):
+        text += f", living in a {cell_fields['settlement_type']} area of {cell_fields['region']}"
+    text += "."
+    extras = [str(cell_fields[k]) for k in ("marital_status", "employment_status") if has(k)]
+    if extras:
+        text += " You are " + ", ".join(extras) + "."
+    if has("income_decile"):
+        text += f" Your household is in income decile {cell_fields['income_decile']}."
+    return text
 
 
 def build_prompt(
@@ -31,8 +56,8 @@ def build_prompt(
       [persona_block if present]
       [scenario_text if present]
       [question]
-      [options, reversed if flagged]
-      Instruction to pick exactly one option.
+      [options as lettered lines A) ... B) ..., reversed if flagged]
+      Instruction to answer with one letter.
     """
     display_options = list(reversed(options)) if reverse_options else list(options)
 
@@ -42,8 +67,9 @@ def build_prompt(
     if scenario_text:
         parts.append(scenario_text.strip())
     parts.append(question.strip())
-    parts.append("Options: " + ", ".join(display_options))
-    parts.append("Respond with exactly one of the options above, nothing else.")
+    letters = option_letters(len(display_options))
+    parts.append("\n".join(f"{letter}) {opt}" for letter, opt in zip(letters, display_options)))
+    parts.append("Answer with the letter of exactly one option, nothing else.")
 
     return "\n\n".join(parts)
 

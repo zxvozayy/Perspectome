@@ -191,3 +191,18 @@ def test_can_fail_sanity():
     # A deliberately broken expectation: confirms the suite actually asserts.
     # (rule 28 -- flip the `==` to prove red.)
     assert wvs.map_gender(1) == "male"
+
+
+def test_heldout_inputs_cannot_change_personas(raw):
+    """Leakage guard: scrambling every held-out source column leaves personas.csv
+    byte-identical, while heldout.csv does change (so the columns were really read)."""
+    from src.personas import ingest
+
+    scrambled = raw.copy()
+    for src_col, _ in ingest.HELDOUT_SRC.values():
+        if src_col in scrambled.columns:
+            scrambled[src_col] = scrambled[src_col].iloc[::-1].to_numpy()
+    p1, h1 = ingest.to_personas_and_heldout(raw)
+    p2, h2 = ingest.to_personas_and_heldout(scrambled)
+    assert p1.to_csv(index=False) == p2.to_csv(index=False)
+    assert h1.to_csv(index=False) != h2.to_csv(index=False)

@@ -1,55 +1,57 @@
-"""Collapse persona-level outcomes into the contract-shaped output."""
+"""Collapse persona-level opinions into the contract-shaped output."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import numpy as np
 import pandas as pd
+
+# Breakdowns by the fields that define an archetype cell. Other fields
+# (region, settlement, income) would only reflect which cells their members
+# fall into, not anything the model said about them.
+SUBGROUP_FIELDS = ("age_band", "gender", "education_level")
+
+
+def _weighted_mean(vectors: np.ndarray, weights: np.ndarray, options: list[str]) -> dict[str, float]:
+    total = weights.sum()
+    mean = (vectors * weights[:, None]).sum(axis=0) / total if total > 0 else vectors.mean(axis=0)
+    return {opt: round(float(p), 4) for opt, p in zip(options, mean)}
 
 
 def aggregate_arm(
     personas: pd.DataFrame,
+    vectors: np.ndarray,
     options: list[str],
-    subgroup_fields: tuple[str, ...] = ("age_band",),
+    subgroup_fields: tuple[str, ...] = SUBGROUP_FIELDS,
     include_subgroups: bool = True,
 ) -> dict:
-    """Compute response_distribution, option_usage, and by_subgroup.
+    """response_distribution, option_usage and by_subgroup for one arm.
 
-    response_distribution uses weights; option_usage is raw counts.
+    ``vectors`` holds each persona's final probability vector (n, k).
+    response_distribution is their weight-weighted mean. option_usage is the
+    expected number of personas choosing each option (unweighted sum of
+    probabilities, rounded) — an option nobody ever picks shows as 0 (rule 21).
     """
-    weights = personas["weight"].values
-    choices = personas["final_choice"].values
-
-    # Weighted distribution.
-    response_distribution: dict[str, float] = {}
-    option_usage: dict[str, int] = {}
-    for opt in options:
-        mask = choices == opt
-        option_usage[opt] = int(mask.sum())
-        response_distribution[opt] = round(
-            float(weights[mask].sum() / weights.sum()), 4
-        )
-
+    weights = personas["weight"].to_numpy(dtype=float)
     result: dict = {
-        "response_distribution": response_distribution,
-        "option_usage": option_usage,
+        "response_distribution": _weighted_mean(vectors, weights, options),
+        "option_usage": {opt: int(round(float(c))) for opt, c in zip(options, vectors.sum(axis=0))},
     }
 
     if include_subgroups:
         by_subgroup: dict[str, dict] = {}
         for field in subgroup_fields:
+            if field not in personas.columns:
+                continue
             groups: dict[str, dict] = {}
-            for value, group_df in personas.groupby(field):
-                n = len(group_df)
-                g_weights = group_df["weight"].values
-                g_choices = group_df["final_choice"].values
-                dist: dict[str, float] = {}
-                for opt in options:
-                    mask = g_choices == opt
-                    dist[opt] = round(
-                        float(g_weights[mask].sum() / g_weights.sum()), 4
-                    )
-                groups[str(value)] = {"n": n, "distribution": dist}
+            values = personas[field].to_numpy()
+            for value in pd.unique(personas[field].dropna()):
+                mask = values == value
+                groups[str(value)] = {
+                    "n": int(mask.sum()),
+                    "distribution": _weighted_mean(vectors[mask], weights[mask], options),
+                }
             by_subgroup[field] = groups
         result["by_subgroup"] = by_subgroup
 
@@ -67,8 +69,20 @@ def build_result(
     persona_set_hash: str,
     option_order: str,
     n_rounds: int,
+    extra_metadata: dict | None = None,
 ) -> dict:
     """Assemble the full results.json dict matching the contract."""
+    metadata = {
+        "model": model_name,
+        "model_snapshot": model_snapshot,
+        "seed": seed,
+        "persona_set_hash": persona_set_hash,
+        "option_order": option_order,
+        "n_rounds": n_rounds,
+        "aggregation": "weighted_mean_probability",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    metadata.update(extra_metadata or {})
     return {
         "run_id": run_id,
         "run_type": scenario["run_type"],
@@ -77,13 +91,5 @@ def build_result(
         "options": scenario["options"],
         "n_personas": n_personas,
         "arms": arms,
-        "metadata": {
-            "model": model_name,
-            "model_snapshot": model_snapshot,
-            "seed": seed,
-            "persona_set_hash": persona_set_hash,
-            "option_order": option_order,
-            "n_rounds": n_rounds,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        },
+        "metadata": metadata,
     }

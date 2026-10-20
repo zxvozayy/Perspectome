@@ -182,3 +182,17 @@ def test_end_to_end_on_simulation_runner(tmp_path):
     assert [p["item"] for p in out["probes"]] == ["trust_police"]
     assert out["scenarios"][0]["scenario_id"] == "unemployment_shock_v1"
     assert out["scenarios"][0]["equation_baseline_effect"] is not None
+
+
+def test_rank_agreement_never_mixes_answer_scales():
+    def probe(item, options, pos):
+        dist = {o: (1.0 if i == pos else 0.0) for i, o in enumerate(options)}
+        return {"item": item, "ordinal": True, "role": "test", "options": options, "real": dist,
+                "methods": {"engine": {"distribution": dist}}}
+    four = ["a", "b", "c", "d"]
+    ten = [str(i) for i in range(1, 11)]
+    probes = [probe("t1", four, 0), probe("t2", four, 1), probe("t3", four, 2),
+              probe("s1", ten, 1), probe("s2", ten, 8)]  # only 2 items on the 1-10 scale
+    out = report.rank_agreement(probes, [])
+    assert [g["items"] for g in out["scales"]] == [["t1", "t2", "t3"]]
+    assert out["items"] == ["t1", "t2", "t3"] and out["methods"]["engine"] == pytest.approx(1.0)

@@ -171,34 +171,54 @@ def score_probes(runs: list[dict], frame: pd.DataFrame, warnings: list[str]) -> 
     return probes
 
 
+def _scale_tau(group: list[dict]) -> dict:
+    """Kendall tau-b per method between real and method orderings of one scale group."""
+    real_pos = [metrics.expected_position(p["real"], p["options"]) for p in group]
+    out = {}
+    for name in sorted({m for p in group for m in p["methods"]}):
+        if not all(name in p["methods"] for p in group):
+            continue
+        pos = [metrics.expected_position(p["methods"][name]["distribution"], p["options"]) for p in group]
+        tau = metrics.kendall_tau_b(real_pos, pos)
+        if tau is not None:
+            out[name] = _r(tau, 3)
+    return out
+
+
 def rank_agreement(probes: list[dict], warnings: list[str]) -> dict:
     """Kendall tau-b between real and method orderings of ordinal probe items.
 
-    Measured on "test" items only (rule 10) once there are enough of them;
-    until then on every ordinal item, with a warning.
+    Items are only ranked against items on the same answer scale (same option
+    list): a mean position on a 4-point trust item and on a 1-10 scale are not
+    comparable, so mixing them makes tau meaningless. Within a scale, "test"
+    items are used (rule 10) once there are enough of them; otherwise every
+    item on that scale, with a warning. ``methods`` / ``items`` describe the
+    largest scale group; every group is listed in ``scales``.
     """
-    ordinal = [p for p in probes if p.get("ordinal")]
-    test = [p for p in ordinal if p.get("role") == "test"]
-    if len(test) >= MIN_RANK_ITEMS:
-        ordinal = test
-    elif ordinal:
-        warnings.append("Rank agreement uses fit items too (fewer than "
-                        f"{MIN_RANK_ITEMS} test items were probed); treat it as a development check.")
-    out = {"metric": "kendall_tau", "n_items": len(ordinal),
-           "items": [p["item"] for p in ordinal], "methods": {}}
-    if len(ordinal) < MIN_RANK_ITEMS:
-        warnings.append(f"Rank agreement needs at least {MIN_RANK_ITEMS} ordinal probe items; "
-                        f"have {len(ordinal)}. Not computed.")
-        return out
-    real_pos = [metrics.expected_position(p["real"], p["options"]) for p in ordinal]
-    names = sorted({m for p in ordinal for m in p["methods"]})
-    for name in names:
-        if not all(name in p["methods"] for p in ordinal):
+    groups: dict[tuple, list[dict]] = defaultdict(list)
+    for p in probes:
+        if p.get("ordinal"):
+            groups[tuple(p["options"])].append(p)
+
+    scales = []
+    for options, group in groups.items():
+        test = [p for p in group if p.get("role") == "test"]
+        used, dev = (test, False) if len(test) >= MIN_RANK_ITEMS else (group, True)
+        if len(used) < MIN_RANK_ITEMS:
             continue
-        pos = [metrics.expected_position(p["methods"][name]["distribution"], p["options"]) for p in ordinal]
-        tau = metrics.kendall_tau_b(real_pos, pos)
-        if tau is not None:
-            out["methods"][name] = _r(tau, 3)
+        if dev:
+            warnings.append(f"Rank agreement on the {len(options)}-option scale uses fit items too "
+                            f"(fewer than {MIN_RANK_ITEMS} test items); treat it as a development check.")
+        scales.append({"options": list(options), "items": [p["item"] for p in used],
+                       "n_items": len(used), "test_only": not dev, "methods": _scale_tau(used)})
+
+    out = {"metric": "kendall_tau", "n_items": 0, "items": [], "methods": {}, "scales": scales}
+    if not scales:
+        warnings.append(f"Rank agreement needs at least {MIN_RANK_ITEMS} probe items on the same "
+                        "answer scale; not computed.")
+        return out
+    main = max(scales, key=lambda g: (g["test_only"], g["n_items"]))
+    out.update(n_items=main["n_items"], items=main["items"], methods=main["methods"])
     return out
 
 

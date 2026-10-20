@@ -89,17 +89,24 @@ personas.csv — conditioning fields ONLY
   settlement_type   "urban" | "rural"
   marital_status    "married" | "single" | "divorced" | "widowed"
   employment_status "employed" | "unemployed" | "student" | "retired" | "homemaker"
-  income_decile     1-10
+  income_decile     1-10  (WVS Q288: self-placed income step, not a true decile)
   (+ any WVS value items you put on the conditioning list)
 
 heldout.csv — attitude fields, SEPARATE file, same persona_id key
-  persona_id            string, matches personas.csv
-  political_leaning     1-5 (left to right)
-  trust_institutions    1-5
-  religiosity           1-5
-  economic_optimism     1-5
-  risk_tolerance        1-5
-  (+ any WVS value items you put on the held-out list)
+  persona_id              string, matches personas.csv
+  trust_government        Q71  a_great_deal | quite_a_lot | not_very_much | none   (fit)
+  trust_courts            Q70  same scale                                           (fit)
+  trust_police            Q69  same scale                                           (test)
+  trust_parliament        Q73  same scale                                           (test)
+  religiosity             Q164 1-10 importance of God                               (fit)
+  religious_identity      Q173 religious | not_religious | atheist                  (test)
+  happiness               Q46  1 very happy .. 4 not at all happy                   (fit)
+  life_satisfaction       Q49  1-10                                                 (test)
+  income_equality         Q106 1 more equal .. 10 larger differences                (fit)
+  competition             Q109 1 good .. 10 harmful                                 (test)
+  political_leaning       Q240 1 left .. 10 right                                   (test)
+  financial_satisfaction  Q50  1-10                                                 (test)
+  Field list and fit/test roles: src/common/schema.py (HELDOUT_FIELDS, HELDOUT_ROLE).
 ```
 
 A 15-row synthetic example of both files is in [`fixtures/`](fixtures/) —

@@ -45,11 +45,13 @@ def load_personas(path: str | Path) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing columns in personas CSV: {sorted(missing)}")
 
-    df["income_decile"] = df["income_decile"].astype(int)
+    # Track A keeps respondents with missing fields (warn, never drop), so
+    # every field except the id and weight may be missing.
+    df["income_decile"] = pd.to_numeric(df["income_decile"], errors="coerce").astype("Int64")
     df["weight"] = df["weight"].astype(float)
 
     for col, valid in _ENUM_VALIDATORS.items():
-        invalid = set(df[col].unique()) - valid
+        invalid = set(df[col].dropna().unique()) - valid
         if invalid:
             raise ValueError(f"Invalid values in '{col}': {sorted(invalid)}")
 
