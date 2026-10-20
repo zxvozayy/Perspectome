@@ -81,8 +81,8 @@ shouldn't change, only its inputs.
 ## How to run
 
 ```bash
-python3 -m src.ui.server              # from the repo root → http://localhost:8501
-python3 -m pytest src/ui/tests        # tests (pytest is the only extra)
+python -m src.ui.server               # from the repo root → http://localhost:8501 (python3 on macOS/Linux)
+python -m pytest src/ui/tests         # tests (pytest is the only extra)
 ```
 
 The site runs on the Python standard library alone: an intro page (`/`), a

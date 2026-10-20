@@ -2,7 +2,7 @@
 
 Standard library only. Run from the repo root:
 
-    python3 -m src.ui.server            # http://localhost:8501
+    python -m src.ui.server             # http://localhost:8501
 """
 
 from __future__ import annotations
