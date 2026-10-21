@@ -28,8 +28,8 @@
   verified: false
   dims: [gender, alcohol]
   values:
-    male: {yes: 0.187, no: 0.813}
-    female: {yes: 0.066, no: 0.934}
+    male: {"yes": 0.187, "no": 0.813}
+    female: {"yes": 0.066, "no": 0.934}
 
 - id: obesity_by_sex
   title: Obese (BMI 30+), age 15+
@@ -39,8 +39,8 @@
   verified: false
   dims: [gender, obese]
   values:
-    male: {yes: 0.187, no: 0.813}
-    female: {yes: 0.248, no: 0.752}
+    male: {"yes": 0.187, "no": 0.813}
+    female: {"yes": 0.248, "no": 0.752}
 
 - id: genai_use_by_age_sex
   title: Used generative AI in the last 3 months, age 16-74
@@ -52,23 +52,23 @@
   dims: [age_band, gender, genai_user]
   values:
     "18-24":
-      female: {yes: 0.684, no: 0.316}
-      male: {yes: 0.616, no: 0.384}
+      female: {"yes": 0.684, "no": 0.316}
+      male: {"yes": 0.616, "no": 0.384}
     "25-34":
-      female: {yes: 0.571, no: 0.429}
-      male: {yes: 0.544, no: 0.456}
+      female: {"yes": 0.571, "no": 0.429}
+      male: {"yes": 0.544, "no": 0.456}
     "35-44":
-      female: {yes: 0.366, no: 0.634}
-      male: {yes: 0.396, no: 0.604}
+      female: {"yes": 0.366, "no": 0.634}
+      male: {"yes": 0.396, "no": 0.604}
     "45-54":
-      female: {yes: 0.195, no: 0.805}
-      male: {yes: 0.216, no: 0.784}
+      female: {"yes": 0.195, "no": 0.805}
+      male: {"yes": 0.216, "no": 0.784}
     "55-64":
-      female: {yes: 0.097, no: 0.903}
-      male: {yes: 0.115, no: 0.885}
+      female: {"yes": 0.097, "no": 0.903}
+      male: {"yes": 0.115, "no": 0.885}
     "65+":
-      female: {yes: 0.049, no: 0.951}
-      male: {yes: 0.053, no: 0.947}
+      female: {"yes": 0.049, "no": 0.951}
+      male: {"yes": 0.053, "no": 0.947}
 
 - id: internet_use_by_sex
   title: Internet use, age 16-74
@@ -78,8 +78,8 @@
   verified: false
   dims: [gender, internet_user]
   values:
-    male: {yes: 0.948, no: 0.052}
-    female: {yes: 0.899, no: 0.101}
+    male: {"yes": 0.948, "no": 0.052}
+    female: {"yes": 0.899, "no": 0.101}
 
 - id: housing_tenure
   title: Households by tenure

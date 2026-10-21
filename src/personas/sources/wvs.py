@@ -27,11 +27,11 @@ verified by value-range check against the real Turkey file (n=2415):
     Q49   life satisfaction 1-10                               (test)
     Q106  incomes more equal .. larger differences 1-10        (fit)
     Q109  competition good .. harmful 1-10                     (test)
-    Q240  left-right self-placement 1-10                       (test)
     Q50   satisfaction with household finances 1-10            (test)
   (Q47 is self-reported health, not a risk item -- no WVS-7 risk item exists,
    so risk_tolerance was dropped. Held-out values keep their raw survey scale;
-   trust and religious_identity are stored as categorical labels.)
+   trust items are stored as categorical labels. Q164 and Q240 are conditioning
+   fields, banded by map_religiosity_band / map_political_band.)
 
 Missing-value sentinels are negative across WVS (-1 don't know, -2 no answer,
 -3 not applicable, -4 not asked, -5 missing). They are recoded to null in
@@ -89,6 +89,8 @@ SRC = {
     # N_REGION_ISO is entirely missing (-5) for Turkey in WVS-7; the region is
     # carried in N_REG_NUTS1 (İBBS Düzey-1 / NUTS-1, 12 regions), coded 792NN.
     "region": "N_REG_NUTS1",
+    "religiosity": "Q164",
+    "political": "Q240",
 }
 
 
@@ -259,8 +261,8 @@ def edu3_from_isced(code) -> Optional[str]:
 
 # --- held-out (heldout.csv) attitude mappings -------------------------------
 # Per Track C sign-off: held-out values keep their RAW survey scale (no
-# rescaling -- Track C validates against the original scale). Trust and
-# religious_identity are stored as categorical labels. Nothing is averaged and
+# rescaling -- Track C validates against the original scale). Trust items
+# are stored as categorical labels. Nothing is averaged and
 # nothing is reverse-coded, so the scale direction is whatever the codebook says
 # (documented per field in schema.HELDOUT_FIELDS).
 
@@ -286,11 +288,24 @@ def map_confidence(code) -> Optional[str]:
 
 
 # Q173: 1 a religious person, 2 not a religious person, 3 a convinced atheist.
-_RELIGIOUS_IDENTITY = {1: "religious", 2: "not_religious", 3: "atheist"}
-
-
-def map_religious_identity(code) -> Optional[str]:
-    """Q173 religious self-identification -> categorical label. Missing -> None."""
+def _band(code, edges: tuple, bands: tuple) -> Optional[str]:
+    """Scale value -> band; ``edges`` are the lowest value of each band."""
     if is_missing(code):
         return None
-    return _RELIGIOUS_IDENTITY.get(int(code))
+    try:
+        value = int(code)
+    except (TypeError, ValueError):
+        return None
+    if not 1 <= value <= 10:
+        return None
+    return bands[bisect.bisect_right(edges, value) - 1]
+
+
+def map_religiosity_band(code) -> Optional[str]:
+    """Q164 importance of God (1-10) -> schema.RELIGIOSITY_BANDS."""
+    return _band(code, (1, 5, 8, 10), schema.RELIGIOSITY_BANDS)
+
+
+def map_political_band(code) -> Optional[str]:
+    """Q240 left-right self-placement (1-10) -> schema.POLITICAL_BANDS."""
+    return _band(code, (1, 5, 7), schema.POLITICAL_BANDS)

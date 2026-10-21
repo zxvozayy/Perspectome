@@ -78,16 +78,17 @@ def test_edu3_from_isced(isced, expected):
                     reason="real WVS Turkey file not present (never committed)")
 def test_generate_lineage_hash_stable(tmp_path):
     # Lineage: same raw file + seed -> identical persona_set_hash.
-    s1 = generator.generate(out_dir=tmp_path / "run1", seed=0)
-    s2 = generator.generate(out_dir=tmp_path / "run2", seed=0)
+    s1 = generator.generate(out_dir=tmp_path / "run1", seed=0, synthetic=500)
+    s2 = generator.generate(out_dir=tmp_path / "run2", seed=0, synthetic=500)
     assert s1["persona_set_hash"] == s2["persona_set_hash"]
+    assert s1["synthetic"]["persona_set_hash"] == s2["synthetic"]["persona_set_hash"]
     assert s1["max_calibration_error"] < 1e-6
 
 
 @pytest.mark.skipif(not TURKEY_CSV.exists(),
                     reason="real WVS Turkey file not present (never committed)")
 def test_generated_output_keeps_heldout_separate(tmp_path):
-    generator.generate(out_dir=tmp_path, seed=0)
+    generator.generate(out_dir=tmp_path, seed=0, synthetic=500)
     personas = pd.read_csv(tmp_path / "personas.csv")
     heldout = pd.read_csv(tmp_path / "heldout.csv")
     assert "weight" in personas.columns

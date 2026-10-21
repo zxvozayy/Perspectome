@@ -12,11 +12,11 @@ convention:
 
 | Schema | Holds | Writes | Reads |
 |---|---|---|---|
-| `personas` | persona sets (exact `personas.csv` bytes) and personas | A | A, B, C, D |
+| `personas` | persona sets (exact CSV bytes), `kind` core or synthetic; personas, with attached features in `attrs` | A | A, B, C, D |
 | `heldout` | held-out answers (one row per persona × item) | A | **C only** |
 | `sim` | Track B runs (full `results.json` as JSONB) | B | B, C, D |
 | `validation` | Track C reports (full `comparison.json`) | C | C, D |
-| `app` | Track D site accounts and chats | D | D |
+| `app` | Track D site accounts | D | D |
 
 Held-out data is closed to Tracks B and D at the schema level: their logins
 can't even list the schema. This is the "held-out never reaches generation or
@@ -47,8 +47,12 @@ address is IPv6-only on the free plan and fails on most home networks.
 python -m src.common.db push-personas --personas data/processed/personas.csv \
     --heldout data/processed/heldout.csv --source "WVS-7 Turkey + Eurostat margins" --seed 0
 
+# Track A — the synthetic set drawn from that core
+python -m src.common.db push-personas --personas data/processed/personas_synthetic.csv     --kind synthetic --core-hash <core persona_set_hash> --source "..." --seed 0
+
 # Track B — get the personas (same bytes, same persona_set_hash), then upload runs
 python -m src.common.db pull-personas --out data/processed/personas.csv
+python -m src.common.db pull-personas --kind synthetic --out data/processed/personas_synthetic.csv
 python -m src.common.db push-runs results/*.json
 
 # Track C — pull everything, build the report, upload it

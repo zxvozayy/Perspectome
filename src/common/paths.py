@@ -6,7 +6,8 @@ REPO = Path(__file__).resolve().parents[2]
 
 DATA_RAW = REPO / "data" / "raw"
 PROCESSED = REPO / "data" / "processed"
-PERSONAS_CSV = PROCESSED / "personas.csv"
+PERSONAS_CSV = PROCESSED / "personas.csv"            # the real core (WVS-7 respondents)
+PERSONAS_SYNTHETIC_CSV = PROCESSED / "personas_synthetic.csv"
 HELDOUT_CSV = PROCESSED / "heldout.csv"
 
 RESULTS_DIR = REPO / "results"

@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from src.common import paths
+from src.common.schema import PERSONA_COLUMNS
 from src.simulation.loader import (
     group_by_cell,
     load_personas,
@@ -40,11 +41,8 @@ class TestLoadPersonas:
 
     def test_rejects_invalid_enum(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            f.write(
-                "persona_id,cell_id,weight,age_band,gender,education_level,"
-                "region,settlement_type,marital_status,employment_status,income_decile\n"
-            )
-            f.write("p01,cell1,1.0,0-17,male,bachelor,Marmara,urban,single,student,4\n")
+            f.write(",".join(PERSONA_COLUMNS) + "\n")
+            f.write("p01,cell1,1.0,0-17,male,bachelor,Marmara,urban,single,student,4,high,centre\n")
             f.flush()
             with pytest.raises(ValueError, match="Invalid values in 'age_band'"):
                 load_personas(f.name)

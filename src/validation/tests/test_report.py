@@ -79,10 +79,10 @@ T2 = {"support": .54, "oppose": .41, "uncertain": .05}
 P = {"support": .35, "oppose": .60, "uncertain": .05}
 
 
-def _score(runs, ratio=1.0):
+def _score(runs, cap=float("inf")):
     warnings = []
     noise = report.noise_floor(runs)
-    return report.score_scenarios(runs, noise, ratio, warnings)[0], noise
+    return report.score_scenarios(runs, noise, cap, warnings)[0], noise
 
 
 def test_noise_floor_is_max_seed_gap():
@@ -120,6 +120,14 @@ def test_small_n_effect_is_below_mdd():
     runs = [_scenario_run(1, T, P, n=30), _scenario_run(2, T2, P, n=30)]
     sc, _ = _score(runs)
     assert sc["minimum_detectable_difference"] > 0.2 and sc["measurable"] is False
+
+
+def test_synthetic_personas_dont_add_power():
+    """20,000 personas drawn from 1,000 effective respondents have the power of 1,000."""
+    runs = [_scenario_run(1, T, P, n=20000), _scenario_run(2, T2, P, n=20000)]
+    capped, _ = _score(runs, cap=1000)
+    same_n, _ = _score([_scenario_run(1, T, P, n=1000), _scenario_run(2, T2, P, n=1000)])
+    assert capped["minimum_detectable_difference"] == pytest.approx(same_n["minimum_detectable_difference"])
 
 
 def test_subgroups_small_cells_flagged_and_bh_directions():

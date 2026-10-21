@@ -250,7 +250,7 @@ def _subgroups(treat_run_arm: dict, placebo_arm: dict, option: str) -> tuple[dic
     return dict(directions), small
 
 
-def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_ratio: float,
+def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_cap: float,
                     warnings: list[str], params: Optional[dict] = None) -> list[dict]:
     params = baselines.load_equation_params() if params is None else params
     by_id = defaultdict(list)
@@ -277,7 +277,8 @@ def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_ratio: float
         option = cfg.get("target_option") if cfg.get("target_option") in options else \
             max(options, key=lambda o: abs(effect[o]))
         saturated = metrics.is_saturated(p[option])
-        n = float(prim[0].get("n_personas") or 0) * n_eff_ratio
+        # synthetic personas are drawn from the real core: they can't carry more information than it
+        n = min(float(prim[0].get("n_personas") or 0), n_eff_cap)
         mdd = metrics.minimum_detectable_difference(p[option], n, n)
         measurable = (noise is not None and effect_tvd > noise and not saturated
                       and abs(effect[option]) >= mdd)
@@ -339,7 +340,10 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
         warnings.append("Only one model was run. Results may reflect that model's prior "
                         "rather than the population (rule 14: at least two models).")
 
-    n_eff_ratio = kish_n_eff(frame["weight"]) / len(frame) if len(frame) else 1.0
+    n_eff_cap = kish_n_eff(frame["weight"])  # effective size of the real respondents behind the personas
+    if any((r.get("n_personas") or 0) > len(frame) for r in runs):
+        warnings.append(f"Runs simulate more personas than there are real respondents ({len(frame)}); "
+                        f"power is computed on the respondents' effective size ({n_eff_cap:.0f}).")
     probes = score_probes(runs, frame, warnings)
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -347,7 +351,7 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
         "noise_floor_tvd": _r(noise),
         "probes": probes,
         "rank_agreement": rank_agreement(probes, warnings),
-        "scenarios": score_scenarios(runs, noise, n_eff_ratio, warnings, params),
+        "scenarios": score_scenarios(runs, noise, n_eff_cap, warnings, params),
         "warnings": warnings,
     }
     report["warnings"] += [

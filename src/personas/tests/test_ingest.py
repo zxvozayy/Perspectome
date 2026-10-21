@@ -106,10 +106,8 @@ def test_every_mapped_category_is_in_schema(mapped):
 
 def test_numeric_heldout_keeps_raw_scale(mapped):
     _, heldout = mapped
-    # political_leaning keeps the raw Q240 1-10 scale (no rescaling).
-    assert heldout.iloc[0]["political_leaning"] == 2     # Q240 = 2
-    assert heldout.iloc[3]["political_leaning"] == 10    # Q240 = 10
-    assert heldout.iloc[0]["religiosity"] == 3           # Q164 = 3
+    # life_satisfaction keeps the raw Q49 1-10 scale (no rescaling).
+    assert heldout.iloc[0]["life_satisfaction"] == 7     # Q49 = 7
     assert heldout.iloc[3]["life_satisfaction"] == 8     # Q49 = 8
 
 
@@ -123,17 +121,19 @@ def test_trust_is_categorical_per_item(mapped):
         assert pd.isna(p1008[f])                          # all four were -5
 
 
-def test_religious_identity_is_categorical(mapped):
-    _, heldout = mapped
-    assert heldout.iloc[0]["religious_identity"] == "religious"   # Q173 = 1
-    p1008 = heldout[heldout["persona_id"] == "p1008"].iloc[0]
-    assert p1008["religious_identity"] == "atheist"              # Q173 = 3
+def test_values_are_banded_into_personas(mapped):
+    personas, heldout = mapped
+    assert personas.iloc[0]["religiosity_band"] == "low"           # Q164 = 3
+    assert personas.iloc[0]["political_leaning_band"] == "left"    # Q240 = 2
+    assert personas.iloc[3]["religiosity_band"] == "very_high"     # Q164 = 10
+    assert personas.iloc[3]["political_leaning_band"] == "right"   # Q240 = 10
+    assert not {"religiosity", "political_leaning"} & set(heldout.columns)
 
 
 def test_missing_heldout_becomes_null(mapped):
     _, heldout = mapped
-    p1006 = heldout[heldout["persona_id"] == "p1006"].iloc[0]
-    assert pd.isna(p1006["religiosity"])                  # Q164 was -4
+    p1008 = heldout[heldout["persona_id"] == "p1008"].iloc[0]
+    assert pd.isna(p1008["trust_government"])            # Q71 was -5
 
 
 # --- held-out discipline / leakage (the rule that can't bend) ---------------
@@ -155,7 +155,7 @@ def test_distinctive_heldout_value_never_appears_in_personas(recoded):
     # assert it cannot surface anywhere in personas.csv.
     marked = recoded.copy()
     marker = 999999
-    marked.loc[0, ingest.HELDOUT_SRC["political_leaning"][0]] = marker  # Q240
+    marked.loc[0, ingest.HELDOUT_SRC["life_satisfaction"][0]] = marker  # Q49
     personas, _ = ingest.to_personas_and_heldout(marked)
     assert not personas.astype(str).apply(lambda c: c.str.contains(str(marker))).any().any()
 
@@ -184,7 +184,7 @@ def test_unknown_codes_map_to_null_not_passthrough():
     assert wvs.map_education(42) is None         # outside ISCED 0-8
     assert wvs.map_age_band(10) is None          # below WVS 18+ floor
     assert wvs.map_confidence(9) is None         # outside the 1-4 confidence scale
-    assert wvs.map_religious_identity(7) is None  # outside the 1-3 Q173 scale
+    assert wvs.map_religiosity_band(11) is None  # outside the 1-10 Q164 scale
 
 
 def test_can_fail_sanity():

@@ -80,8 +80,9 @@ python -m pytest            # all tests
 ```
 
 The demo runs on the fabricated fixtures, and the dashboard says so.
-`python -m src.demo --real` uses the real persona set under `data/processed/`
-(pull it with `python -m src.common.db pull-personas`).
+`python -m src.demo --real` uses the real core persona set under `data/processed/`,
+`python -m src.demo --synthetic` simulates the 20,000 synthetic personas
+(pull them with `python -m src.common.db pull-personas [--kind synthetic]`).
 
 ## Status
 
