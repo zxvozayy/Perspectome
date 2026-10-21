@@ -12,7 +12,8 @@ import pandas as pd
 import pytest
 
 from src.common import paths, schema
-from src.personas import generator, wvs
+from src.personas import generator
+from src.personas.sources import wvs
 
 TURKEY_CSV = paths.DATA_RAW / "wvs7_turkey.csv"
 

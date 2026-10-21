@@ -1,0 +1,79 @@
+# Consistency rules for personas. Every rule names rows that break it.
+#
+#   kind: hard  -> impossible by definition. A synthetic persona that breaks it
+#                  is resampled; a real respondent is kept and warned about.
+#   kind: soft  -> possible but rare. Never dropped; its share in a synthetic set
+#                  is compared with its share among the real respondents.
+#   when:        pandas query over persona columns (engine="python"); helper
+#                column `expected_cell_id` is available.
+#   real_share:  share among the 2,415 real WVS-7 respondents (persona set
+#                sha256:30961ad5…), measured 2026-10-21 — the reference for
+#                soft rules, not a target.
+
+- id: cell_id_matches_fields
+  kind: hard
+  when: "cell_id.notna() and cell_id != expected_cell_id"
+  rationale: cell_id is defined as age_band|gender|education_level.
+  source: src/common/schema.py CELL_FIELDS
+
+- id: weight_positive
+  kind: hard
+  when: "weight <= 0"
+  rationale: a post-stratification weight is a positive population share.
+  source: generator.rake
+
+- id: retired_under_35
+  kind: soft
+  when: "employment_status == 'retired' and age_band in ['18-24', '25-34']"
+  rationale: possible only through disability pensions.
+  source: WVS-7 Türkiye
+  real_share: 0.0
+
+- id: student_55_plus
+  kind: soft
+  when: "employment_status == 'student' and age_band in ['55-64', '65+']"
+  rationale: open-university students exist but are rare.
+  source: WVS-7 Türkiye
+  real_share: 0.0004
+
+- id: widowed_under_25
+  kind: soft
+  when: "marital_status == 'widowed' and age_band == '18-24'"
+  rationale: rare at this age.
+  source: WVS-7 Türkiye
+  real_share: 0.0
+
+- id: divorced_under_25
+  kind: soft
+  when: "marital_status == 'divorced' and age_band == '18-24'"
+  rationale: rare at this age (mean age at first marriage is 26–28).
+  source: WVS-7 Türkiye; TÜİK marriage statistics 2025
+  real_share: 0.0012
+
+- id: graduate_under_25
+  kind: soft
+  when: "education_level == 'graduate' and age_band == '18-24'"
+  rationale: a master's degree before 25 is possible but rare.
+  source: WVS-7 Türkiye
+  real_share: 0.0
+
+- id: male_homemaker
+  kind: soft
+  when: "employment_status == 'homemaker' and gender == 'male'"
+  rationale: TÜİK counts "ev işleriyle meşgul" almost only among women.
+  source: WVS-7 Türkiye; TÜİK household labour force survey
+  real_share: 0.0
+
+- id: unemployed_top_income
+  kind: soft
+  when: "employment_status == 'unemployed' and income_decile == 10"
+  rationale: self-placed top income while unemployed is rare.
+  source: WVS-7 Türkiye
+  real_share: 0.0
+
+- id: married_student
+  kind: soft
+  when: "employment_status == 'student' and marital_status == 'married'"
+  rationale: rare among Turkish students.
+  source: WVS-7 Türkiye
+  real_share: 0.0004

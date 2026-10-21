@@ -1,7 +1,7 @@
 """Post-stratified persona generator (issue #10).
 
 Takes the ingested WVS-7 Turkey respondents and reweights them to the Turkey
-population margins (margins.py) by raking / iterative proportional fitting, so
+population margins (sources/eurostat.py) by raking / iterative proportional fitting, so
 the weighted persona set matches the real age / gender / region / education
 distribution. Each respondent becomes a persona carrying a post-stratification
 `weight` and its archetype `cell_id`; the held-out attitudes stay in a separate
@@ -25,7 +25,8 @@ import pandas as pd
 
 from src.common import paths, schema, stats
 from src.common.hashing import file_hash
-from src.personas import ingest, margins as margins_mod, wvs
+from src.personas import ingest
+from src.personas.sources import eurostat, wvs
 
 log = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DI
     personas, heldout = ingest.to_personas_and_heldout(raw)
 
     frame = _raking_frame(personas, raw)
-    targets = margins_mod.target_margins()
+    targets = eurostat.target_margins()
     weights = rake(frame, targets)
 
     personas = personas.copy()

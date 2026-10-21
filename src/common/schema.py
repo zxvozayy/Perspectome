@@ -8,7 +8,7 @@ SETTLEMENT_TYPES = ("urban", "rural")
 MARITAL_STATUSES = ("married", "single", "divorced", "widowed")
 EMPLOYMENT_STATUSES = ("employed", "unemployed", "student", "retired", "homemaker")
 INCOME_DECILES = tuple(range(1, 11))
-# The 7 geographic regions; the 12 NUTS-1 regions collapse onto these (personas/wvs.py).
+# The 7 geographic regions; the 12 NUTS-1 regions collapse onto these (personas/sources/wvs.py).
 REGIONS = ("Marmara", "Ege", "Akdeniz", "Ic Anadolu", "Karadeniz", "Dogu Anadolu", "Guneydogu Anadolu")
 
 CONDITIONING_FIELDS = (

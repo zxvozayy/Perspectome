@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 
 from src.common import schema
-from src.personas import wvs
+from src.personas import rules
+from src.personas.sources import wvs
 
 log = logging.getLogger(__name__)
 
@@ -100,19 +101,6 @@ def _persona_ids(df: pd.DataFrame, id_col) -> pd.Series:
     return pd.Series([f"p{i:0{width}d}" for i in range(1, len(df) + 1)], index=df.index)
 
 
-def _warn_inconsistencies(personas: pd.DataFrame) -> None:
-    """Log consistency warnings. Never drops rows (persona README: warn, never drop)."""
-    students_old = personas[(personas["employment_status"] == "student")
-                            & (personas["age_band"].isin(["55-64", "65+"]))]
-    for pid in students_old["persona_id"]:
-        log.warning("consistency: persona %s is a student aged 55+", pid)
-
-    retired_young = personas[(personas["employment_status"] == "retired")
-                             & (personas["age_band"] == "18-24")]
-    for pid in retired_young["persona_id"]:
-        log.warning("consistency: persona %s is retired aged 18-24", pid)
-
-
 def to_personas_and_heldout(df: pd.DataFrame, id_col: str | None = "D_INTERVIEW"):
     """Map a recoded WVS frame to (personas, heldout) -- two separate frames.
 
@@ -151,5 +139,5 @@ def to_personas_and_heldout(df: pd.DataFrame, id_col: str | None = "D_INTERVIEW"
             heldout[field] = None
     heldout = heldout.reindex(columns=HELDOUT_COLUMNS)
 
-    _warn_inconsistencies(personas)
+    rules.warn(personas)  # real respondents: warn, never drop
     return personas, heldout
