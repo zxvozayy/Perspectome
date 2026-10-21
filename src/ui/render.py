@@ -99,6 +99,8 @@ def message(key: str, msg: dict, last: bool, bundle: Bundle) -> str:
         body = validation(bundle)
     elif kind == "details":
         body = run_list(msg, bundle)
+    elif kind == "comments":
+        body = prose(views.comments_intro(msg)) + views.persona_comments(msg)
     else:
         body = prose(views.UNKNOWN_TEXT) + (chips(answers.suggestions(bundle)) if last else "")
     return f'<div class="answer">{views.assistant_label()}{body}</div>'

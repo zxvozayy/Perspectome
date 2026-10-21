@@ -577,6 +577,38 @@ def details_text(n: int) -> str:
 
 
 UNKNOWN_TEXT = (
-    "Bu soruya karşılık gelen bir çalıştırma yok. Bu panel yeni simülasyon başlatmaz; "
-    "yalnızca Track B ve Track C'nin ürettiği sonuçları gösterir. Şu an sorabileceklerin:"
+    "Bu soruya karşılık gelen bir çalıştırma yok ve personalara şu an ulaşılamıyor "
+    "(API anahtarı ya da sentetik persona dosyası eksik). Hazır çalıştırmalardan sorabileceklerin:"
 )
+
+STANCE_TR = {"OLUMLU": ("Olumlu", "olumlu"), "OLUMSUZ": ("Olumsuz", "olumsuz"), "KARARSIZ": ("Kararsız", "kararsiz")}
+
+
+def comments_intro(msg: dict) -> str:
+    return (
+        f"Bu soruyu nüfusa göre ağırlıklı seçilmiş **{msg['n_asked']} sentetik persona** yanıtladı "
+        f"({msg['model']}). Her biri kendi profiline göre konuşuyor. Bunlar gerçek kişiler değil; "
+        "yorumlar örnek amaçlıdır, *nüfus tahmini değildir*."
+    )
+
+
+def persona_comments(msg: dict) -> str:
+    """Synthetic personas' comments: who said it, their stance, what they said. Never a share."""
+    shown = msg["comments"]
+    dropped = sum(msg["dropped"].values())
+    counts = " · ".join(f"{STANCE_TR[s][0]} {n}" for s, n in msg["stances"].items())
+    note = f"{counts} — {len(shown)} yorum, oran değil."
+    if dropped:
+        parts = [f"{n} {label}" for key, label in (("inconsistent", "profiliyle çelişen"), ("unreadable", "okunamayan"),
+                                                     ("duplicate", "tekrar eden")) if (n := msg["dropped"][key])]
+        note += " Gösterilmeyen: " + ", ".join(parts) + "."
+    cards = ""
+    for c in shown:
+        label, cls = STANCE_TR[c["stance"]]
+        who, rest = " · ".join(c["facts"][:3]), c["facts"][3:]
+        chips = "".join(f"<span>{esc(f)}</span>" for f in rest)
+        cards += (f'<article class="pc"><div class="pc-head"><b>{esc(who)}</b>'
+                  f'<span class="pc-stance {cls}">{esc(label)}</span></div>'
+                  f'<div class="pc-facts">{chips}</div><p>{esc(c["text"])}</p></article>')
+    return (f'<p class="pt-note pc-note">{esc(note)}</p>'
+            f'<div class="pc-grid">{cards}</div>')

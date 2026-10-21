@@ -255,3 +255,17 @@
   .pt-svg .ln { stroke-dashoffset: 0 !important; }
 }
 .panel-page { scroll-padding-bottom: 130px; }
+
+/* persona comments */
+.pc-note { margin: -8px 0 14px; }
+.pc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.pc { padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow);
+  animation: pt-rise .5s var(--ease) both; }
+.pc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: .86rem; }
+.pc-stance { flex: none; padding: 2px 9px; border: 1px solid currentColor; border-radius: 999px; font-size: .7rem; font-weight: 600; }
+.pc-stance.olumlu { color: var(--above); }
+.pc-stance.olumsuz { color: var(--below); }
+.pc-stance.kararsiz { color: var(--muted); }
+.pc-facts { display: flex; flex-wrap: wrap; gap: 4px; margin: 9px 0 11px; }
+.pc-facts span { padding: 2px 7px; border-radius: 6px; background: var(--soft); color: var(--ink-2); font-size: .72rem; }
+.pc p { font-size: .9rem; line-height: 1.6; }

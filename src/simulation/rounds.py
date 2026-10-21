@@ -17,6 +17,7 @@ import pandas as pd
 
 from src.common.schema import AGE_BANDS
 from src.common.stats import normalize_vec
+from src.simulation.model import NoAnswer
 
 
 # ---------------------------------------------------------------------------
@@ -33,11 +34,15 @@ def run_round_1(
 
     Returns {cell_id: {option: probability}}. The model returns probabilities
     keyed by option name, so the displayed (possibly reversed) order doesn't
-    matter here.
+    matter here. A cell where the model never gave a readable answer (it
+    refused) is left out; the caller reports it.
     """
     distributions: dict[str, dict[str, float]] = {}
     for entry in prompts:
-        distributions[entry["cell_id"]] = model.query(entry["prompt"], entry["options_order"], n_repeats, seed)
+        try:
+            distributions[entry["cell_id"]] = model.query(entry["prompt"], entry["options_order"], n_repeats, seed)
+        except NoAnswer:
+            continue
     return distributions
 
 

@@ -10,6 +10,14 @@ import numpy as np
 
 from src.common import env
 
+# Room for a refusal to show itself: with one token, "I can't ..." reads as
+# option I on a 9+ option scale. A real answer is one letter, then the model stops.
+ANSWER_TOKENS = 3
+
+
+class NoAnswer(RuntimeError):
+    """Every repeat of a query was unreadable (typically the model refused)."""
+
 
 class MockModel:
     """Deterministic mock that returns Dirichlet-drawn distributions.
@@ -90,13 +98,13 @@ class OpenAIModel:
                 )
             self._call_count += 1
 
-    def _call(self, prompt: str, **kwargs):
+    def _call(self, prompt: str, max_tokens: int = 1, **kwargs):
         self._reserve()
         return self._client.chat.completions.create(
             model=self._model,
             messages=[{"role": "user", "content": prompt}],
             temperature=1,
-            max_tokens=1,
+            max_tokens=max_tokens,
             **kwargs,
         )
 
@@ -128,7 +136,7 @@ class OpenAIModel:
         return {letter: m / coverage for letter, m in mass.items()}
 
     def _sample_text(self, prompt: str, seed: int) -> str:
-        return self._call(prompt, seed=seed).choices[0].message.content or ""
+        return self._call(prompt, max_tokens=ANSWER_TOKENS, seed=seed).choices[0].message.content or ""
 
     def _from_samples(self, prompt: str, letters: str, n_repeats: int, seed: int):
         counts = {letter: 0 for letter in letters}
@@ -142,7 +150,7 @@ class OpenAIModel:
                 self.stats["parse_failures"] += 1
         total = sum(counts.values())
         if total == 0:
-            raise RuntimeError("No parseable answer in any repeat; check the prompt and model.")
+            raise NoAnswer("No parseable answer in any repeat (the model may have refused).")
         self.stats["sampled_queries"] += 1
         return {letter: c / total for letter, c in counts.items()}
 
@@ -199,8 +207,9 @@ class AnthropicModel(OpenAIModel):
 
     def _sample_text(self, prompt: str, seed: int) -> str:
         self._reserve()
-        # sampling temperature is the API default, 1
-        resp = self._client.messages.create(model=self._model, max_tokens=1,
+        # sampling temperature is the API default, 1; thinking off, or newer models
+        # spend the one-token budget on a thinking block and never answer
+        resp = self._client.messages.create(model=self._model, max_tokens=ANSWER_TOKENS, thinking={"type": "disabled"},
                                             messages=[{"role": "user", "content": prompt}])
         with self._lock:
             self.stats["input_tokens"] += resp.usage.input_tokens

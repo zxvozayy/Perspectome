@@ -129,9 +129,20 @@ class TestAnthropicModel:
         assert dist == {"yes": 2 / 3, "no": 1 / 3}
         summary = model.summary()
         assert summary["parse_failures"] == 1 and summary["input_tokens"] == 40 and summary["calls"] == 4
-        assert all(r["max_tokens"] == 1 and r["model"] == "claude-test" for r in client.requests)
+        assert all(r["max_tokens"] == 3 and r["model"] == "claude-test" for r in client.requests)
+        assert all(r["thinking"] == {"type": "disabled"} for r in client.requests)
 
     def test_call_cap_holds(self):
         model, _ = self._model(["A"] * 10, cap=3)
         with pytest.raises(RuntimeError, match="cap"):
             model.query("p", ["yes", "no"], n_repeats=5, seed=1)
+
+    def test_a_refusal_is_never_read_as_option_i(self):
+        from src.simulation.model import NoAnswer
+        options = [str(i) for i in range(1, 11)]          # letters A..J, so "I" is option 9
+        model, _ = self._model(["I can", "I", "B"])
+        dist = model.query("p", options, n_repeats=3, seed=1)
+        assert dist["9"] == 0.5 and dist["2"] == 0.5 and model.summary()["parse_failures"] == 1
+        refusing, _ = self._model(["I appreciate", "I'm an AI"])
+        with pytest.raises(NoAnswer):
+            refusing.query("p", options, n_repeats=2, seed=1)
