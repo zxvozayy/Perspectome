@@ -93,3 +93,17 @@ def test_minimum_detectable_difference():
 @pytest.mark.parametrize("share, saturated", [(.05, True), (.10, False), (.5, False), (.95, True)])
 def test_saturation(share, saturated):
     assert metrics.is_saturated(share) is saturated
+
+
+@pytest.mark.parametrize("scores, labels, expected", [
+    ([0.9, 0.8, 0.2, 0.1], [1, 1, 0, 0], 1.0),     # perfect separation
+    ([0.1, 0.2, 0.8, 0.9], [1, 1, 0, 0], 0.0),     # perfectly wrong
+    ([0.5, 0.5, 0.5, 0.5], [1, 1, 0, 0], 0.5),     # all ties
+    ([0.9, 0.3, 0.6, 0.1], [1, 1, 0, 0], 0.75),    # pairs: (.9>.6)(.9>.1)(.3<.6)(.3>.1) -> 3/4
+])
+def test_auc(scores, labels, expected):
+    assert metrics.auc(scores, labels) == pytest.approx(expected)
+
+
+def test_auc_needs_both_classes():
+    assert metrics.auc([0.1, 0.2], [1, 1]) is None

@@ -123,3 +123,37 @@ Newest at the bottom. Write the success criterion **before** the run
   the core's effective size, and held-out answers exist only for the core. The
   65+ structure still rests on 30 WVS respondents (smoothed); attached features
   carry the conditional-independence assumptions listed in the generator summary.
+
+### F-4 — Realism of the synthetic persona set  (2026-10-21, Hasan)
+- Question: can the 20,000 synthetic personas be told apart from the real core,
+  and do they keep its joint structure better than a naive generator?
+- Success criterion (written before running `python -m src.validation.realism`):
+  - zero hard-rule violations;
+  - structural zeros (synthetic personas with a pair of values no real respondent
+    has) at most 3% — some unseen pairs are expected, since the core has 2,415 people;
+  - C2ST AUC at most 0.60 (a cross-fitted classifier barely tells real from synthetic);
+  - **relative**: the Bayesian network beats an independent-fields baseline (each
+    field drawn from its own weighted marginal, same n) on 2-way SRMSE, 3-way
+    SRMSE and C2ST AUC. Without this, the network adds nothing over margins.
+- Config: core `sha256:6c6addff…f770`, synthetic `sha256:fcabc04f…f91d`, seed 0.
+- Result (`reports/realism.json`):
+
+  | | synthetic (BN) | independent baseline | criterion |
+  |---|---|---|---|
+  | hard-rule violations | 0 | — | 0 ✓ |
+  | structural zeros | 4.32% | 22.43% | ≤ 3% ✗ |
+  | SRMSE 2-way, mean | 0.190 | 0.283 | BN lower ✓ |
+  | SRMSE 3-way, mean | 0.402 | 0.613 | BN lower ✓ |
+  | C2ST AUC | 0.544 | 0.554 | ≤ 0.60 ✓, BN lower ✓ |
+- Status: partial (structural-zero criterion missed)
+- Notes: the worst unseen pair is age_band × region (672 personas): the core has
+  65+ respondents in only 4 of 7 regions (Marmara 16, Ege 9, Akdeniz 3, İç Anadolu 2),
+  while the synthetic set takes region × age × sex from the official 2025 table, so
+  every region gets its elderly. Excluding the age/region/sex pairs fixed by official
+  targets, the rate is 1.06%. These are sampling zeros of a 2,415-person core, not
+  impossible people — but the criterion was registered as written and is reported as
+  missed. Worst SRMSE tables involve region × religiosity (2-way 0.58) and
+  region × income × religiosity (3-way 0.97): thin cells in the core. A fix (e.g. a
+  LiTS-informed age × region structure, or TÜİK microdata) must be tested as a new
+  finding, not tuned against this one. Measurement bug found and fixed before this
+  result: income 4 vs 4.0 was counted as unseen (first run showed 100%).
