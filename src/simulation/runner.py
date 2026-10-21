@@ -73,8 +73,13 @@ def _run_arm(
     n_repeats: int,
     stubbornness: float,
     n_rounds: int,
-) -> dict:
-    """Round 1 per cell, then Friedkin–Johnsen for rounds 2..n_rounds."""
+    refusals: dict,
+) -> dict | None:
+    """Round 1 per cell, then Friedkin–Johnsen for rounds 2..n_rounds.
+
+    Personas in cells the model refused to answer are left out of the arm and
+    recorded in ``refusals``; an arm with no answered cell is None.
+    """
     options = scenario["options"]
     prompts = build_prompts_for_arm(
         arm=arm,
@@ -84,12 +89,19 @@ def _run_arm(
         contexts=contexts,
     )
     cell_dists = run_round_1(model, prompts, n_repeats, seed)
+    refused = sorted(p["cell_id"] for p in prompts if p["cell_id"] not in cell_dists)
+    if refused:
+        cells_of = personas["cell_id"] if arm != "vanilla" else personas["cell_id"].map(lambda _: "__vanilla__")
+        refusals[arm] = {"cells": refused, "n_personas": int(cells_of.isin(refused).sum())}
+    if not cell_dists:
+        return None
 
     if arm == "vanilla":
         # The model's own prior: one answer for everyone, no persona, no deliberation.
         x = initial_vectors(personas.assign(cell_id="__vanilla__"), cell_dists, options)
         return aggregate_arm(personas, x, options, include_subgroups=False)
 
+    personas = personas[personas["cell_id"].isin(cell_dists)].reset_index(drop=True)
     x0 = initial_vectors(personas, cell_dists, options)
     x = run_fj(personas, x0, stubbornness, steps=n_rounds - 1)
     return aggregate_arm(personas, x, options, include_subgroups=True)
@@ -150,6 +162,7 @@ def run_simulation(
     arms_to_run = [a for a in ARMS if scenario["run_type"] == "scenario" or a != "placebo"]
 
     arms_output: dict[str, dict | None] = {}
+    refusals: dict[str, dict] = {}
     for arm in arms_to_run:
         arms_output[arm] = _run_arm(
             arm=arm,
@@ -162,6 +175,7 @@ def run_simulation(
             n_repeats=n_repeats,
             stubbornness=stubbornness,
             n_rounds=n_rounds,
+            refusals=refusals,
         )
 
     # Probes have placebo = null.
@@ -180,7 +194,8 @@ def run_simulation(
         persona_set_hash=p_hash,
         option_order="reversed_half",
         n_rounds=n_rounds,
-        extra_metadata={"n_excluded_no_cell": n_excluded, "model_stats": model.summary(), "cells": cell_meta},
+        extra_metadata={"n_excluded_no_cell": n_excluded, "model_stats": model.summary(), "cells": cell_meta,
+                        "refusals": refusals},
     )
 
     # Write output.

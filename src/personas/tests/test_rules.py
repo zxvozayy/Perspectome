@@ -61,3 +61,18 @@ def test_real_shares_match_the_recorded_reference():
     assert s.loc[s.kind == "hard", "n"].sum() == 0
     soft = s[s.kind == "soft"]
     assert (soft["share"] - soft["real_share"]).abs().max() < 0.0001
+
+
+@pytest.mark.parametrize("text, fields, expected", [
+    ("Emekliyim, maaş yetmiyor.", {"employment_status": "employed"}, 1),
+    ("Emekliyim, maaş yetmiyor.", {"employment_status": "retired"}, 0),
+    ("Eşim de çalışıyor.", {"marital_status": "single"}, 1),
+    ("Bekârım ve kirada oturuyorum.", {"marital_status": "single"}, 0),
+    ("22 yaşındayım, iş arıyorum.", {"age_band": "65+", "employment_status": "unemployed"}, 1),
+    ("40 yaşında biri olarak", {"age_band": "35-44"}, 0),
+    ("Kiradayım, her yıl zam geliyor.", {"tenure": "owner"}, 1),
+    ("Kiradayım, her yıl zam geliyor.", {"tenure": "tenant"}, 0),
+    ("Kendi evimde oturuyorum.", {"tenure": "tenant"}, 1),
+])
+def test_check_text(text, fields, expected):
+    assert len(rules.check_text(text, fields)) == expected

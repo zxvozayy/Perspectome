@@ -65,18 +65,6 @@ def test_independent_baseline_keeps_marginals_and_breaks_structure():
     assert mixed == pytest.approx(0.25, abs=0.03)   # independence invents 65+ students
 
 
-@pytest.mark.parametrize("text, fields, expected", [
-    ("Emekliyim, maaş yetmiyor.", {"employment_status": "employed"}, 1),
-    ("Emekliyim, maaş yetmiyor.", {"employment_status": "retired"}, 0),
-    ("Eşim de çalışıyor.", {"marital_status": "single"}, 1),
-    ("Bekârım ve kirada oturuyorum.", {"marital_status": "single"}, 0),
-    ("22 yaşındayım, iş arıyorum.", {"age_band": "65+", "employment_status": "unemployed"}, 1),
-    ("40 yaşında biri olarak", {"age_band": "35-44"}, 0),
-])
-def test_check_text(text, fields, expected):
-    assert len(realism.check_text(text, fields)) == expected
-
-
 def test_report_has_both_sets_and_rules():
     real = _people([{}] * 30)
     out = realism.report(_people([{}] * 30), real)

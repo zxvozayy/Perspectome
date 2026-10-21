@@ -196,11 +196,28 @@ class Handler(BaseHTTPRequestHandler):
         if not question:
             return self.json({"error": "Soru boş."}, 400)
         bundle = load()
+        reply = answers.route(question, bundle)
+        if reply["kind"] == "unknown":
+            reply = persona_comments(question)
         chat = {"id": uuid.uuid4().hex, "messages": [
             {"role": "user", "text": question},
-            {"role": "assistant", **answers.route(question, bundle)},
+            {"role": "assistant", **reply},
         ]}
         self.json({"html": render.chat(chat, bundle)})
+
+
+def persona_comments(question: str) -> dict:
+    """A question no run covers goes to the synthetic personas (live model, Track B).
+
+    The panel's one link to pipeline code. Without an API key or persona file the
+    answer falls back to "nothing has been run for that".
+    """
+    try:
+        from src.simulation import comments
+        return {"kind": "comments", **comments.ask(question)}
+    except Exception as err:  # no key, no persona file, API down: never a crash, never a key in the page
+        print(f"persona comments unavailable: {type(err).__name__}")
+        return {"kind": "unknown"}
 
 
 def main() -> None:

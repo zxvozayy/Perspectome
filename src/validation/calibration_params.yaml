@@ -1,0 +1,33 @@
+# Written by python -m src.validation.calibration; fit-role items only.
+model_snapshot: claude-haiku-4-5-20251001
+default:
+  temperature: 5.0
+  stack_weight: 0.0
+  fitted_on:
+  - gender_jobs
+  - happiness
+  - income_equality
+  - science_life
+  - trust_courts
+  - trust_government
+by_scale_size:
+  4:
+    temperature: 5.0
+    stack_weight: 0.0
+    fitted_on:
+    - happiness
+    - trust_courts
+    - trust_government
+  5:
+    temperature: 5.0
+    stack_weight: 0.0
+    fitted_on:
+    - gender_jobs
+  10:
+    temperature: 5.0
+    stack_weight: 0.0
+    fitted_on:
+    - income_equality
+    - science_life
+fitted_at: '2026-10-21T10:10:40+00:00'
+persona_set_hash: sha256:6c6addff7439a824222fb3b565bae1aeda6b661772dcf19a74c57613b900f770

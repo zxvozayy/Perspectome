@@ -127,3 +127,21 @@ def test_fixed_cell_fields_and_default():
         default = run_simulation(FIXTURE_PERSONAS, SCENARIOS_DIR / "probe_trust_police.yaml", output_dir=tmpdir, seed=1)
     assert fixed["metadata"]["cells"] == {"mode": "fixed", "fields": ["gender"], "anchors": [], "n_cells": 1}
     assert default["metadata"]["cells"]["mode"] == "default"
+
+
+def test_refused_cells_are_left_out_and_reported(monkeypatch):
+    from src.simulation import model as model_mod
+    real_query = model_mod.MockModel.query
+
+    def query(self, prompt, options, n_repeats, seed):
+        if "female" in prompt:
+            raise model_mod.NoAnswer("refused")
+        return real_query(self, prompt, options, n_repeats, seed)
+
+    monkeypatch.setattr(model_mod.MockModel, "query", query)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_simulation(FIXTURE_PERSONAS, SCENARIOS_DIR / "probe_trust_police.yaml", output_dir=tmpdir, seed=1)
+    refused = result["metadata"]["refusals"]["treatment"]
+    assert refused["cells"] and all("female" in c for c in refused["cells"])
+    assert result["arms"]["treatment"]["by_subgroup"]["gender"].keys() == {"male"}
+    assert "vanilla" not in result["metadata"]["refusals"]

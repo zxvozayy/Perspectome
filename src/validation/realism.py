@@ -8,8 +8,7 @@
 - C2ST: a classifier trained to tell real from synthetic personas (cross-fitted);
   AUC 0.5 = indistinguishable, 1.0 = trivially separable;
 - consistency rules (src/personas/rules.yaml): hard violations and soft-rule
-  shares, synthetic vs real;
-- ``check_text``: does a persona's free text contradict its own fields?
+  shares, synthetic vs real.
 
 Pass thresholds are pre-registered in docs/findings.md (F-4).
 """
@@ -18,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from itertools import combinations
 from typing import Optional
 
@@ -145,34 +143,6 @@ def independent_baseline(real: pd.DataFrame, n: int, seed: int = 0) -> pd.DataFr
     frame["cell_id"] = frame[list(schema.CELL_FIELDS)].astype(str).agg("|".join, axis=1)
     frame.insert(0, "persona_id", [f"i{i}" for i in range(n)])
     return frame
-
-
-# --- free text vs the persona's own fields -------------------------------------------
-
-_AGE = re.compile(r"\b(\d{2})\s*yaşında", re.IGNORECASE)
-# (pattern in the text, field, values that are consistent with it)
-TEXT_RULES = (
-    (re.compile(r"\bemekliyim\b|\bemekli oldum\b", re.IGNORECASE), "employment_status", {"retired"}),
-    (re.compile(r"\böğrenciyim\b|\bdersim(e|den)?\b|\bfinallerim\b", re.IGNORECASE), "employment_status", {"student"}),
-    (re.compile(r"\bişsizim\b|\biş arıyorum\b", re.IGNORECASE), "employment_status", {"unemployed"}),
-    (re.compile(r"\b(eşim|karım|kocam)\b", re.IGNORECASE), "marital_status", {"married"}),
-    (re.compile(r"\bbekarım\b|\bbekârım\b", re.IGNORECASE), "marital_status", {"single", "divorced", "widowed"}),
-)
-
-
-def check_text(text: str, persona: dict) -> list[str]:
-    """Contradictions between a persona's free text and its fields (empty list = consistent)."""
-    problems = []
-    for pattern, field, allowed in TEXT_RULES:
-        value = persona.get(field)
-        if value is not None and pattern.search(text) and value not in allowed:
-            problems.append(f"text implies {field} in {sorted(allowed)}, persona has {value!r}")
-    for match in _AGE.finditer(text):
-        years = int(match.group(1))
-        band = next((b for b, lo in zip(reversed(schema.AGE_BANDS), reversed(schema.AGE_EDGES)) if years >= lo), None)
-        if band and persona.get("age_band") and band != persona["age_band"]:
-            problems.append(f"text says {years} years old, persona is {persona['age_band']}")
-    return problems
 
 
 def main(argv: Optional[list] = None):

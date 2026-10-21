@@ -26,6 +26,7 @@ def site(cache, monkeypatch):
     # the site reads real runs only; tests point it at the fabricated samples explicitly
     monkeypatch.setenv("PERSPECTOME_RESULTS_DIR", str(paths.RESULTS_FIXTURES[0].parent))
     monkeypatch.setenv("PERSPECTOME_COMPARISON", str(paths.COMPARISON_FIXTURE))
+    monkeypatch.setattr(server, "persona_comments", lambda q: {"kind": "unknown"})  # never a live call in tests
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     yield httpd.server_address[1]
@@ -122,3 +123,22 @@ def test_ask_with_no_runs_shows_no_numbers(site, monkeypatch, tmp_path):
     status, _, body = call(site, "POST", "/api/ask", json.dumps({"q": "İşsizlik artarsa?"}),
                            {**cookie, "Content-Type": "application/json"})
     assert status == 200 and "Etki" not in json.loads(body)["html"]
+
+
+def test_unmatched_question_shows_persona_comments(site, monkeypatch):
+    fake = {"kind": "comments", "question": "Kira?", "model": "m", "n_asked": 2,
+            "comments": [{"persona_id": "s1", "facts": ["Kadın", "35-44 yaş", "Ege · şehirde", "Kiracı"],
+                          "stance": "OLUMSUZ", "text": "<b>Kira</b> çok arttı."}],
+            "dropped": {"unreadable": 1, "inconsistent": 0, "duplicate": 0},
+            "stances": {"OLUMLU": 0, "OLUMSUZ": 1, "KARARSIZ": 0}}
+    monkeypatch.setattr(server, "persona_comments", lambda q: fake)
+    form = {"Content-Type": "application/x-www-form-urlencoded"}
+    _, headers, _ = call(site, "POST", "/kayit", "ad=kira&sifre=uzun-bir-sifre&sifre2=uzun-bir-sifre", form)
+    cookie = {"Cookie": headers["Set-Cookie"].split(";")[0]}
+    _, _, body = call(site, "POST", "/api/ask", json.dumps({"q": "Kira zammı ne olacak?"}),
+                      {**cookie, "Content-Type": "application/json"})
+    html = json.loads(body)["html"]
+    assert 'class="pc-grid"' in html and "Kiracı" in html and "Olumsuz" in html
+    assert "&lt;b&gt;Kira" in html                      # model text is escaped
+    assert "nüfus tahmini değildir" in html and "1 okunamayan" in html
+    assert "%" not in html.split('class="pc-grid"')[0]   # counts, never shares
