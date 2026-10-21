@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from src.common.schema import AGE_BANDS
+from src.common.stats import normalize_vec
 
 
 # ---------------------------------------------------------------------------
@@ -49,8 +50,7 @@ def initial_vectors(
     out = np.empty((len(personas), len(options)))
     for i, cell in enumerate(personas["cell_id"].to_numpy()):
         dist = cell_distributions[cell]
-        v = np.array([dist.get(opt, 0.0) for opt in options], dtype=float)
-        out[i] = v / v.sum() if v.sum() > 0 else 1.0 / len(options)
+        out[i] = normalize_vec([dist.get(opt, 0.0) for opt in options])
     return out
 
 
@@ -112,5 +112,5 @@ def run_fj(
         mean = np.where(has_nb[:, None], sums / np.maximum(hood_size, 1)[:, None], x0)
         x = stubbornness * x0 + (1 - stubbornness) * mean
         x = np.clip(x, lo, hi)
-        x = x / x.sum(axis=1, keepdims=True)
+        x = normalize_vec(x)
     return x

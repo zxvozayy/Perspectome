@@ -47,7 +47,6 @@ def _fetch(dataset: str, params: dict) -> dict:
 def _to_tidy(js: dict) -> pd.DataFrame:
     """Expand a JSON-stat 2.0 response into one row per cell."""
     dims = js["id"]
-    sizes = js["size"]
     # ordered category keys per dimension
     cats = []
     for d in dims:

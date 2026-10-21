@@ -1,5 +1,5 @@
 // Perspectome — analysis panel. The server renders every answer; this file only
-// sends questions, swaps chats and toggles chart tabs.
+// sends questions and toggles chart tabs. Nothing is stored between visits.
 (() => {
   const thread = document.getElementById("thread");
   const head = document.getElementById("head");
@@ -10,7 +10,7 @@
   const side = document.getElementById("side");
   const scrim = document.querySelector(".scrim");
   const opener = document.querySelector(".side-open");
-  let current = null;
+  let inChat = false;
   let state = { counts: {} };
   let busy = false;
 
@@ -37,20 +37,19 @@
   }
 
   function welcome() {
-    current = null;
+    inChat = false;
     setHead("Panel", "Perspectome'a hoş geldin", "Hazır senaryo ve doğrulama çalıştırmalarının genel durumu.");
     const c = state.counts || {};
     const stat = (label, n, kind) => `<div class="w-stat"><div><p>${label}</p><b>${n ?? 0}</b></div>${icon(ICONS[kind])}</div>`;
     thread.innerHTML = `<div class="welcome">
       <div class="w-stats">${stat("Senaryo çalıştırması", c.scenarios, "scenario")}${stat("Doğrulama sorusu", c.probes, "probe")}${stat("Karşılaştırılan model", c.models, "models")}</div>
-      <div class="w-grid">
-        <section class="w-card"><h2>Nasıl okunur</h2><ul class="w-read">
+      <section class="w-card"><h2>Nasıl okunur</h2><ul class="w-read">
           <li><b>Etki</b><span>Senaryo kolu eksi placebo kolu. Nüfustaki oran değil, senaryonun yarattığı fark.</span></li>
           <li><b>Gürültü tabanı</b><span>Aynı ayarın tekrarındaki oynaklık. Bundan küçük etkiler sayı olarak gösterilmez.</span></li>
           <li><b>Alt gruplar</b><span>Yalnızca yön okları; n &lt; 30 olan hücreler test edilmez.</span></li>
           <li><b>Doğrulama</b><span>Gerçek anket sorularında motorun isabeti, temel modellerle yan yana (TVD).</span></li>
         </ul></section>
-      </div></div>`;
+      </div>`;
     markNav();
     closeSide();
   }
@@ -60,7 +59,7 @@
   }
 
   function markNav() {
-    homeBtn.setAttribute("aria-current", String(current === null));
+    homeBtn.setAttribute("aria-current", String(!inChat));
   }
 
   async function refresh() {
@@ -75,18 +74,15 @@
     input.value = "";
     closeSide();
     homeBtn.setAttribute("aria-current", "false");
-    if (!current) { chatHead(q); thread.innerHTML = ""; }
+    if (!inChat) { chatHead(q); thread.innerHTML = ""; inChat = true; }
     thread.querySelectorAll(".answer .chips").forEach((c) => c.remove()); // follow-ups belong to the newest answer only
     const pending = document.createElement("div");
     pending.innerHTML = `<div class="pt pt-user"><div>${esc(q)}</div></div><div class="pt pt-typing" aria-label="Yanıt hazırlanıyor"><i></i><i></i><i></i></div>`;
     thread.append(pending);
     pending.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
-      const [res] = await Promise.all([api("/api/ask", { chat_id: current, q }), new Promise((r) => setTimeout(r, 450))]);
-      const isNew = current !== res.id;
-      current = res.id;
+      const [res] = await Promise.all([api("/api/ask", { q }), new Promise((r) => setTimeout(r, 450))]);
       pending.outerHTML = res.html;
-      if (isNew) await refresh();
     } catch (err) {
       if (err.message !== "auth") pending.querySelector(".pt-typing").outerHTML = `<p class="form-error" role="alert">${esc(err.message)}</p>`;
     } finally {

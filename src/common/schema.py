@@ -1,12 +1,15 @@
 """Shared categories for every track. Change only via PR, with a heads-up to all tracks."""
 
 AGE_BANDS = ("18-24", "25-34", "35-44", "45-54", "55-64", "65+")
+AGE_EDGES = (18, 25, 35, 45, 55, 65)  # lower bound (years) of each AGE_BANDS entry
 GENDERS = ("male", "female")
 EDUCATION_LEVELS = ("primary", "secondary", "vocational", "bachelor", "graduate")
 SETTLEMENT_TYPES = ("urban", "rural")
 MARITAL_STATUSES = ("married", "single", "divorced", "widowed")
 EMPLOYMENT_STATUSES = ("employed", "unemployed", "student", "retired", "homemaker")
 INCOME_DECILES = tuple(range(1, 11))
+# The 7 geographic regions; the 12 NUTS-1 regions collapse onto these (personas/wvs.py).
+REGIONS = ("Marmara", "Ege", "Akdeniz", "Ic Anadolu", "Karadeniz", "Dogu Anadolu", "Guneydogu Anadolu")
 
 CONDITIONING_FIELDS = (
     "persona_id",
@@ -19,6 +22,24 @@ CONDITIONING_FIELDS = (
     "employment_status",
     "income_decile",
 )
+
+# Allowed values per categorical conditioning field.
+CATEGORIES = {
+    "age_band": AGE_BANDS,
+    "gender": GENDERS,
+    "education_level": EDUCATION_LEVELS,
+    "region": REGIONS,
+    "settlement_type": SETTLEMENT_TYPES,
+    "marital_status": MARITAL_STATUSES,
+    "employment_status": EMPLOYMENT_STATUSES,
+    "income_decile": INCOME_DECILES,
+}
+
+# personas.csv columns, in contract order.
+PERSONA_COLUMNS = ("persona_id", "cell_id", "weight", *CONDITIONING_FIELDS[1:])
+
+# The fields that define an archetype cell (cell_id = "age_band|gender|education_level").
+CELL_FIELDS = ("age_band", "gender", "education_level")
 
 # Never visible to persona generation or simulation; validation only (Track C).
 # Track C (Hasan) sign-off: two items per topic -- one to FIT (calibrate) and
@@ -54,3 +75,4 @@ HELDOUT_ROLE = {
 RUN_TYPES = ("probe", "scenario")
 ARMS = ("treatment", "placebo", "vanilla")
 MIN_CELL_N = 30
+SATURATION = (0.10, 0.90)  # placebo share outside this band can't show an effect (rule 7)

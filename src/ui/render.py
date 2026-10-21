@@ -104,10 +104,7 @@ def message(key: str, msg: dict, last: bool, bundle: Bundle) -> str:
     return f'<div class="answer">{views.assistant_label()}{body}</div>'
 
 
-def chat(chat: dict, bundle: Bundle, start: int = 0) -> str:
-    """Messages from `start` on; `start` lets the panel append only the newest pair."""
+def chat(chat: dict, bundle: Bundle) -> str:
+    """One question and its answer; ``chat["id"]`` keeps element ids unique on the page."""
     msgs = chat["messages"]
-    return "".join(
-        message(f"{chat['id']}-{i}", m, i == len(msgs) - 1, bundle)
-        for i, m in enumerate(msgs) if i >= start
-    )
+    return "".join(message(f"{chat['id']}-{i}", m, i == len(msgs) - 1, bundle) for i, m in enumerate(msgs))

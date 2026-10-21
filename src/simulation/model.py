@@ -3,19 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Protocol
-
 import numpy as np
-
-
-class ModelClient(Protocol):
-    """Uniform interface for querying a model."""
-
-    def query(
-        self, prompt: str, options: list[str], n_repeats: int, seed: int,
-    ) -> dict[str, float]:
-        """Return {option: probability} summing to 1.0."""
-        ...
 
 
 class MockModel:

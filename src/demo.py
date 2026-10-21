@@ -15,14 +15,14 @@ import argparse
 import contextlib
 import json
 import io
-from pathlib import Path
 
+from src.common import paths
 from src.simulation import runner
 from src.validation import real, report
 
-SCENARIOS = Path("src/simulation/scenarios")
-RESULTS = Path("results")
-REPORT = Path("reports/comparison.json")
+SCENARIOS = paths.SCENARIOS_DIR
+RESULTS = paths.RESULTS_DIR
+REPORT = paths.COMPARISON_JSON
 SEEDS = (1, 2)
 
 
@@ -34,7 +34,7 @@ def main():
     personas, heldout = real.PERSONAS_FIXTURE, real.HELDOUT_FIXTURE
     fixtures = True
     if args.real:
-        personas, heldout = Path("data/processed/personas.csv"), Path("data/processed/heldout.csv")
+        personas, heldout = paths.PERSONAS_CSV, paths.HELDOUT_CSV
         if not (personas.exists() and heldout.exists()):
             raise SystemExit("No real persona files under data/processed/ (pull them: python -m src.common.db pull-personas).")
         fixtures = False
@@ -50,7 +50,7 @@ def main():
 
     rep = report.build(report.load_runs(sorted(RESULTS.glob("*.json"))),
                        real.load(personas, heldout), fixtures=fixtures)
-    REPORT.parent.mkdir(exist_ok=True)
+    REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"personas : {personas} ({'fixtures' if fixtures else 'real'})")

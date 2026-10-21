@@ -11,30 +11,20 @@ import html
 import json
 import mimetypes
 import os
-import sys
-import threading
 import uuid
-from datetime import datetime
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from src.ui import answers, auth, render, store, views  # noqa: E402
-from src.ui.data import load  # noqa: E402
+from src.ui import answers, auth, render
+from src.ui.data import load
 
 WEB = Path(__file__).parent / "web"
 COOKIE = "pt_session"
 STATIC_TYPES = {".css", ".js", ".svg", ".woff2", ".png", ".webp", ".ico", ".jpg", ".mp4", ".webm"}
 VIDEO = WEB / "media" / "tanitim.mp4"  # the hero video (Mixkit, free licence); a still shows if it's missing
-_lock = threading.Lock()  # one writer at a time for the chat files
-
-
-_MAP, _MAP_W, _MAP_H = views.turkey_outline()
-MAP = {"map": _MAP, "mapw": str(_MAP_W), "maph": str(_MAP_H), "turkey": views.TURKEY_JSON}
 
 
 def video() -> str:
@@ -54,7 +44,7 @@ def counts(bundle) -> dict:
 
 def page(file: str, **values: str) -> bytes:
     text = (WEB / file).read_text(encoding="utf-8")
-    for key, value in {**MAP, **values}.items():
+    for key, value in values.items():
         text = text.replace("{{" + key + "}}", value)
     return text.encode()
 
@@ -190,14 +180,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.json({"error": "Oturum kapalı."}, 401)
         bundle = load()
         if path == "/api/state":
-            chats = [{"id": c["id"], "title": c["title"]} for c in store.load(user)]
-            return self.json({"suggestions": answers.suggestions(bundle), "chats": chats, "counts": counts(bundle)})
-        if path == "/api/chat":
-            cid = (query.get("id") or [""])[0]
-            chat = next((c for c in store.load(user) if c["id"] == cid), None)
-            if chat is None:
-                return self.json({"error": "Sohbet bulunamadı."}, 404)
-            return self.json({"id": chat["id"], "title": chat["title"], "html": render.chat(chat, bundle)})
+            return self.json({"counts": counts(bundle)})
         self.json({"error": "Bilinmeyen adres."}, 404)
 
     def api_ask(self) -> None:
@@ -214,22 +197,11 @@ class Handler(BaseHTTPRequestHandler):
         if not question:
             return self.json({"error": "Soru boş."}, 400)
         bundle = load()
-        with _lock:
-            chats = store.load(user)
-            chat = next((c for c in chats if c["id"] == req.get("chat_id")), None)
-            if chat is None:
-                chat = {
-                    "id": uuid.uuid4().hex,
-                    "title": question[:60],
-                    "created": datetime.now().isoformat(timespec="minutes"),
-                    "messages": [],
-                }
-                chats.insert(0, chat)
-            start = len(chat["messages"])
-            chat["messages"].append({"role": "user", "text": question})
-            chat["messages"].append({"role": "assistant", **answers.route(question, bundle)})
-            store.save(user, chats)
-        self.json({"id": chat["id"], "title": chat["title"], "html": render.chat(chat, bundle, start)})
+        chat = {"id": uuid.uuid4().hex, "messages": [
+            {"role": "user", "text": question},
+            {"role": "assistant", **answers.route(question, bundle)},
+        ]}
+        self.json({"html": render.chat(chat, bundle)})
 
 
 def main() -> None:

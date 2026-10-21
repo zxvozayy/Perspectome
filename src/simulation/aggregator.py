@@ -7,23 +7,21 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-# Breakdowns by the fields that define an archetype cell. Other fields
-# (region, settlement, income) would only reflect which cells their members
-# fall into, not anything the model said about them.
-SUBGROUP_FIELDS = ("age_band", "gender", "education_level")
+from src.common.schema import CELL_FIELDS
+from src.common.stats import weighted_mean_rows
 
 
 def _weighted_mean(vectors: np.ndarray, weights: np.ndarray, options: list[str]) -> dict[str, float]:
-    total = weights.sum()
-    mean = (vectors * weights[:, None]).sum(axis=0) / total if total > 0 else vectors.mean(axis=0)
-    return {opt: round(float(p), 4) for opt, p in zip(options, mean)}
+    return {opt: round(float(p), 4) for opt, p in zip(options, weighted_mean_rows(vectors, weights))}
 
 
 def aggregate_arm(
     personas: pd.DataFrame,
     vectors: np.ndarray,
     options: list[str],
-    subgroup_fields: tuple[str, ...] = SUBGROUP_FIELDS,
+    # Breakdowns by the cell-defining fields: other fields (region, income) would only
+    # reflect which cells their members fall into, not anything the model said.
+    subgroup_fields: tuple[str, ...] = CELL_FIELDS,
     include_subgroups: bool = True,
 ) -> dict:
     """response_distribution, option_usage and by_subgroup for one arm.

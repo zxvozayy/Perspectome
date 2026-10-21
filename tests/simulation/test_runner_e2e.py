@@ -7,10 +7,11 @@ import json
 import tempfile
 from pathlib import Path
 
+from src.common import paths
 from src.simulation.runner import run_simulation
 
-FIXTURE_PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
-SCENARIOS_DIR = Path("src/simulation/scenarios")
+FIXTURE_PERSONAS = paths.PERSONAS_FIXTURE
+SCENARIOS_DIR = paths.SCENARIOS_DIR
 
 
 def _run_and_validate(scenario_path: str | Path, expected_run_type: str):

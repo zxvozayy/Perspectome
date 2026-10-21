@@ -13,9 +13,10 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-FIXTURE_RESULTS = REPO / "src" / "simulation" / "fixtures"
-FIXTURE_COMPARISON = REPO / "src" / "validation" / "fixtures" / "comparison.sample.json"
+from src.common import paths
+
+FIXTURE_RESULTS = paths.RESULTS_FIXTURES[0].parent
+FIXTURE_COMPARISON = paths.COMPARISON_FIXTURE
 
 
 @dataclass
@@ -47,9 +48,9 @@ def _read(path: Path) -> dict | None:
 
 
 def load(results_dir: Path | None = None, comparison_path: Path | None = None) -> Bundle:
-    results_dir = results_dir or Path(os.environ.get("PERSPECTOME_RESULTS_DIR", REPO / "results"))
+    results_dir = results_dir or Path(os.environ.get("PERSPECTOME_RESULTS_DIR", paths.RESULTS_DIR))
     comparison_path = comparison_path or Path(
-        os.environ.get("PERSPECTOME_COMPARISON", REPO / "reports" / "comparison.json")
+        os.environ.get("PERSPECTOME_COMPARISON", paths.COMPARISON_JSON)
     )
 
     files = sorted(results_dir.glob("*.json")) if results_dir.is_dir() else []

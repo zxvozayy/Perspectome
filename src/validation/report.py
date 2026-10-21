@@ -23,16 +23,14 @@ from typing import Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from src.common import schema
+from src.common import paths, schema
+from src.common.stats import kish_n_eff
 from src.validation import baselines, metrics, real
 
-RESULTS_FIXTURES = (
-    Path("src/simulation/fixtures/results.sample.json"),
-    Path("src/simulation/fixtures/results.probe.sample.json"),
-)
-REAL_PERSONAS = Path("data/processed/personas.csv")
-REAL_HELDOUT = Path("data/processed/heldout.csv")
-DEFAULT_OUT = Path("reports/comparison.json")
+RESULTS_FIXTURES = paths.RESULTS_FIXTURES
+REAL_PERSONAS = paths.PERSONAS_CSV
+REAL_HELDOUT = paths.HELDOUT_CSV
+DEFAULT_OUT = paths.COMPARISON_JSON
 MIN_RANK_ITEMS = 3
 
 
@@ -341,7 +339,7 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
         warnings.append("Only one model was run. Results may reflect that model's prior "
                         "rather than the population (rule 14: at least two models).")
 
-    n_eff_ratio = metrics.kish_n_eff(frame["weight"]) / len(frame) if len(frame) else 1.0
+    n_eff_ratio = kish_n_eff(frame["weight"]) / len(frame) if len(frame) else 1.0
     probes = score_probes(runs, frame, warnings)
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -370,7 +368,7 @@ def main():
     ap.add_argument("--fixtures", action="store_true", help="force fixture inputs")
     args = ap.parse_args()
 
-    results_dir = Path(args.results_dir) if args.results_dir else Path("results")
+    results_dir = Path(args.results_dir) if args.results_dir else paths.RESULTS_DIR
     result_files = sorted(results_dir.glob("*.json")) if results_dir.is_dir() else []
     use_fixtures = args.fixtures or not result_files
     if use_fixtures:

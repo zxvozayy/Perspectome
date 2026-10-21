@@ -35,7 +35,6 @@
 
   --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --gutter: clamp(16px, 3vw, 28px);
-  --bar: 56px;
   --r: 14px;
   --ease: cubic-bezier(.22, .61, .36, 1);
   color-scheme: light;
@@ -78,7 +77,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -.015em; line-height: 
 button { font: inherit; color: inherit; }
 ::selection { background: var(--brand); color: var(--on-brand); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.muted { color: var(--muted); }
 
 .kicker { margin: 0 0 6px; font-size: .68rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 

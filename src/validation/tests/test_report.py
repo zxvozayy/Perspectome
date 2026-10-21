@@ -6,6 +6,7 @@ import json
 import pandas as pd
 import pytest
 
+from src.common import paths
 from src.validation import real, report
 
 CONTRACT_TOP = {"generated_at", "persona_set_hash", "noise_floor_tvd", "probes",
@@ -174,7 +175,7 @@ def test_end_to_end_on_simulation_runner(tmp_path):
     runner = pytest.importorskip("src.simulation.runner")
     for seed in (1, 2):
         for name in ("probe_trust_police.yaml", "unemployment_shock_v1.yaml"):
-            runner.run_simulation(real.PERSONAS_FIXTURE, f"src/simulation/scenarios/{name}",
+            runner.run_simulation(paths.PERSONAS_FIXTURE, paths.SCENARIOS_DIR / name,
                                   output_dir=tmp_path, seed=seed)
     runs = report.load_runs(sorted(tmp_path.glob("*.json")))
     out = report.build(runs, real.load())

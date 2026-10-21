@@ -45,6 +45,8 @@ real-data findings behind these mappings.
 
 from __future__ import annotations
 
+import bisect
+
 import math
 from typing import Optional
 
@@ -93,26 +95,15 @@ SRC = {
 # --- conditioning (personas.csv) mappings ----------------------------------
 
 def map_age_band(age) -> Optional[str]:
-    """Numeric age (Q262) -> age_band. Returns None if missing or out of range."""
+    """Numeric age (Q262) -> age_band (schema.AGE_EDGES). None if missing or under 18."""
     if is_missing(age):
         return None
     try:
         years = int(age)
     except (TypeError, ValueError):
         return None
-    if years < 18:
-        return None  # WVS is 18+; anything below is a coding error, drop/warn
-    if years <= 24:
-        return "18-24"
-    if years <= 34:
-        return "25-34"
-    if years <= 44:
-        return "35-44"
-    if years <= 54:
-        return "45-54"
-    if years <= 64:
-        return "55-64"
-    return "65+"
+    i = bisect.bisect_right(schema.AGE_EDGES, years) - 1
+    return schema.AGE_BANDS[i] if i >= 0 else None
 
 
 _GENDER = {1: "male", 2: "female"}
@@ -216,20 +207,24 @@ def map_income_decile(code) -> Optional[int]:
 # region variable. The 792NN -> NUTS-1 order below is the standard İBBS Düzey-1
 # numbering, corroborated by the response counts (79201 = İstanbul is the
 # largest cell). Double-check against the WVS region annex if a count looks off.
-REGION_MAP = {
-    79201: "Marmara",            # TR1 İstanbul
-    79202: "Marmara",            # TR2 Batı Marmara
-    79203: "Ege",                # TR3 Ege
-    79204: "Marmara",            # TR4 Doğu Marmara
-    79205: "Ic Anadolu",         # TR5 Batı Anadolu (Ankara/Konya)
-    79206: "Akdeniz",            # TR6 Akdeniz
-    79207: "Ic Anadolu",         # TR7 Orta Anadolu
-    79208: "Karadeniz",          # TR8 Batı Karadeniz
-    79209: "Karadeniz",          # TR9 Doğu Karadeniz
-    79210: "Dogu Anadolu",       # TRA Kuzeydoğu Anadolu
-    79211: "Dogu Anadolu",       # TRB Ortadoğu Anadolu
-    79212: "Guneydogu Anadolu",  # TRC Güneydoğu Anadolu
-}
+# (WVS code, Eurostat alpha code, schema region) for the 12 NUTS-1 regions.
+_NUTS1 = (
+    (79201, "TR1", "Marmara"),            # İstanbul
+    (79202, "TR2", "Marmara"),            # Batı Marmara
+    (79203, "TR3", "Ege"),                # Ege
+    (79204, "TR4", "Marmara"),            # Doğu Marmara
+    (79205, "TR5", "Ic Anadolu"),         # Batı Anadolu (Ankara/Konya)
+    (79206, "TR6", "Akdeniz"),            # Akdeniz
+    (79207, "TR7", "Ic Anadolu"),         # Orta Anadolu
+    (79208, "TR8", "Karadeniz"),          # Batı Karadeniz
+    (79209, "TR9", "Karadeniz"),          # Doğu Karadeniz
+    (79210, "TRA", "Dogu Anadolu"),       # Kuzeydoğu Anadolu
+    (79211, "TRB", "Dogu Anadolu"),       # Ortadoğu Anadolu
+    (79212, "TRC", "Guneydogu Anadolu"),  # Güneydoğu Anadolu
+)
+assert {r for _, _, r in _NUTS1} == set(schema.REGIONS)
+REGION_MAP = {code: region for code, _, region in _NUTS1}
+NUTS1_ALPHA_TO_REGION = {alpha: region for _, alpha, region in _NUTS1}
 
 
 def map_region(code) -> Optional[str]:
@@ -240,17 +235,6 @@ def map_region(code) -> Optional[str]:
         return REGION_MAP.get(int(float(code)))
     except (TypeError, ValueError):
         return None
-
-
-# Same 12 NUTS-1 regions keyed by Eurostat's alpha codes (TR1..TRC), so the
-# post-stratification margins (issue #10) collapse to the same 7 regions as the
-# WVS personas. Kept next to REGION_MAP so the two never drift apart.
-NUTS1_ALPHA_TO_REGION = {
-    "TR1": "Marmara", "TR2": "Marmara", "TR3": "Ege", "TR4": "Marmara",
-    "TR5": "Ic Anadolu", "TR6": "Akdeniz", "TR7": "Ic Anadolu",
-    "TR8": "Karadeniz", "TR9": "Karadeniz", "TRA": "Dogu Anadolu",
-    "TRB": "Dogu Anadolu", "TRC": "Guneydogu Anadolu",
-}
 
 
 # Coarse 3-level education axis (ISCED 0-2 / 3-4 / 5-8) used only for

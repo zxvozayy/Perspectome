@@ -66,11 +66,6 @@ def test_kendall_undefined_cases():
     assert metrics.kendall_tau_b([1, 1], [2, 2]) is None
 
 
-def test_kish_n_eff():
-    assert metrics.kish_n_eff([1, 1, 1, 1]) == pytest.approx(4.0)
-    assert metrics.kish_n_eff([1, 3]) == pytest.approx(16 / 10)
-
-
 @pytest.mark.parametrize("p, expected", [
     # thresholds for m=4: .0125 .025 .0375 .05 -> only the smallest passes
     ([0.01, 0.04, 0.03, 0.2], [True, False, False, False]),

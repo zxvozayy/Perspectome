@@ -26,21 +26,8 @@ from src.personas import wvs
 
 log = logging.getLogger(__name__)
 
-# Output column order. Mirrors the frozen contract header (persona README).
-# ``weight`` is deliberately absent here -- it is produced by the
-# post-stratification generator (issue #10), not by ingest.
-PERSONA_COLUMNS = [
-    "persona_id",
-    "cell_id",
-    "age_band",
-    "gender",
-    "education_level",
-    "region",
-    "settlement_type",
-    "marital_status",
-    "employment_status",
-    "income_decile",
-]
+# personas.csv columns except ``weight``, which the post-stratification generator adds.
+PERSONA_COLUMNS = [c for c in schema.PERSONA_COLUMNS if c != "weight"]
 HELDOUT_COLUMNS = ["persona_id", *schema.HELDOUT_FIELDS]
 
 # demographic field -> (source column key in wvs.SRC, mapper)

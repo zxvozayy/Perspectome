@@ -14,7 +14,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install pandas numpy pyyaml pytest "psycopg[binary]>=3.1"
+        run: pip install pandas numpy pyyaml pytest "psycopg[binary]>=3.1" pyflakes pycodestyle
+      - name: Lint (unused code, extra blank lines, trailing whitespace)
+        run: |
+          python -m pyflakes src tests
+          python -m pycodestyle --select=E301,E302,E303,E304,E305,W291,W293,W391 src tests
       - name: Run tests
         run: python -m pytest -q
       - name: End-to-end demo on fixtures

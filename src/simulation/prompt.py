@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 
-# Fields that define an archetype cell (Track A's cell_id). Only these describe a
-# cell; any other field would be one arbitrary member's value, not the cell's.
-CELL_FIELDS = ("age_band", "gender", "education_level")
-
 # Single-token option labels, so a model's answer can be read from its
 # next-token log-probabilities (rule 24). Rule 25: every option gets one.
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

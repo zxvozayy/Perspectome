@@ -39,6 +39,7 @@ import pandas as pd
 import yaml
 
 from src.common import schema
+from src.common.stats import normalize_vec, weighted_mean_rows
 from src.validation import real
 
 EQUATION_PARAMS = Path(__file__).parent / "equation_params.yaml"
@@ -129,7 +130,7 @@ def ml_baseline(frame: pd.DataFrame, item: str, options: Sequence[str],
         W = fit_softmax(X[train], y[train], k, w[train])
         proba[test] = predict_proba(X[test], W)
 
-    dist = (proba * w[:, None]).sum(axis=0) / w.sum()
+    dist = weighted_mean_rows(proba, w)
     return {"distribution": {o: float(p) for o, p in zip(options, dist)},
             "n": int(len(sub)), "n_folds": n_folds}
 
@@ -146,8 +147,7 @@ def equation_effect(placebo: dict, options: Sequence[str], target_option: str,
     """Closed-form ODE effect p(T) - p0 per option (sums to 0)."""
     if target_option not in options:
         raise ValueError(f"target_option {target_option!r} not in options {list(options)}")
-    p0 = np.array([float(placebo.get(o, 0.0)) for o in options])
-    p0 = p0 / p0.sum() if p0.sum() > 0 else np.full(len(options), 1.0 / len(options))
+    p0 = normalize_vec([float(placebo.get(o, 0.0)) for o in options])
     e = np.array([1.0 if o == target_option else 0.0 for o in options])
     scale = intensity * (1.0 - math.exp(-rate * rounds))
     return {o: float(d) for o, d in zip(options, scale * (e - p0))}
