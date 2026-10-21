@@ -142,6 +142,7 @@ The builder also writes these **additive** keys (Track D may ignore them):
 | `rank_agreement` | `items`, `scales` | items the headline tau used; every same-scale group with its own tau (items are never ranked across answer scales) |
 | scenario | `option_of_interest` | option used for saturation, MDD and subgroup tests |
 | scenario | `minimum_detectable_difference` | smallest effect detectable at α=.05, power .8 |
+| top level | `persona_realism` | only when runs used the synthetic persona set: `realism.report` (structural zeros, SRMSE, C2ST AUC, rules, independent baseline) |
 
 There is **no `equation_baseline` inside probes**: a probe has no shock, so
 an ODE has no input to work with. The equation baseline is scenario-only
@@ -161,7 +162,8 @@ BH, MDD, saturation), `real.py` (weighted held-out distributions — the only
 place held-out data is joined to personas), `baselines.py` (cross-fitted
 multinomial regression; closed-form ODE), `equation_params.yaml`
 (pre-registered equation priors per scenario), `report.py` (the builder).
-Pass/fail thresholds: [`findings.md` F-1](../../docs/findings.md).
+Realism of the synthetic personas: `python -m src.validation.realism` → `reports/realism.json`.
+Pass/fail thresholds: [`findings.md` F-1, F-4](../../docs/findings.md).
 
 ## Don't wait for anyone
 

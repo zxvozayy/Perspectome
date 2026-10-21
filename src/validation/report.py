@@ -322,7 +322,8 @@ def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_cap: float,
 # --- top level --------------------------------------------------------------------
 
 def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
-          params: Optional[dict] = None) -> dict:
+          params: Optional[dict] = None, persona_realism: Optional[dict] = None) -> dict:
+    """``persona_realism`` (realism.report output) is attached when the runs used a synthetic set."""
     warnings: list[str] = []
     if fixtures:
         warnings.append("Built from fixture data: every number here is fabricated for development.")
@@ -354,6 +355,8 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
         "scenarios": score_scenarios(runs, noise, n_eff_cap, warnings, params),
         "warnings": warnings,
     }
+    if persona_realism is not None:
+        report["persona_realism"] = persona_realism
     report["warnings"] += [
         "Scenario results are effects (treatment minus placebo), never population shares.",
         "Personas query the model per archetype cell, which flattens variation inside a cell.",

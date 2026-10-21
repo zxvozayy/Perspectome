@@ -17,9 +17,11 @@ import contextlib
 import json
 import io
 
+import pandas as pd
+
 from src.common import paths
 from src.simulation import runner
-from src.validation import real, report
+from src.validation import real, realism, report
 
 SCENARIOS = paths.SCENARIOS_DIR
 RESULTS = paths.RESULTS_DIR
@@ -54,8 +56,11 @@ def main():
             with contextlib.redirect_stdout(io.StringIO()):
                 runner.run_simulation(simulated, path, output_dir=RESULTS, seed=seed)
 
+    persona_realism = None
+    if args.synthetic:
+        persona_realism = realism.report(pd.read_csv(simulated), pd.read_csv(personas))
     rep = report.build(report.load_runs(sorted(RESULTS.glob("*.json"))),
-                       real.load(personas, heldout), fixtures=fixtures)
+                       real.load(personas, heldout), fixtures=fixtures, persona_realism=persona_realism)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding="utf-8")
 

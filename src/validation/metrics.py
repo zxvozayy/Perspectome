@@ -144,3 +144,15 @@ def minimum_detectable_difference(p: float, n1: float, n2: float) -> float:
 def is_saturated(share: float, low: float = SATURATION[0], high: float = SATURATION[1]) -> bool:
     """Rule 7: a placebo share outside 10-90% leaves no room to show an effect."""
     return share < low or share > high
+
+
+def auc(scores: Sequence[float], labels: Sequence[int]) -> Optional[float]:
+    """Area under the ROC curve (Mann-Whitney, ties count half). None without both classes."""
+    s = np.asarray(scores, dtype=float)
+    y = np.asarray(labels, dtype=int)
+    pos, neg = s[y == 1], s[y == 0]
+    if not len(pos) or not len(neg):
+        return None
+    greater = (pos[:, None] > neg[None, :]).sum()
+    ties = (pos[:, None] == neg[None, :]).sum()
+    return float((greater + 0.5 * ties) / (len(pos) * len(neg)))
