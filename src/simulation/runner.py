@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 from src.simulation.aggregator import aggregate_arm, build_result
@@ -20,10 +19,12 @@ from src.simulation.loader import (
     group_by_cell,
     load_personas,
     load_scenario,
-    persona_set_hash,
 )
 from src.simulation.model import MockModel, OpenAIModel
-from src.simulation.prompt import CELL_FIELDS, build_prompts_for_arm
+from src.common import paths
+from src.common.hashing import file_hash
+from src.common.schema import ARMS, CELL_FIELDS
+from src.simulation.prompt import build_prompts_for_arm
 from src.simulation.rounds import initial_vectors, run_fj, run_round_1
 
 
@@ -70,7 +71,7 @@ def _run_arm(
 def run_simulation(
     personas_path: str | Path,
     scenario_path: str | Path,
-    output_dir: str | Path = "results",
+    output_dir: str | Path = paths.RESULTS_DIR,
     seed: int = 42,
     live: bool = False,
     model_snapshot: str = "mock-0",
@@ -86,7 +87,7 @@ def run_simulation(
     # Load data.
     personas = load_personas(personas_path)
     scenario = load_scenario(scenario_path)
-    p_hash = persona_set_hash(personas_path)
+    p_hash = file_hash(personas_path)
 
     # A persona without a cell (a cell-defining field missing) can't be queried.
     no_cell = personas["cell_id"].isna()
@@ -105,10 +106,8 @@ def run_simulation(
     cell_groups = group_by_cell(personas)
     cell_reps = _cell_representatives(cell_groups)
 
-    # Determine which arms to run.
-    arms_to_run = ["treatment", "vanilla"]
-    if scenario["run_type"] == "scenario":
-        arms_to_run.insert(1, "placebo")
+    # Probes have no placebo arm (placebo = null in the output).
+    arms_to_run = [a for a in ARMS if scenario["run_type"] == "scenario" or a != "placebo"]
 
     arms_output: dict[str, dict | None] = {}
     for arm in arms_to_run:
@@ -158,7 +157,7 @@ def main():
     parser = argparse.ArgumentParser(description="Perspectome simulation runner")
     parser.add_argument("--personas", required=True, help="Path to personas.csv")
     parser.add_argument("--scenario", required=True, help="Path to scenario YAML")
-    parser.add_argument("--output-dir", default="results", help="Output directory")
+    parser.add_argument("--output-dir", default=str(paths.RESULTS_DIR), help="Output directory")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--live", action="store_true", help="Use real API (costs money)")
     parser.add_argument("--model", default="mock-0", help="Model snapshot string")

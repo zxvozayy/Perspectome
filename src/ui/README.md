@@ -87,8 +87,9 @@ python -m pytest src/ui/tests         # tests (pytest is the only extra)
 
 The site runs on the Python standard library alone: an intro page (`/`), a
 sign-in page (`/giris`) and the analysis panel (`/panel`). Accounts, the
-session key and chat history live in `src/ui/.cache/` (gitignored) and stay on
-this machine; it is a local dashboard, not something to expose to the internet.
+session key live in `src/ui/.cache/` (gitignored) and stay on
+this machine; questions and answers are not stored. It is a local dashboard, not
+something to expose to the internet.
 Set `PORT` to use another port.
 
 With no `results/*.json` at the repo root the panel reads the fixtures and
@@ -96,7 +97,7 @@ shows a "Fixture verisi" badge. Point it at real output with
 `PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`.
 
 Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
-the server), `answers.py` (question → run), `auth.py`, `store.py`, `web/`
+the server), `answers.py` (question → run), `auth.py`, `web/`
 (pages, CSS, a few lines of JS, `people.js` for the walking people band, IBM Plex
 Sans font (OFL), and `media/tanitim.mp4`, the intro video: a network of connected
 points, from Mixkit under its free licence).

@@ -1,26 +1,13 @@
 """src/common/db.py: everything that can be checked without a live database."""
 
-from pathlib import Path
 
 import pytest
 
-from src.common import db, schema
+from src.common import db, paths, schema
 
-PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
-HELDOUT = Path("src/personas/fixtures/heldout.sample.csv")
+PERSONAS = paths.PERSONAS_FIXTURE
+HELDOUT = paths.HELDOUT_FIXTURE
 ADMIN = "postgresql://postgres.abcdref:s3cret@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
-
-
-def test_normalize_hash_unifies_track_a_and_b_forms():
-    hexd = "a" * 64
-    assert db.normalize_hash(hexd) == f"sha256:{hexd}"
-    assert db.normalize_hash(f"sha256:{hexd}") == f"sha256:{hexd}"
-    assert db.normalize_hash("SHA256:" + hexd.upper()) == f"sha256:{hexd}"
-
-
-def test_file_hash_matches_track_b_loader():
-    from src.simulation.loader import persona_set_hash
-    assert db.file_hash(PERSONAS.read_bytes()) == persona_set_hash(PERSONAS)
 
 
 def test_fixture_personas_pass_validation():
@@ -40,6 +27,7 @@ def test_validation_blocks_leaked_heldout_field():
 def test_validation_blocks_unknown_category_and_duplicates():
     rows = db.read_csv_rows(PERSONAS.read_bytes())
     rows[0]["age_band"] = "17-19"
+    rows[3]["income_decile"] = "4.0"  # float-formatted CSV values are fine
     rows[1]["persona_id"] = rows[2]["persona_id"]
     problems = " ".join(db.validate_personas(rows))
     assert "age_band" in problems and "duplicate" in problems
@@ -52,10 +40,11 @@ def test_heldout_unknown_column_and_orphans():
 
 
 def test_heldout_long_keeps_only_schema_items_and_nulls_blanks():
-    rows = [{"persona_id": "p1", "trust_police": "none", "religiosity": "", "extra": "x"}]
+    rows = [{"persona_id": "p1", "trust_police": "none", "religiosity": "", "life_satisfaction": "7.0", "extra": "x"}]
     out = db.heldout_long(rows)
     assert ("p1", "trust_police", "none") in out
     assert ("p1", "religiosity", None) in out
+    assert ("p1", "life_satisfaction", "7") in out
     assert all(item in schema.HELDOUT_FIELDS for _, item, _ in out)
 
 

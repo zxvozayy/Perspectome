@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import io
 import json
 import os
@@ -36,30 +35,20 @@ from pathlib import Path
 from typing import Iterable, Optional
 from urllib.parse import quote, urlsplit, urlunsplit
 
-from src.common import schema
+from src.common import paths, schema
+from src.common.hashing import sha256_bytes
+from src.common.labels import answer_label
 
-REPO = Path(__file__).resolve().parents[2]
-MIGRATIONS = REPO / "db" / "migrations"
-USERS_FILE = REPO / "tmp" / "db-users.local.txt"
+MIGRATIONS = paths.REPO / "db" / "migrations"
+USERS_FILE = paths.REPO / "tmp" / "db-users.local.txt"
 
 # Personal logins and the track role each one gets.
 PEOPLE = {"fatmanur": "track_a", "yigithan": "track_b", "hasan": "track_c", "ezgi": "track_d"}
 
-PERSONA_COLUMNS = ("persona_id", "cell_id", "weight", *[f for f in schema.CONDITIONING_FIELDS
-                                                        if f != "persona_id"])
-CATEGORY_CHECKS = {
-    "age_band": schema.AGE_BANDS,
-    "gender": schema.GENDERS,
-    "education_level": schema.EDUCATION_LEVELS,
-    "settlement_type": schema.SETTLEMENT_TYPES,
-    "marital_status": schema.MARITAL_STATUSES,
-    "employment_status": schema.EMPLOYMENT_STATUSES,
-}
-
 
 # --- connection ----------------------------------------------------------------
 
-def database_url(env_file: Path = REPO / ".env") -> str:
+def database_url(env_file: Path = paths.REPO / ".env") -> str:
     """DATABASE_URL from the environment, else from the git-ignored .env file."""
     url = os.environ.get("DATABASE_URL")
     if not url and env_file.exists():
@@ -109,18 +98,6 @@ def connect(url: Optional[str] = None):
 
 # --- pure helpers (tested without a database) ----------------------------------
 
-def normalize_hash(h: str) -> str:
-    """Track A writes bare hex, Track B writes "sha256:<hex>"; store one form."""
-    h = (h or "").strip().lower()
-    if re.fullmatch(r"[0-9a-f]{64}", h):
-        return f"sha256:{h}"
-    return h
-
-
-def file_hash(data: bytes) -> str:
-    return f"sha256:{hashlib.sha256(data).hexdigest()}"
-
-
 def read_csv_rows(data: bytes) -> list[dict]:
     return list(csv.DictReader(io.StringIO(data.decode("utf-8-sig"))))
 
@@ -131,14 +108,15 @@ def validate_personas(rows: list[dict]) -> list[str]:
     if not rows:
         return ["personas.csv is empty"]
     cols = set(rows[0])
-    missing = [c for c in PERSONA_COLUMNS if c not in cols]
+    missing = [c for c in schema.PERSONA_COLUMNS if c not in cols]
     if missing:
         problems.append(f"missing columns: {missing}")
     leaked = sorted(cols & set(schema.HELDOUT_FIELDS))
     if leaked:
         problems.append(f"held-out fields in personas.csv: {leaked}")
-    for field, allowed in CATEGORY_CHECKS.items():
-        bad = sorted({r.get(field) for r in rows if r.get(field) not in ("", None, *allowed)})
+    for field, allowed in schema.CATEGORIES.items():
+        allowed = {str(v) for v in allowed}
+        bad = sorted({answer_label(r.get(field)) for r in rows} - allowed - {None})
         if bad:
             problems.append(f"{field}: values not in schema.py: {bad[:5]}")
     ids = [r.get("persona_id") for r in rows]
@@ -161,14 +139,9 @@ def validate_heldout(rows: list[dict], persona_ids: set) -> list[str]:
 
 
 def heldout_long(rows: list[dict]) -> list[tuple]:
-    """Wide held-out rows -> (persona_id, item, value) with empty strings as null."""
-    out = []
-    for r in rows:
-        for item in schema.HELDOUT_FIELDS:
-            if item in r:
-                v = r[item]
-                out.append((r["persona_id"], item, v if v not in ("", None) else None))
-    return out
+    """Wide held-out rows -> (persona_id, item, label) with blanks as null."""
+    return [(r["persona_id"], item, answer_label(r[item]))
+            for r in rows for item in schema.HELDOUT_FIELDS if item in r]
 
 
 def user_url(admin_url: str, role: str, password: str) -> str:
@@ -179,10 +152,6 @@ def user_url(admin_url: str, role: str, password: str) -> str:
     login = f"{role}.{ref}" if ref else role
     host = parts.hostname + (f":{parts.port}" if parts.port else "")
     return urlunsplit(parts._replace(netloc=f"{quote(login)}:{quote(password)}@{host}"))
-
-
-def _num(v, cast):
-    return cast(v) if v not in ("", None) else None
 
 
 # --- admin ------------------------------------------------------------------------
@@ -265,7 +234,7 @@ def push_personas(conn, personas_path, heldout_path=None, source: str = "",
     if problems:
         raise ValueError("Refusing to push: " + "; ".join(problems))
 
-    h = file_hash(raw)
+    h = sha256_bytes(raw)
     with conn.cursor() as cur:
         cur.execute("select 1 from personas.persona_sets where persona_set_hash = %s", (h,))
         if cur.fetchone():
@@ -273,15 +242,14 @@ def push_personas(conn, personas_path, heldout_path=None, source: str = "",
         cur.execute("insert into personas.persona_sets (persona_set_hash, personas_csv, seed, source, "
                     "n_personas, notes) values (%s, %s, %s, %s, %s, %s)",
                     (h, raw, seed, source, len(rows), notes))
-        with cur.copy("copy personas.personas (persona_set_hash, persona_id, cell_id, weight, age_band, "
-                      "gender, education_level, region, settlement_type, marital_status, "
-                      "employment_status, income_decile) from stdin") as cp:
+        cols = schema.PERSONA_COLUMNS
+        with cur.copy(f"copy personas.personas (persona_set_hash, {', '.join(cols)}) from stdin") as cp:
             for r in rows:
-                cp.write_row((h, r["persona_id"], r.get("cell_id") or None, float(r["weight"]),
-                              *[r.get(f) or None for f in ("age_band", "gender", "education_level",
-                                                           "region", "settlement_type",
-                                                           "marital_status", "employment_status")],
-                              _num(r.get("income_decile"), lambda v: int(float(v)))))
+                values = {c: answer_label(r.get(c)) for c in cols}
+                values["weight"] = float(r["weight"])
+                if values["income_decile"] is not None:
+                    values["income_decile"] = int(values["income_decile"])
+                cp.write_row((h, *(values[c] for c in cols)))
         if held:
             with cur.copy("copy heldout.answers (persona_set_hash, persona_id, item, value) "
                           "from stdin") as cp:
@@ -300,7 +268,7 @@ def latest_persona_set(conn) -> Optional[str]:
 
 def pull_personas(conn, out_path, persona_set_hash: Optional[str] = None) -> str:
     """Write the exact personas.csv bytes back out, so its hash is unchanged."""
-    h = normalize_hash(persona_set_hash) if persona_set_hash else latest_persona_set(conn)
+    h = persona_set_hash or latest_persona_set(conn)
     with conn.cursor() as cur:
         cur.execute("select personas_csv from personas.persona_sets where persona_set_hash = %s", (h,))
         row = cur.fetchone()
@@ -313,7 +281,7 @@ def pull_personas(conn, out_path, persona_set_hash: Optional[str] = None) -> str
 
 def pull_heldout(conn, out_path, persona_set_hash: Optional[str] = None) -> str:
     """Track C only (the database refuses everyone else): wide heldout.csv."""
-    h = normalize_hash(persona_set_hash) if persona_set_hash else latest_persona_set(conn)
+    h = persona_set_hash or latest_persona_set(conn)
     with conn.cursor() as cur:
         cur.execute("select persona_id, item, value from heldout.answers where persona_set_hash = %s "
                     "order by persona_id", (h,))
@@ -340,7 +308,7 @@ def push_runs(conn, paths: Iterable) -> int:
         for p in paths:
             doc = json.loads(Path(p).read_text(encoding="utf-8"))
             meta = doc.get("metadata", {})
-            h = normalize_hash(meta.get("persona_set_hash", ""))
+            h = meta.get("persona_set_hash", "")
             cur.execute(
                 "insert into sim.runs (run_id, run_type, scenario_id, target_item, model, model_snapshot, "
                 "seed, persona_set_hash, n_personas, result) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
@@ -355,7 +323,7 @@ def push_runs(conn, paths: Iterable) -> int:
 
 
 def pull_runs(conn, out_dir, persona_set_hash: Optional[str] = None) -> int:
-    where, args = ("where persona_set_hash = %s", (normalize_hash(persona_set_hash),)) \
+    where, args = ("where persona_set_hash = %s", (persona_set_hash,)) \
         if persona_set_hash else ("", ())
     with conn.cursor() as cur:
         cur.execute(f"select run_id, model_snapshot, result from sim.runs {where} order by id", args)
@@ -375,7 +343,7 @@ def push_report(conn, path) -> int:
     doc = json.loads(Path(path).read_text(encoding="utf-8"))
     with conn.cursor() as cur:
         cur.execute("insert into validation.reports (persona_set_hash, report) values (%s, %s) "
-                    "returning id", (normalize_hash(doc.get("persona_set_hash") or ""), Jsonb(doc)))
+                    "returning id", (doc.get("persona_set_hash"), Jsonb(doc)))
         rid = cur.fetchone()[0]
     conn.commit()
     return rid

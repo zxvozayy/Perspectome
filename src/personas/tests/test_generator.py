@@ -7,16 +7,14 @@ locally, and is skipped otherwise (the raw file is never committed).
 Run:  python -m pytest src/personas/tests -q
 """
 
-from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
-from src.common import schema
+from src.common import paths, schema
 from src.personas import generator, wvs
 
-TURKEY_CSV = Path("data/raw/wvs7_turkey.csv")
+TURKEY_CSV = paths.DATA_RAW / "wvs7_turkey.csv"
 
 TWO_DIMS = ("age_band", "gender")
 TARGETS = {
@@ -74,21 +72,6 @@ def test_edu3_from_isced(isced, expected):
 
 
 # --- hash / lineage ---------------------------------------------------------
-
-def test_persona_set_hash_reproducible(tmp_path):
-    f1, f2 = tmp_path / "a.csv", tmp_path / "b.csv"
-    df = pd.DataFrame({"persona_id": ["p1", "p2"], "weight": [1.0, 1.0]})
-    df.to_csv(f1, index=False)
-    df.to_csv(f2, index=False)
-    assert generator.persona_set_hash(f1) == generator.persona_set_hash(f2)
-
-
-def test_persona_set_hash_changes_with_content(tmp_path):
-    f1, f2 = tmp_path / "a.csv", tmp_path / "b.csv"
-    pd.DataFrame({"x": [1]}).to_csv(f1, index=False)
-    pd.DataFrame({"x": [2]}).to_csv(f2, index=False)
-    assert generator.persona_set_hash(f1) != generator.persona_set_hash(f2)
-
 
 @pytest.mark.skipif(not TURKEY_CSV.exists(),
                     reason="real WVS Turkey file not present (never committed)")

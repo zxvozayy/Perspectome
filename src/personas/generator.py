@@ -17,25 +17,20 @@ coarse ISCED grouping) is used only for calibration, never written out.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+from src.common import paths, schema, stats
+from src.common.hashing import file_hash
 from src.personas import ingest, margins as margins_mod, wvs
 
 log = logging.getLogger(__name__)
 
 RAKING_DIMS = ("age_band", "gender", "region", "edu3")
-PROCESSED_DIR = Path("data/processed")
-
-# personas.csv column order (contract): weight sits after cell_id.
-GEN_PERSONA_COLUMNS = [
-    "persona_id", "cell_id", "weight", "age_band", "gender", "education_level",
-    "region", "settlement_type", "marital_status", "employment_status", "income_decile",
-]
+PROCESSED_DIR = paths.PROCESSED
 
 
 def _raking_frame(personas: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
@@ -89,26 +84,17 @@ def marginal_fit(frame: pd.DataFrame, weights: pd.Series, targets: dict,
     w = weights.loc[complete.index]
     rows = []
     for dim in dims:
-        wsum = w.groupby(complete[dim]).sum()
-        total = wsum.sum()
+        shares = stats.weighted_share(complete[dim], w, list(targets[dim]))
         for cat, target in targets[dim].items():
-            got = wsum.get(cat, 0.0) / total
             rows.append({"dim": dim, "category": cat, "target": target,
-                         "weighted": got, "abs_error": abs(got - target)})
+                         "weighted": shares[cat], "abs_error": abs(shares[cat] - target)})
     return pd.DataFrame(rows)
-
-
-def persona_set_hash(path) -> str:
-    """"sha256:<hex>" of a file's bytes -- the same form Track B and the database record."""
-    h = hashlib.sha256()
-    h.update(Path(path).read_bytes())
-    return f"sha256:{h.hexdigest()}"
 
 
 def weight_diagnostics(weights: pd.Series, frame: pd.DataFrame) -> dict:
     """How much the post-stratification weights cost: Kish n_eff and the extremes."""
     w = weights.astype(float)
-    n_eff = float(w.sum() ** 2 / (w ** 2).sum()) if len(w) else 0.0
+    n_eff = stats.kish_n_eff(w)
     by_age = frame.assign(w=w.values).groupby("age_band")["w"].agg(["size", "mean", "max"])
     return {
         "n_eff": n_eff,
@@ -119,7 +105,7 @@ def weight_diagnostics(weights: pd.Series, frame: pd.DataFrame) -> dict:
     }
 
 
-def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
+def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DIR,
              seed: int = 0) -> dict:
     """Full pipeline: ingest -> rake -> write frozen personas.csv / heldout.csv.
 
@@ -137,7 +123,7 @@ def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
 
     personas = personas.copy()
     personas["weight"] = weights.round(4).values
-    personas = personas.reindex(columns=GEN_PERSONA_COLUMNS)
+    personas = personas.reindex(columns=list(schema.PERSONA_COLUMNS))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -151,7 +137,7 @@ def generate(turkey_csv="data/raw/wvs7_turkey.csv", out_dir=PROCESSED_DIR,
         "n_personas": len(personas),
         "personas_path": str(personas_path),
         "heldout_path": str(heldout_path),
-        "persona_set_hash": persona_set_hash(personas_path),
+        "persona_set_hash": file_hash(personas_path),
         "seed": seed,
         "max_calibration_error": float(fit["abs_error"].max()),
         "weights": weight_diagnostics(weights, frame),
@@ -166,7 +152,7 @@ def main():
         python -m src.personas.generator --seed 0
     """
     ap = argparse.ArgumentParser(description="Generate the frozen persona set.")
-    ap.add_argument("--turkey-csv", default="data/raw/wvs7_turkey.csv")
+    ap.add_argument("--turkey-csv", default=str(paths.DATA_RAW / "wvs7_turkey.csv"))
     ap.add_argument("--out-dir", default=str(PROCESSED_DIR))
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()

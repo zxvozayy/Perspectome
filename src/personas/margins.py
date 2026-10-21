@@ -22,13 +22,12 @@ calibration claim -- see src/personas/NOTES.md.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 
+from src.common import paths, schema, stats
 from src.personas import wvs
 
-EUROSTAT_DIR = Path("data/raw/eurostat")
+EUROSTAT_DIR = paths.DATA_RAW / "eurostat"
 POP_FILE = EUROSTAT_DIR / "tr_population_age_sex_nuts1.csv"
 EDU_FILE = EUROSTAT_DIR / "tr_education_sex_age.csv"
 
@@ -46,9 +45,13 @@ _EDU_AGE_BAND = "Y15-74"          # broad adult band for the education split
 _EDU3 = {"ED0-2": "low", "ED3_4": "mid", "ED5-8": "high"}
 
 
+_SEX = {"M": schema.GENDERS[0], "F": schema.GENDERS[1]}
+assert set(AGE_BAND_COMPONENTS) == set(schema.AGE_BANDS)
+
+
 def _normalize(counts: dict) -> dict:
-    total = sum(counts.values())
-    return {k: v / total for k, v in counts.items()} if total else counts
+    keys = list(counts)
+    return dict(zip(keys, stats.normalize_vec([counts[k] for k in keys]).tolist())) if keys else counts
 
 
 def _population_cells(pop_file=POP_FILE) -> pd.DataFrame:
@@ -59,7 +62,7 @@ def _population_cells(pop_file=POP_FILE) -> pd.DataFrame:
     rows = []
     for (geo, sex), r in wide.iterrows():
         region = wvs.NUTS1_ALPHA_TO_REGION.get(geo)
-        gender = {"M": "male", "F": "female"}.get(sex)
+        gender = _SEX.get(sex)
         if region is None or gender is None:
             continue
         for band, comps in AGE_BAND_COMPONENTS.items():
@@ -77,7 +80,7 @@ def _education_margin(cells: pd.DataFrame, edu_file=EDU_FILE) -> dict:
     sex_share = sex_share / sex_share.sum()
 
     out = {"low": 0.0, "mid": 0.0, "high": 0.0}
-    for sex_code, gender in (("M", "male"), ("F", "female")):
+    for sex_code, gender in _SEX.items():
         sub = edu[edu["sex"] == sex_code]
         pct = {_EDU3[i]: v for i, v in zip(sub["isced11"], sub["value"])}
         total = sum(pct.values())

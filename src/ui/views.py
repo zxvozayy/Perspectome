@@ -11,7 +11,7 @@ import json
 import math
 from pathlib import Path
 
-from src.common.schema import MIN_CELL_N
+from src.common.schema import MIN_CELL_N, SATURATION
 from src.ui import theme
 
 PRIOR_CAVEAT = "This may reflect the model's prior, not the population."
@@ -100,27 +100,6 @@ def assistant_label() -> str:
     return '<div class="pt pt-who"><i></i>Perspectome</div>'
 
 
-def typing() -> str:
-    return '<div class="pt pt-typing"><i></i><i></i><i></i></div>'
-
-
-def top_bar(is_fixture: bool, title: str = "") -> str:
-    badge = '<span class="pt-badge">Fixture verisi</span>' if is_fixture else ""
-    return f'<div class="pt pt-top"><b>{esc(title or "Perspectome")}</b>{badge}</div>'
-
-
-def listening() -> str:
-    """Empty chat: a faint invitation instead of a blank page."""
-    return (
-        '<div class="pt"><div class="pt-listen">Fikrini dinliyorum</div>'
-        '<div class="pt-hint">Hazır çalıştırmalar üzerinden yanıt verir; yeni simülasyon başlatmaz.</div></div>'
-    )
-
-
-def panel_heading(text: str) -> str:
-    return f'<div class="pt pt-eyebrow" style="margin:14px 0 4px 10px">{esc(text)}</div>'
-
-
 # ------------------------------------------------------------------- warnings
 
 def warnings(items: list[str], scenario_caveat: bool = False) -> str:
@@ -150,7 +129,7 @@ def effect_headline(scored: dict | None, noise_floor: float | None) -> str:
         note = ""
         if scored.get("saturated"):
             note = (
-                '<div class="pt-note">Madde doygun: placebo payı %10–%90 aralığının dışında, '
+                f'<div class="pt-note">Madde doygun: placebo payı %{SATURATION[0] * 100:.0f}–%{SATURATION[1] * 100:.0f} aralığının dışında, '
                 "bu yüzden etki gösteremez.</div>"
             )
         return card(f'<div class="pt-big null">{NO_EFFECT}</div>{note}', eyebrow, hint=TIPS["effect"])
@@ -331,9 +310,6 @@ def slope(run: dict, scored: dict | None) -> str:
         "Placebo → treatment: her seçenek nereye kaydı",
         hint=TIPS["arms"],
     )
-
-
-TURKEY_JSON = _TURKEY.read_text(encoding="utf-8")  # the outline as-is, for the intro page scripts
 
 
 def turkey_outline() -> tuple[str, int, int]:

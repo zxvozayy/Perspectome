@@ -7,7 +7,7 @@ from http.server import ThreadingHTTPServer
 
 import pytest
 
-from src.ui import auth, render, server, store
+from src.ui import auth, render, server
 from src.ui.data import load
 
 
@@ -17,7 +17,6 @@ def cache(tmp_path, monkeypatch):
     monkeypatch.setattr(auth, "USERS", tmp_path / "users.json")
     monkeypatch.setattr(auth, "SECRET", tmp_path / "secret")
     monkeypatch.setattr(auth, "ITERATIONS", 1000)
-    monkeypatch.setattr(store, "DIR", tmp_path / "chats")
     return tmp_path
 
 
@@ -78,11 +77,24 @@ def test_sign_up_and_ask(site):
                            {**cookie, "Content-Type": "application/json"})
     assert status == 200
     answer = json.loads(body)
-    assert "pt-user" in answer["html"] and "Etki" in answer["html"]
+    assert set(answer) == {"html"} and "pt-user" in answer["html"] and "Etki" in answer["html"]
 
     state = json.loads(call(site, "GET", "/api/state", headers=cookie)[2])
-    assert [c["id"] for c in state["chats"]] == [answer["id"]]
+    assert set(state) == {"counts"}
+    assert call(site, "GET", "/api/chat?id=x", headers=cookie)[0] == 404
     assert call(site, "POST", "/giris", "ad=ezgi&sifre=yanlis", form)[0] == 401
+
+
+def test_ask_is_stateless(site, cache):
+    """Nothing about a question is written to disk: the panel keeps no history."""
+    form = {"Content-Type": "application/x-www-form-urlencoded"}
+    _, headers, _ = call(site, "POST", "/kayit", "ad=ayse&sifre=uzun-bir-sifre&sifre2=uzun-bir-sifre", form)
+    cookie = {"Cookie": headers["Set-Cookie"].split(";")[0]}
+    before = sorted(p.name for p in cache.rglob("*"))
+    for q in ("İşsizlik artarsa?", "Doğrulama nasıl?"):
+        status, _, _ = call(site, "POST", "/api/ask", json.dumps({"q": q}), {**cookie, "Content-Type": "application/json"})
+        assert status == 200
+    assert sorted(p.name for p in cache.rglob("*")) == before
 
 
 def test_answer_text_is_escaped():

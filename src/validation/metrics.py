@@ -11,9 +11,12 @@ passes; missing options count as 0.
 from __future__ import annotations
 
 import math
-from typing import Iterable, Optional, Sequence
+from typing import Optional, Sequence
 
 import numpy as np
+
+from src.common.schema import SATURATION
+from src.common.stats import normalize_vec
 
 
 def _vec(dist: dict, options: Sequence[str]) -> np.ndarray:
@@ -22,11 +25,7 @@ def _vec(dist: dict, options: Sequence[str]) -> np.ndarray:
 
 def normalize(dist: dict, options: Sequence[str]) -> dict:
     """Rescale to sum 1 over ``options`` (rounded inputs rarely sum exactly)."""
-    v = _vec(dist, options)
-    total = v.sum()
-    if total <= 0:
-        return {o: 0.0 for o in options}
-    return {o: float(x / total) for o, x in zip(options, v)}
+    return dict(zip(options, normalize_vec(_vec(dist, options)).tolist()))
 
 
 def tvd(p: dict, q: dict, options: Sequence[str]) -> float:
@@ -93,14 +92,6 @@ def kendall_tau_b(x: Sequence[float], y: Sequence[float]) -> Optional[float]:
     return float((concordant - discordant) / denom)
 
 
-def kish_n_eff(weights: Iterable[float]) -> float:
-    """Kish effective sample size: (sum w)^2 / sum w^2."""
-    w = np.asarray(list(weights), dtype=float)
-    if w.size == 0 or (w ** 2).sum() == 0:
-        return 0.0
-    return float(w.sum() ** 2 / (w ** 2).sum())
-
-
 def benjamini_hochberg(p_values: Sequence[float], alpha: float = 0.05) -> list[bool]:
     """BH step-up procedure. Returns, per input p-value, whether it is rejected."""
     m = len(p_values)
@@ -150,6 +141,6 @@ def minimum_detectable_difference(p: float, n1: float, n2: float) -> float:
     return float((Z_ALPHA_2 + Z_POWER_80) * math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2)))
 
 
-def is_saturated(share: float, low: float = 0.10, high: float = 0.90) -> bool:
+def is_saturated(share: float, low: float = SATURATION[0], high: float = SATURATION[1]) -> bool:
     """Rule 7: a placebo share outside 10-90% leaves no room to show an effect."""
     return share < low or share > high

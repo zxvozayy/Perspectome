@@ -82,14 +82,13 @@ button { font: inherit; color: inherit; }
 
 /* ---------- buttons ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 0 20px;
-  border: 1px solid transparent; border-radius: 10px; font-weight: 600; font-size: .92rem; text-decoration: none; cursor: pointer;
+  border: 1px solid transparent; border-radius: 999px; font-weight: 600; font-size: .92rem; text-decoration: none; cursor: pointer;
   white-space: nowrap; transition: background-color .2s, border-color .2s, color .2s, transform .2s var(--ease); }
 .btn .ar { transition: transform .25s var(--ease); }
 .btn:hover .ar { transform: translateX(3px); }
 .btn--sm { min-height: 34px; padding: 0 15px; font-size: .82rem; }
 .btn--accent { background: var(--accent); color: var(--on-accent); }
 .btn--accent:hover { background: var(--accent-hover); }
-.btn { border-radius: 999px; }
 .btn--outline { border-color: var(--line-2); color: var(--ink); background: transparent; }
 .btn--outline:hover { border-color: var(--ink-2); }
 .btn--dark { background: var(--dark-btn); color: #FFFFFF; }
@@ -170,8 +169,7 @@ button { font: inherit; color: inherit; }
 .duo__card h3 { font-size: 1.4rem; font-weight: 600; letter-spacing: -.015em; }
 .duo__card p { margin: 12px 0 24px; font-size: .86rem; color: var(--ink-3); line-height: 1.65; max-width: 52ch; }
 .duo__card .btn { margin-top: auto; }
-.duo__card--accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.duo__card--accent { background: linear-gradient(150deg, #2F7BFF, #1E4FD0); }
+.duo__card--accent { background: linear-gradient(150deg, #2F7BFF, #1E4FD0); border-color: var(--accent); color: var(--on-accent); }
 .duo__card--accent p, .duo__card--accent .duo__n { color: rgba(255, 255, 255, .82); }
 .duo__card--accent .ico { background: rgba(255, 255, 255, .16); color: inherit; }
 @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }

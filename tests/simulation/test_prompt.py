@@ -4,10 +4,10 @@ Captures what is actually sent and checks the persona block
 and exact question wording are in it.
 """
 
-from pathlib import Path
 
 import pytest
 
+from src.common import paths
 from src.common.schema import HELDOUT_FIELDS
 from src.simulation.loader import load_personas, load_scenario, group_by_cell
 from src.simulation.prompt import (
@@ -16,9 +16,9 @@ from src.simulation.prompt import (
     build_prompts_for_arm,
 )
 
-FIXTURE_PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
-FIXTURE_SCENARIO = Path("src/simulation/scenarios/unemployment_shock_v1.yaml")
-FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_police.yaml")
+FIXTURE_PERSONAS = paths.PERSONAS_FIXTURE
+FIXTURE_SCENARIO = paths.SCENARIOS_DIR / "unemployment_shock_v1.yaml"
+FIXTURE_PROBE = paths.SCENARIOS_DIR / "probe_trust_police.yaml"
 
 
 class TestBuildPersonaBlock:

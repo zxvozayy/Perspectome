@@ -2,46 +2,19 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import pandas as pd
 import yaml
 
-from src.common.schema import (
-    AGE_BANDS,
-    EDUCATION_LEVELS,
-    EMPLOYMENT_STATUSES,
-    GENDERS,
-    HELDOUT_FIELDS,
-    INCOME_DECILES,
-    MARITAL_STATUSES,
-    RUN_TYPES,
-    SETTLEMENT_TYPES,
-)
-
-REQUIRED_PERSONA_COLUMNS = (
-    "persona_id", "cell_id", "weight",
-    "age_band", "gender", "education_level", "region",
-    "settlement_type", "marital_status", "employment_status", "income_decile",
-)
-
-_ENUM_VALIDATORS = {
-    "age_band": set(AGE_BANDS),
-    "gender": set(GENDERS),
-    "education_level": set(EDUCATION_LEVELS),
-    "settlement_type": set(SETTLEMENT_TYPES),
-    "marital_status": set(MARITAL_STATUSES),
-    "employment_status": set(EMPLOYMENT_STATUSES),
-    "income_decile": set(INCOME_DECILES),
-}
+from src.common.schema import CATEGORIES, HELDOUT_FIELDS, PERSONA_COLUMNS, RUN_TYPES
 
 
 def load_personas(path: str | Path) -> pd.DataFrame:
     """Read personas.csv and validate against the shared schema."""
     df = pd.read_csv(path)
 
-    missing = set(REQUIRED_PERSONA_COLUMNS) - set(df.columns)
+    missing = set(PERSONA_COLUMNS) - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns in personas CSV: {sorted(missing)}")
 
@@ -50,8 +23,8 @@ def load_personas(path: str | Path) -> pd.DataFrame:
     df["income_decile"] = pd.to_numeric(df["income_decile"], errors="coerce").astype("Int64")
     df["weight"] = df["weight"].astype(float)
 
-    for col, valid in _ENUM_VALIDATORS.items():
-        invalid = set(df[col].dropna().unique()) - valid
+    for col, valid in CATEGORIES.items():
+        invalid = set(df[col].dropna().unique()) - set(valid)
         if invalid:
             raise ValueError(f"Invalid values in '{col}': {sorted(invalid)}")
 
@@ -85,12 +58,6 @@ def load_scenario(path: str | Path) -> dict:
             raise ValueError("Scenarios must have non-null placebo_text")
 
     return scenario
-
-
-def persona_set_hash(path: str | Path) -> str:
-    """SHA-256 hex digest of the raw file bytes, prefixed with 'sha256:'."""
-    raw = Path(path).read_bytes()
-    return f"sha256:{hashlib.sha256(raw).hexdigest()}"
 
 
 def group_by_cell(df: pd.DataFrame) -> dict[str, pd.DataFrame]:

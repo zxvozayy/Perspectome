@@ -9,7 +9,6 @@ lives in web/site.css and web/panel.css and uses the same values.
 BLUE = "#1E4FD0"    # the treatment arm, the engine
 SKY = "#6EA8FF"
 GOLD = "#C6A02F"    # the real survey answer
-INK = "#102A43"
 MUTED = "#667085"
 SLATE = "#98A2B3"   # the quiet comparison series
 PLUM = "#7A4FB0"

@@ -6,17 +6,15 @@ This is the only place in the repo that joins ``heldout.csv`` back onto
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Optional, Sequence
 
-import numpy as np
 import pandas as pd
 
-from src.common import schema
-from src.validation import metrics
+from src.common import paths, schema, stats
+from src.common.labels import answer_label
 
-PERSONAS_FIXTURE = Path("src/personas/fixtures/personas.sample.csv")
-HELDOUT_FIXTURE = Path("src/personas/fixtures/heldout.sample.csv")
+PERSONAS_FIXTURE = paths.PERSONAS_FIXTURE
+HELDOUT_FIXTURE = paths.HELDOUT_FIXTURE
 
 # Held-out items whose options have a natural order (Wasserstein applies).
 # religious_identity (religious / not / atheist) is nominal.
@@ -38,13 +36,7 @@ def load(personas_path=PERSONAS_FIXTURE, heldout_path=HELDOUT_FIXTURE) -> pd.Dat
 
 def answer_labels(series: pd.Series) -> pd.Series:
     """Held-out values as option labels: 7.0 -> "7", "quite_a_lot" stays."""
-    def label(v):
-        if v is None or (isinstance(v, float) and np.isnan(v)):
-            return None
-        if isinstance(v, (int, np.integer)) or (isinstance(v, float) and float(v).is_integer()):
-            return str(int(v))
-        return str(v)
-    return series.map(label)
+    return series.map(answer_label)
 
 
 def distribution(frame: pd.DataFrame, item: str, options: Sequence[str]) -> dict:
@@ -52,8 +44,7 @@ def distribution(frame: pd.DataFrame, item: str, options: Sequence[str]) -> dict
 
     Answers outside ``options`` are dropped (and counted in ``coverage``).
     """
-    stats = distribution_stats(frame, item, options)
-    return stats["distribution"]
+    return distribution_stats(frame, item, options)["distribution"]
 
 
 def distribution_stats(frame: pd.DataFrame, item: str, options: Sequence[str]) -> dict:
@@ -61,29 +52,15 @@ def distribution_stats(frame: pd.DataFrame, item: str, options: Sequence[str]) -
     labels = answer_labels(frame[item])
     answered = labels.notna()
     in_options = labels.isin(list(options))
-    sub = frame[in_options]
-    w = sub["weight"].astype(float)
-    total = w.sum()
-    dist = {o: float(w[labels[in_options] == o].sum() / total) if total > 0 else 0.0
-            for o in options}
+    w = frame["weight"].astype(float)
     return {
-        "distribution": dist,
+        "distribution": stats.weighted_share(labels, w, options),
         "n": int(in_options.sum()),
-        "n_eff": metrics.kish_n_eff(w),
+        "n_eff": stats.kish_n_eff(w[in_options]),
         "coverage": float(in_options.sum() / answered.sum()) if answered.sum() else 0.0,
     }
 
 
-def subgroup_distribution(frame: pd.DataFrame, item: str, options: Sequence[str],
-                          field: str) -> dict:
-    """{group value: {"n": int, "distribution": {...}}} for one conditioning field."""
-    out = {}
-    for value, group in frame.groupby(field):
-        stats = distribution_stats(group, item, options)
-        out[str(value)] = {"n": stats["n"], "distribution": stats["distribution"]}
-    return out
-
-
 def role(item: str) -> Optional[str]:
     """"fit" or "test" from schema.HELDOUT_ROLE (None for unknown items)."""
-    return getattr(schema, "HELDOUT_ROLE", {}).get(item)
+    return schema.HELDOUT_ROLE.get(item)

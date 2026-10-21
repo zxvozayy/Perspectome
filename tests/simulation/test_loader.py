@@ -1,21 +1,20 @@
 """Tests for src.simulation.loader."""
 
 import tempfile
-from pathlib import Path
 
 import pandas as pd
 import pytest
 
+from src.common import paths
 from src.simulation.loader import (
     group_by_cell,
     load_personas,
     load_scenario,
-    persona_set_hash,
 )
 
-FIXTURE_PERSONAS = Path("src/personas/fixtures/personas.sample.csv")
-FIXTURE_SCENARIO = Path("src/simulation/scenarios/unemployment_shock_v1.yaml")
-FIXTURE_PROBE = Path("src/simulation/scenarios/probe_trust_police.yaml")
+FIXTURE_PERSONAS = paths.PERSONAS_FIXTURE
+FIXTURE_SCENARIO = paths.SCENARIOS_DIR / "unemployment_shock_v1.yaml"
+FIXTURE_PROBE = paths.SCENARIOS_DIR / "probe_trust_police.yaml"
 
 
 class TestLoadPersonas:
@@ -69,20 +68,6 @@ class TestLoadScenario:
             f.flush()
             with pytest.raises(ValueError, match="Invalid run_type"):
                 load_scenario(f.name)
-
-
-class TestPersonaSetHash:
-    def test_deterministic(self):
-        h1 = persona_set_hash(FIXTURE_PERSONAS)
-        h2 = persona_set_hash(FIXTURE_PERSONAS)
-        assert h1 == h2
-        assert h1.startswith("sha256:")
-
-    def test_is_hex(self):
-        h = persona_set_hash(FIXTURE_PERSONAS)
-        hex_part = h.split(":")[1]
-        assert len(hex_part) == 64
-        int(hex_part, 16)  # should not raise
 
 
 class TestGroupByCell:
