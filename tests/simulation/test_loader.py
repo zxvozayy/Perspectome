@@ -4,6 +4,7 @@ import tempfile
 
 import pandas as pd
 import pytest
+import yaml
 
 from src.common import paths
 from src.common.schema import PERSONA_COLUMNS
@@ -88,3 +89,20 @@ class TestMissingValues:
         out = load_personas(path)
         assert out["income_decile"].isna().sum() == 1 and str(out["income_decile"].dtype) == "Int64"
         assert out["employment_status"].isna().sum() == 1
+
+
+@pytest.mark.parametrize("cells", ["auto", ["gender", "region"]])
+def test_scenario_cell_fields_accepted(tmp_path, cells):
+    path = tmp_path / "s.yaml"
+    path.write_text(yaml.safe_dump({"scenario_id": "x", "run_type": "probe", "question": "q",
+                                    "options": ["a", "b"], "cell_fields": cells}), encoding="utf-8")
+    assert load_scenario(path)["cell_fields"] == cells
+
+
+@pytest.mark.parametrize("cells", ["all", ["trust_police"], "gender"])
+def test_scenario_cell_fields_rejected(tmp_path, cells):
+    path = tmp_path / "s.yaml"
+    path.write_text(yaml.safe_dump({"scenario_id": "x", "run_type": "probe", "question": "q",
+                                    "options": ["a", "b"], "cell_fields": cells}), encoding="utf-8")
+    with pytest.raises(ValueError, match="cell_fields"):
+        load_scenario(path)

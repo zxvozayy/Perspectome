@@ -7,6 +7,8 @@ import json
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from src.common import paths
 from src.simulation.runner import run_simulation
 
@@ -103,3 +105,25 @@ class TestProbeEndToEnd:
         assert result["arms"]["placebo"] is None
         # Options are the four WVS confidence categories.
         assert result["options"] == ["a_great_deal", "quite_a_lot", "not_very_much", "none"]
+
+
+def test_question_specific_cells():
+    pytest.importorskip("sklearn")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_simulation(FIXTURE_PERSONAS, SCENARIOS_DIR / "probe_trust_police.yaml", output_dir=tmpdir,
+                                seed=1, cell_fields="auto", core_path=FIXTURE_PERSONAS,
+                                anchors_path=paths.ANCHORS_FIXTURE)
+    cells_meta = result["metadata"]["cells"]
+    assert cells_meta["mode"] == "auto" and len(cells_meta["fields"]) == 3
+    # 15 fixture personas < MIN_CELL_N: everyone falls back to one cell
+    assert cells_meta["n_cells"] == 1
+    assert set(result["arms"]["treatment"]["response_distribution"]) == set(result["options"])
+
+
+def test_fixed_cell_fields_and_default():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fixed = run_simulation(FIXTURE_PERSONAS, SCENARIOS_DIR / "probe_trust_police.yaml", output_dir=tmpdir,
+                               seed=1, cell_fields=["gender"])
+        default = run_simulation(FIXTURE_PERSONAS, SCENARIOS_DIR / "probe_trust_police.yaml", output_dir=tmpdir, seed=1)
+    assert fixed["metadata"]["cells"] == {"mode": "fixed", "fields": ["gender"], "anchors": [], "n_cells": 1}
+    assert default["metadata"]["cells"]["mode"] == "default"

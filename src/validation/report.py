@@ -6,7 +6,9 @@
         --heldout data/processed/heldout.csv --out reports/comparison.json
 
 Probes are scored against the real held-out answers (TVD, calibration error,
-Wasserstein for ordinal items) next to vanilla and the ML baseline. Scenarios
+Wasserstein for ordinal items) next to vanilla and the ML baseline, plus
+engine_calibrated and stacked once calibration_params.yaml exists
+(calibration.py, fitted on fit items only). Scenarios
 report effects only (treatment - placebo), gated by the noise floor, the
 saturation screen and the minimum detectable difference.
 """
@@ -25,7 +27,7 @@ import pandas as pd
 
 from src.common import paths, schema
 from src.common.stats import kish_n_eff
-from src.validation import baselines, metrics, real
+from src.validation import baselines, calibration, metrics, real
 
 RESULTS_FIXTURES = paths.RESULTS_FIXTURES
 REAL_PERSONAS = paths.PERSONAS_CSV
@@ -167,6 +169,27 @@ def score_probes(runs: list[dict], frame: pd.DataFrame, warnings: list[str]) -> 
             "models": models,
         })
     return probes
+
+
+def add_calibrated(probes: list[dict], params: Optional[dict], snapshot: Optional[str],
+                   warnings: list[str]) -> None:
+    """Add engine_calibrated and stacked to every probe, if ``params`` fit this model."""
+    if not params or not probes:
+        return
+    if params["model_snapshot"] != snapshot:
+        warnings.append(f"Calibration was fitted on {params['model_snapshot']}, the probes ran on {snapshot}; "
+                        "not applied.")
+        return
+    for p in probes:
+        if "engine" not in p["methods"]:
+            continue
+        cal, stacked = calibration.calibrate(p["methods"]["engine"]["distribution"],
+                                             p["methods"]["ml_baseline"]["distribution"], p["options"],
+                                             calibration.params_for(params, p["options"]))
+        p["methods"]["engine_calibrated"] = _scores(cal, p["real"], p["options"], p["ordinal"])
+        p["methods"]["stacked"] = _scores(stacked, p["real"], p["options"], p["ordinal"])
+    warnings.append("engine_calibrated and stacked are fitted on fit-role items: judge them on test items only. "
+                    "stacked mixes in the ML baseline, which is trained on the item's real answers.")
 
 
 def _scale_tau(group: list[dict]) -> dict:
@@ -322,8 +345,10 @@ def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_cap: float,
 # --- top level --------------------------------------------------------------------
 
 def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
-          params: Optional[dict] = None, persona_realism: Optional[dict] = None) -> dict:
-    """``persona_realism`` (realism.report output) is attached when the runs used a synthetic set."""
+          params: Optional[dict] = None, persona_realism: Optional[dict] = None,
+          calibration_params: Optional[dict] = None) -> dict:
+    """``persona_realism`` (realism.report output) is attached when the runs used a synthetic set.
+    ``calibration_params`` defaults to calibration_params.yaml when it exists."""
     warnings: list[str] = []
     if fixtures:
         warnings.append("Built from fixture data: every number here is fabricated for development.")
@@ -346,6 +371,9 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
         warnings.append(f"Runs simulate more personas than there are real respondents ({len(frame)}); "
                         f"power is computed on the respondents' effective size ({n_eff_cap:.0f}).")
     probes = score_probes(runs, frame, warnings)
+    probe_runs = [r for r in runs if r.get("run_type") == "probe"]
+    add_calibrated(probes, calibration.load() if calibration_params is None else calibration_params,
+                   _primary_model(probe_runs) if probe_runs else None, warnings)
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "persona_set_hash": persona_hash,

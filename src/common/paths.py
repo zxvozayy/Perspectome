@@ -9,6 +9,7 @@ PROCESSED = REPO / "data" / "processed"
 PERSONAS_CSV = PROCESSED / "personas.csv"            # the real core (WVS-7 respondents)
 PERSONAS_SYNTHETIC_CSV = PROCESSED / "personas_synthetic.csv"
 HELDOUT_CSV = PROCESSED / "heldout.csv"
+ANCHORS_CSV = PROCESSED / "anchors.csv"              # the core's answers to the anchor items (src/answering)
 
 RESULTS_DIR = REPO / "results"
 COMPARISON_JSON = REPO / "reports" / "comparison.json"
@@ -16,6 +17,7 @@ SCENARIOS_DIR = REPO / "src" / "simulation" / "scenarios"
 
 PERSONAS_FIXTURE = REPO / "src" / "personas" / "fixtures" / "personas.sample.csv"
 HELDOUT_FIXTURE = REPO / "src" / "personas" / "fixtures" / "heldout.sample.csv"
+ANCHORS_FIXTURE = REPO / "src" / "personas" / "fixtures" / "anchors.sample.csv"
 RESULTS_FIXTURES = (
     REPO / "src" / "simulation" / "fixtures" / "results.sample.json",
     REPO / "src" / "simulation" / "fixtures" / "results.probe.sample.json",

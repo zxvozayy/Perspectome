@@ -6,6 +6,11 @@ Usage (dry-run, mock model — the default):
         --scenario src/simulation/scenarios/unemployment_shock_v1.yaml
 
 Add --live --model <snapshot> to use a real API (costs money).
+
+Cells: by default the archetype cells of personas.csv (age x gender x
+education). ``cell_fields: auto`` in the scenario (or --cells auto) lets
+src/answering pick the fields that matter for this question and quote the
+cell's answers to related anchor items; a list of fields fixes them.
 """
 
 from __future__ import annotations
@@ -14,6 +19,9 @@ import argparse
 import json
 from pathlib import Path
 
+import pandas as pd
+
+from src.answering import cells, importance
 from src.simulation.aggregator import aggregate_arm, build_result
 from src.simulation.loader import (
     group_by_cell,
@@ -37,11 +45,29 @@ def _cell_representatives(cell_groups: dict) -> dict[str, dict]:
     return {cell_id: {f: sub_df.iloc[0][f] for f in CELL_FIELDS} for cell_id, sub_df in cell_groups.items()}
 
 
+def _question_cells(personas, scenario: dict, spec, core_path, anchors_path):
+    """Cells on question-specific fields (src/answering): personas with a new
+    cell_id, each cell's fields, prompt context per cell, and run metadata."""
+    if spec == "auto":
+        imp = importance.table(core_path, anchors_path)
+        chosen = cells.choose(scenario["question"], imp, target=scenario.get("target_item"))
+    else:
+        chosen = {"fields": list(spec), "anchors": []}
+    cell_id, reps = cells.assign(personas, chosen["fields"])
+    contexts = {}
+    if chosen["anchors"]:
+        core = pd.read_csv(core_path).merge(pd.read_csv(anchors_path), on="persona_id")
+        contexts = {c: cells.context(rep, core, chosen["anchors"]) for c, rep in reps.items()}
+    return personas.assign(cell_id=cell_id), reps, contexts, {"mode": spec if spec == "auto" else "fixed",
+                                                             **chosen, "n_cells": len(reps)}
+
+
 def _run_arm(
     arm: str,
     scenario: dict,
     personas,
     cell_reps: dict[str, dict],
+    contexts: dict[str, str],
     model,
     seed: int,
     n_repeats: int,
@@ -55,6 +81,7 @@ def _run_arm(
         scenario=scenario,
         cell_representatives=cell_reps if arm != "vanilla" else {"__vanilla__": {}},
         reverse_half=True,
+        contexts=contexts,
     )
     cell_dists = run_round_1(model, prompts, n_repeats, seed)
 
@@ -79,10 +106,15 @@ def run_simulation(
     n_repeats: int = 5,
     stubbornness: float = 0.6,
     n_rounds: int = 3,
+    cell_fields=None,
+    core_path: str | Path = paths.PERSONAS_CSV,
+    anchors_path: str | Path = paths.ANCHORS_CSV,
 ) -> dict:
     """Run the full simulation and return the result dict.
 
-    Also writes the result JSON to output_dir.
+    ``cell_fields`` ("auto" or a list) overrides the scenario's own setting;
+    ``core_path``/``anchors_path`` are the real core and its anchor answers,
+    used only for question-specific cells. Also writes the result JSON to output_dir.
     """
     # Load data.
     personas = load_personas(personas_path)
@@ -103,8 +135,12 @@ def run_simulation(
         model_name = "mock"
         model_snapshot = "mock-0"
 
-    cell_groups = group_by_cell(personas)
-    cell_reps = _cell_representatives(cell_groups)
+    spec = cell_fields if cell_fields is not None else scenario.get("cell_fields")
+    if spec is None:
+        cell_reps, contexts = _cell_representatives(group_by_cell(personas)), {}
+        cell_meta = {"mode": "default", "fields": list(CELL_FIELDS), "n_cells": len(cell_reps)}
+    else:
+        personas, cell_reps, contexts, cell_meta = _question_cells(personas, scenario, spec, core_path, anchors_path)
 
     # Probes have no placebo arm (placebo = null in the output).
     arms_to_run = [a for a in ARMS if scenario["run_type"] == "scenario" or a != "placebo"]
@@ -116,6 +152,7 @@ def run_simulation(
             scenario=scenario,
             personas=personas,
             cell_reps=cell_reps,
+            contexts=contexts,
             model=model,
             seed=seed,
             n_repeats=n_repeats,
@@ -139,7 +176,7 @@ def run_simulation(
         persona_set_hash=p_hash,
         option_order="reversed_half",
         n_rounds=n_rounds,
-        extra_metadata={"n_excluded_no_cell": n_excluded, "model_stats": model.summary()},
+        extra_metadata={"n_excluded_no_cell": n_excluded, "model_stats": model.summary(), "cells": cell_meta},
     )
 
     # Write output.
@@ -164,7 +201,11 @@ def main():
     parser.add_argument("--max-calls", type=int, default=200, help="Hard call cap")
     parser.add_argument("--n-repeats", type=int, default=5, help="Repeats per cell query")
     parser.add_argument("--stubbornness", type=float, default=0.6, help="FJ stubbornness")
+    parser.add_argument("--cells", default=None, help="'auto', or comma-separated fields (default: the scenario's)")
+    parser.add_argument("--core", default=str(paths.PERSONAS_CSV), help="real core personas (for --cells)")
+    parser.add_argument("--anchors", default=str(paths.ANCHORS_CSV), help="the core's anchor answers")
     args = parser.parse_args()
+    spec = args.cells if args.cells in (None, "auto") else args.cells.split(",")
 
     run_simulation(
         personas_path=args.personas,
@@ -176,6 +217,9 @@ def main():
         max_calls=args.max_calls,
         n_repeats=args.n_repeats,
         stubbornness=args.stubbornness,
+        cell_fields=spec,
+        core_path=args.core,
+        anchors_path=args.anchors,
     )
 
 

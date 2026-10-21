@@ -201,3 +201,19 @@ class TestBuildPromptsForArm:
         not_reversed = sum(1 for p in prompts if not p["reversed"])
         assert reversed_count > 0
         assert not_reversed > 0
+
+
+def test_persona_block_from_any_fields():
+    block = build_persona_block({"region": "Ege", "religiosity_band": "high", "political_leaning_band": "left"})
+    assert block == ("You are a person, living in Ege. God is very important in your life. "
+                     "Politically, you place yourself on the left.")
+    default = build_persona_block({"age_band": "25-34", "gender": "female", "education_level": "bachelor"})
+    assert default == "You are a 25-34 year old female with a bachelor level education."
+
+
+def test_context_follows_the_persona_block():
+    scenario = load_scenario(FIXTURE_PROBE)
+    prompts = build_prompts_for_arm("treatment", scenario, {"c1": {"gender": "male"}, "c2": {"gender": "female"}},
+                                    contexts={"c1": "Survey answers of people like you."})
+    assert "You are a male.\n\nSurvey answers of people like you." in prompts[0]["prompt"]
+    assert "Survey answers" not in prompts[1]["prompt"]

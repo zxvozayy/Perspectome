@@ -157,3 +157,74 @@ Newest at the bottom. Write the success criterion **before** the run
   LiTS-informed age × region structure, or TÜİK microdata) must be tested as a new
   finding, not tuned against this one. Measurement bug found and fixed before this
   result: income 4 vs 4.0 was counted as unseen (first run showed 100%).
+
+### F-5 — Question-specific cells with anchor answers  (2026-10-21, Hasan)
+- Question: do cells chosen per question (`cell_fields: auto`, `src/answering`)
+  with the cell's answers to related anchor items in the prompt bring the engine
+  closer to real answers than the default age × gender × education cells?
+- Success criterion (written before any real-LLM run). Same model snapshot(s),
+  seeds and persona set for both arms; `test`-role items only (the 8 of F-1):
+  - **A1 — better on most items.** On at least 5 of the 8 test items, auto-cell
+    TVD is lower than default-cell TVD by more than the probe noise floor.
+  - **A2 — not worse overall.** Median TVD across the test items is not higher
+    than the default's.
+  - **A3 — rankings kept.** Kendall tau-b on the 1–10 test group (F-1 P3) is at
+    least the default's.
+  - **A4 — two models agree,** as in F-1 P4.
+  - Pass: A1 + A2 + A4. A3 reported either way.
+- Frozen settings: 3 anchors per question, similarity floor 0.1 (TF-IDF cosine
+  on title + wording), 3 fields, MIN_CELL_N 30, anchors and exclusions as in
+  `src/answering/anchors.yaml` at this commit. Any change to these is tuned on
+  `fit` items only and recorded here before test items are scored.
+- Config: to be filled on the first real run.
+- Result: —
+- Status: pre-registered
+- Notes:
+  - Leakage guards: anchors are neither held-out items nor conditioning fields
+    (test); every held-out target excludes its near-duplicate anchors (e.g. the
+    confidence battery for the trust items); `src/answering` and `src/simulation`
+    never import `src.validation` or open a held-out file (AST test).
+  - Field importance on the real core (66 anchors, gradient boosting, permutation
+    importance on 30% held back, mean over anchors): region 0.37, religiosity 0.21,
+    left–right 0.14, income 0.10, settlement 0.06, every other field ≤ 0.03.
+    Sensible spot checks: religious attendance → gender, news from social media
+    → age, confidence in elections → left–right. Region's weight may partly be
+    regional fieldwork differences in WVS-7 Türkiye, not only attitudes.
+  - Known limit before running: lexical similarity finds no anchor above the
+    floor for some test items (e.g. gender_income, science_future, whose closest
+    anchors are excluded as near-duplicates); those use importance averaged over
+    all anchors and get no anchor answers in the prompt. Semantic embeddings
+    would be a new finding, not a change to this one.
+  - Mock-model dry run (no accuracy meaning): 20,000 synthetic personas → 79 cells
+    for the police-trust probe, 172 for the two scenarios (default: 48).
+
+### F-6 — Calibration and stacking  (2026-10-21, Hasan)
+- Question: does a temperature fitted on fit items make the engine's answer
+  distributions closer to real ones on test items, and how much does the engine
+  add to the ML baseline?
+- Success criterion (written before any real-LLM run). Parameters from
+  `python -m src.validation.calibration` on `fit`-role probes only; scored on the
+  8 `test` items of F-1, same runs as the raw engine:
+  - **C1 — calibration helps.** Median test-item TVD of `engine_calibrated` is
+    lower than raw `engine` by more than the probe noise floor.
+  - **C2 — it doesn't break rankings.** Kendall tau-b on the 1–10 test group is
+    at least raw `engine`'s (a temperature per scale size can change the mean
+    position of a skewed item).
+  - **C3 — the engine adds something.** At least one fitted stack weight is
+    above 0, and `stacked` has lower median test TVD than `ml_baseline` alone.
+    If every weight is 0, the engine adds nothing beyond demographics on these
+    items, and that is the result.
+  - Pass: C1 + C2. C3 is reported either way.
+- Frozen settings: temperature grid 0.5–5.0 step 0.1, weight grid 0–1 step 0.05,
+  objective mean TVD, one parameter pair per answer-scale size (4, 5, 10 options;
+  fit items: trust_government, trust_courts, happiness | gender_jobs |
+  income_equality, science_life), ties broken toward no correction.
+- Config: to be filled on the first real run (one fit per model snapshot; a
+  calibration fitted on one model is never applied to another).
+- Result: —
+- Status: pre-registered
+- Notes: `stacked` uses the ML baseline, which is trained on the item's real
+  answers; it can't be used for a question without survey data, and is only a
+  measure of what the engine adds. results.json stays raw; calibration lives in
+  comparison.json only. Permuting test items' real answers leaves the parameters
+  unchanged (test).

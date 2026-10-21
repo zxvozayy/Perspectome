@@ -101,7 +101,9 @@ and Track A's `heldout.csv` (see [`../personas/README.md`](../personas/README.md
       "methods": {
         "engine":            {"distribution": {"a_great_deal": 0.20, "quite_a_lot": 0.40, "not_very_much": 0.27, "none": 0.13}, "tvd": 0.07},
         "vanilla":           {"distribution": {"a_great_deal": 0.05, "quite_a_lot": 0.85, "not_very_much": 0.10, "none": 0.00}, "tvd": 0.50},
-        "ml_baseline":       {"distribution": {"...": 0}, "tvd": 0.09}
+        "ml_baseline":       {"distribution": {"...": 0}, "tvd": 0.09},
+        "engine_calibrated": {"...": "only once calibration_params.yaml exists (calibration.py)"},
+        "stacked":           {"...": "engine_calibrated blended with ml_baseline, same condition"}
       },
       "models": {"<model_snapshot>": {"tvd": 0.07}}
     }
