@@ -106,3 +106,17 @@ def test_scenario_cell_fields_rejected(tmp_path, cells):
                                     "options": ["a", "b"], "cell_fields": cells}), encoding="utf-8")
     with pytest.raises(ValueError, match="cell_fields"):
         load_scenario(path)
+
+
+def test_option_labels_need_one_per_option(tmp_path):
+    path = tmp_path / "s.yaml"
+    path.write_text(yaml.safe_dump({"scenario_id": "x", "run_type": "probe", "question": "q",
+                                    "options": ["1", "2"], "option_labels": ["low"]}), encoding="utf-8")
+    with pytest.raises(ValueError, match="option_labels"):
+        load_scenario(path)
+
+
+def test_every_heldout_item_has_a_probe():
+    from src.common.schema import HELDOUT_FIELDS
+    probes = {load_scenario(p)["target_item"] for p in paths.SCENARIOS_DIR.glob("probe_*.yaml")}
+    assert probes == set(HELDOUT_FIELDS)

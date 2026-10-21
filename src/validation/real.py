@@ -13,9 +13,6 @@ import pandas as pd
 from src.common import paths, schema, stats
 from src.common.labels import answer_label
 
-PERSONAS_FIXTURE = paths.PERSONAS_FIXTURE
-HELDOUT_FIXTURE = paths.HELDOUT_FIXTURE
-
 # Held-out items without a natural option order (Wasserstein doesn't apply).
 # Every current held-out item is ordinal.
 NOMINAL_ITEMS: tuple = ()
@@ -25,7 +22,7 @@ def is_ordinal(item: str) -> bool:
     return item in schema.HELDOUT_FIELDS and item not in NOMINAL_ITEMS
 
 
-def load(personas_path=PERSONAS_FIXTURE, heldout_path=HELDOUT_FIXTURE) -> pd.DataFrame:
+def load(personas_path=paths.PERSONAS_CSV, heldout_path=paths.HELDOUT_CSV) -> pd.DataFrame:
     """personas (conditioning + weight) joined with held-out answers on persona_id."""
     personas = pd.read_csv(personas_path, dtype={"persona_id": str})
     heldout = pd.read_csv(heldout_path, dtype={"persona_id": str})

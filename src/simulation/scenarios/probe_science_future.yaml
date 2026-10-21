@@ -1,0 +1,31 @@
+# WVS-7 Q159. Wording from the WVS-7 questionnaire as given in the codebook (Variables report v6.0).
+scenario_id: probe_science_future
+run_type: probe
+question: How much do you agree or disagree with the following statement? 1 means that you "completely
+  disagree" and 10 means that you "completely agree". Because of science and technology, there will be
+  more opportunities for the next generation.
+options:
+- '1'
+- '2'
+- '3'
+- '4'
+- '5'
+- '6'
+- '7'
+- '8'
+- '9'
+- '10'
+option_labels:
+- 1 (Completely disagree)
+- '2'
+- '3'
+- '4'
+- '5'
+- '6'
+- '7'
+- '8'
+- '9'
+- 10 (Completely agree)
+treatment_text: null
+placebo_text: null
+target_item: science_future

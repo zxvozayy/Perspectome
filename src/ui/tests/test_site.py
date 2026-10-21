@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 
 import pytest
 
+from src.common import paths
 from src.ui import auth, render, server
 from src.ui.data import load
 
@@ -103,7 +104,7 @@ def test_answer_text_is_escaped():
 
 
 def test_chart_tabs_hold_all_four_views():
-    bundle = load()
+    bundle = load(results_dir=paths.RESULTS_FIXTURES[0].parent, comparison_path=paths.COMPARISON_FIXTURE)
     run = bundle.runs("scenario")[0]
     html = render.chart_tabs("k", run, bundle.scored(run["scenario_id"]))
     assert html.count('class="tab-panel"') == 4 and html.count(" hidden") == 3

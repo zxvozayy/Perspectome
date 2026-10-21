@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from src.common import paths
 from src.ui import answers, views
 from src.ui.data import load
 
@@ -14,7 +15,7 @@ UI_DIR = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def bundle():
-    return load(results_dir=Path("/nonexistent"))  # falls back to the fixtures
+    return load(results_dir=paths.RESULTS_FIXTURES[0].parent, comparison_path=paths.COMPARISON_FIXTURE)
 
 
 @pytest.fixture
@@ -22,8 +23,7 @@ def scored(bundle):
     return copy.deepcopy(bundle.comparison["scenarios"][0])
 
 
-def test_fixtures_load_without_pipeline_code(bundle):
-    assert bundle.is_fixture
+def test_loads_without_pipeline_code(bundle):
     assert len(bundle.runs("scenario")) == 1 and len(bundle.runs("probe")) == 1
     for py in UI_DIR.glob("*.py"):
         assert not re.search(r"src\.(personas|simulation|validation)", py.read_text())
@@ -84,3 +84,9 @@ def test_routing(bundle):
     assert answers.route("Bugün hava nasıl?", bundle)["kind"] == "unknown"
     for q in answers.suggestions(bundle):
         assert answers.route(q, bundle)["kind"] != "unknown"
+
+
+def test_no_real_runs_means_nothing_shown(tmp_path):
+    """The site never falls back to fabricated example data."""
+    empty = load(results_dir=tmp_path, comparison_path=tmp_path / "none.json")
+    assert empty.results == {} and empty.comparison is None

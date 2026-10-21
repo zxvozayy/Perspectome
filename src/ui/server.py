@@ -119,8 +119,7 @@ class Handler(BaseHTTPRequestHandler):
             user = self.user()
             if not user:
                 return self.redirect("/giris")
-            badge = '<span class="badge">Fixture verisi</span>' if load().is_fixture else ""
-            return self.send(page("panel.html", user=html.escape(user), initial=html.escape(user[:1].upper()), badge=badge))
+            return self.send(page("panel.html", user=html.escape(user), initial=html.escape(user[:1].upper())))
         if path.startswith("/api/"):
             return self.api_get(path, parse_qs(url.query))
         if path.startswith("/static/"):

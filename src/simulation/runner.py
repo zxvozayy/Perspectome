@@ -28,7 +28,7 @@ from src.simulation.loader import (
     load_personas,
     load_scenario,
 )
-from src.simulation.model import MockModel, OpenAIModel
+from src.simulation.model import AnthropicModel, MockModel, OpenAIModel
 from src.common import paths
 from src.common.hashing import file_hash
 from src.common.schema import ARMS, CELL_FIELDS
@@ -128,8 +128,12 @@ def run_simulation(
 
     # Select model.
     if live:
-        model = OpenAIModel(model_snapshot=model_snapshot, max_calls=max_calls)
-        model_name = f"openai/{model_snapshot}"
+        if model_snapshot.startswith("claude"):
+            model = AnthropicModel(model_snapshot=model_snapshot, max_calls=max_calls)
+            model_name = f"anthropic/{model_snapshot}"
+        else:
+            model = OpenAIModel(model_snapshot=model_snapshot, max_calls=max_calls)
+            model_name = f"openai/{model_snapshot}"
     else:
         model = MockModel(seed=seed)
         model_name = "mock"
@@ -164,7 +168,7 @@ def run_simulation(
     if "placebo" not in arms_output:
         arms_output["placebo"] = None
 
-    run_id = f"{scenario['scenario_id']}__seed{seed}"
+    run_id = f"{scenario['scenario_id']}__{model_snapshot}__seed{seed}"  # one file per model and seed
     result = build_result(
         run_id=run_id,
         scenario=scenario,

@@ -82,3 +82,14 @@ def test_heldout_schema_is_closed_to_tracks_b_and_d():
     sql = (db.MIGRATIONS / "001_init.sql").read_text(encoding="utf-8")
     grants = [l for l in sql.splitlines() if l.startswith("grant") and "heldout" in l]
     assert grants and all("track_b" not in g and "track_d" not in g for g in grants)
+
+
+def test_env_reads_the_file_when_the_environment_is_empty(tmp_path, monkeypatch):
+    from src.common import env
+    f = tmp_path / ".env"
+    f.write_text("DATABASE_URL=postgresql://x\n export CLAUDE_API_KEY='k-1'\n", encoding="utf-8")
+    monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
+    assert env.get("CLAUDE_API_KEY", f) == "k-1"
+    assert env.get("MISSING", f) is None
+    monkeypatch.setenv("CLAUDE_API_KEY", "from-env")
+    assert env.get("CLAUDE_API_KEY", f) == "from-env"

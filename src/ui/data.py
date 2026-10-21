@@ -2,8 +2,8 @@
 
 Pure consumer: nothing here imports pipeline code. Real files are picked up
 from `results/` and `reports/comparison.json` at the repo root (or from the
-PERSPECTOME_RESULTS_DIR / PERSPECTOME_COMPARISON environment variables); when
-they don't exist yet the bundled fixtures are used.
+PERSPECTOME_RESULTS_DIR / PERSPECTOME_COMPARISON environment variables). With
+no real runs the bundle is empty: the site never shows fabricated numbers.
 """
 
 from __future__ import annotations
@@ -15,15 +15,11 @@ from pathlib import Path
 
 from src.common import paths
 
-FIXTURE_RESULTS = paths.RESULTS_FIXTURES[0].parent
-FIXTURE_COMPARISON = paths.COMPARISON_FIXTURE
-
 
 @dataclass
 class Bundle:
     results: dict[str, dict] = field(default_factory=dict)  # run_id -> results.json
     comparison: dict | None = None
-    is_fixture: bool = False
 
     def runs(self, run_type: str) -> list[dict]:
         return [r for r in self.results.values() if r.get("run_type") == run_type]
@@ -53,14 +49,8 @@ def load(results_dir: Path | None = None, comparison_path: Path | None = None) -
         os.environ.get("PERSPECTOME_COMPARISON", paths.COMPARISON_JSON)
     )
 
-    files = sorted(results_dir.glob("*.json")) if results_dir.is_dir() else []
-    is_fixture = not files
-    if is_fixture:
-        files = sorted(FIXTURE_RESULTS.glob("results*.json"))
-        comparison_path = FIXTURE_COMPARISON
-
-    bundle = Bundle(is_fixture=is_fixture)
-    for f in files:
+    bundle = Bundle()
+    for f in sorted(results_dir.glob("*.json")) if results_dir.is_dir() else []:
         run = _read(f)
         if run and "run_id" in run and "arms" in run:
             bundle.results[run["run_id"]] = run
