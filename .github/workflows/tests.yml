@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install pandas numpy pyyaml pytest "psycopg[binary]>=3.1" pyflakes pycodestyle
+        run: pip install pandas numpy pyyaml pytest "psycopg[binary]>=3.1" "scikit-learn>=1.4" pyflakes pycodestyle
       - name: Lint (unused code, extra blank lines, trailing whitespace)
         run: |
           python -m pyflakes src tests

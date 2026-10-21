@@ -52,6 +52,16 @@ Both produce the same `results.json` shape.
   population grows. Only the cell-defining fields describe the cell in the
   prompt; other fields differ inside a cell. Personas without a `cell_id`
   are left out and counted in `metadata.n_excluded_no_cell`.
+- **Question-specific cells (optional).** `cell_fields: auto` in a scenario
+  (or `--cells auto`) lets `src/answering` choose the cells per question: the
+  anchor items worded most like the question, which persona fields predict
+  them on the real core (gradient boosting + permutation importance), and the
+  top 3 fields become the cells; cells under 30 personas fall back to fewer
+  fields. The prompt then carries the cell's most common answers to those
+  anchors among real respondents. `cell_fields: [religiosity_band, region]`
+  fixes the fields instead. `metadata.cells` records the fields, anchors and
+  number of cells. Anchors near-duplicating a probe's target item are never
+  used (`src/answering/anchors.yaml`, `exclude`). Needs `pip install -e ".[ml]"`.
 - **How the answer is read.** Options are labelled with single letters
   (`A) support`, `B) oppose`, ...) and the model answers with one letter.
   When the model returns token log-probabilities, one call gives the full

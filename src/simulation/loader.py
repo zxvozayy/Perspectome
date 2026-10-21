@@ -51,6 +51,10 @@ def load_scenario(path: str | Path) -> dict:
             f"target_item '{target}' not in HELDOUT_FIELDS: {HELDOUT_FIELDS}"
         )
 
+    cells = scenario.get("cell_fields")
+    if cells is not None and cells != "auto" and not (isinstance(cells, list) and set(cells) <= set(CATEGORIES)):
+        raise ValueError(f"cell_fields must be 'auto' or a list of {sorted(CATEGORIES)}, got {cells!r}")
+
     if scenario["run_type"] == "scenario":
         if not scenario.get("treatment_text"):
             raise ValueError("Scenarios must have non-null treatment_text")

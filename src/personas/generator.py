@@ -24,6 +24,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.common import paths, schema, stats
+from src.answering import anchors
 from src.common.hashing import file_hash
 from src.personas import attach, ingest, synth
 from src.personas.sources import eurostat, lits, wvs
@@ -143,7 +144,8 @@ def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DI
     """ingest -> rake the real core -> (optionally) synthesize; write the frozen sets.
 
     personas.csv / heldout.csv are the real WVS-7 respondents (deterministic, no
-    sampling). personas_synthetic.csv holds ``synthetic`` personas drawn from
+    sampling); anchors.csv is their answers to the anchor items (src/answering),
+    which, unlike heldout.csv, may reach the simulation. personas_synthetic.csv holds ``synthetic`` personas drawn from
     the core (seeded); ``synthetic=0`` writes the core only.
     """
     raw = ingest.recode_missing(ingest.load_raw(turkey_csv))
@@ -161,14 +163,17 @@ def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DI
     out_dir.mkdir(parents=True, exist_ok=True)
     personas_path = out_dir / paths.PERSONAS_CSV.name
     heldout_path = out_dir / paths.HELDOUT_CSV.name
+    anchors_path = out_dir / paths.ANCHORS_CSV.name
     personas.to_csv(personas_path, index=False)
     heldout.to_csv(heldout_path, index=False)
+    anchors.from_raw(raw, personas["persona_id"]).to_csv(anchors_path, index=False)
 
     fit = marginal_fit(frame, weights, targets)
     summary = {
         "n_personas": len(personas),
         "personas_path": str(personas_path),
         "heldout_path": str(heldout_path),
+        "anchors_path": str(anchors_path),
         "persona_set_hash": file_hash(personas_path),
         "seed": seed,
         "targets_year": year,
@@ -212,6 +217,7 @@ def main():
         print(f"  {band:6} n={r['n']:4}  mean weight {r['mean_weight']:.2f}  max {r['max_weight']:.2f}")
     print(f"personas          : {s['personas_path']}")
     print(f"heldout           : {s['heldout_path']}")
+    print(f"anchors           : {s['anchors_path']}")
     print(f"persona_set_hash  : {s['persona_set_hash']}  (real core, targets {s['targets_year']})")
     if s["synthetic"]:
         syn = s["synthetic"]

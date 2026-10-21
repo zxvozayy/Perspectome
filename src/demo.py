@@ -3,6 +3,7 @@
     python -m src.demo            # fixtures, mock model, no API key, no cost
     python -m src.demo --real     # Track A's real core personas under data/processed/
     python -m src.demo --synthetic  # simulate the 20,000 synthetic personas, validate on the real core
+    python -m src.demo --cells auto # question-specific cells with anchor answers (src/answering)
     python -m src.ui.server       # then open http://localhost:8501
 
 Runs on the fabricated fixtures unless --real is given. Every scenario and probe runs at two seeds
@@ -33,12 +34,13 @@ def main():
     ap = argparse.ArgumentParser(description="End-to-end demo on fixtures (default) or real personas.")
     ap.add_argument("--real", action="store_true", help="use data/processed/personas.csv and heldout.csv")
     ap.add_argument("--synthetic", action="store_true", help="simulate data/processed/personas_synthetic.csv")
+    ap.add_argument("--cells", choices=("auto",), help="question-specific cells instead of age x gender x education")
     args = ap.parse_args()
 
-    personas, heldout = real.PERSONAS_FIXTURE, real.HELDOUT_FIXTURE
+    personas, heldout, anchors = real.PERSONAS_FIXTURE, real.HELDOUT_FIXTURE, paths.ANCHORS_FIXTURE
     fixtures = True
     if args.real or args.synthetic:
-        personas, heldout = paths.PERSONAS_CSV, paths.HELDOUT_CSV
+        personas, heldout, anchors = paths.PERSONAS_CSV, paths.HELDOUT_CSV, paths.ANCHORS_CSV
         if not (personas.exists() and heldout.exists()):
             raise SystemExit("No real persona files under data/processed/ (pull them: python -m src.common.db pull-personas).")
         fixtures = False
@@ -54,7 +56,8 @@ def main():
     for path in files:
         for seed in SEEDS:
             with contextlib.redirect_stdout(io.StringIO()):
-                runner.run_simulation(simulated, path, output_dir=RESULTS, seed=seed)
+                runner.run_simulation(simulated, path, output_dir=RESULTS, seed=seed,
+                                      cell_fields=args.cells, core_path=personas, anchors_path=anchors)
 
     persona_realism = None
     if args.synthetic:

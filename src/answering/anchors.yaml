@@ -1,0 +1,735 @@
+# Anchor items: WVS-7 answers that may reach the simulation (they are not held-out).
+#
+# Answers to these items describe what people in a cell actually think; the
+# answering layer puts a cell's typical answers to the anchors most related to
+# a new question into the prompt, and learns per question which persona fields
+# matter (src/answering). Wording and options are from the WVS-7 codebook
+# (Variables report v6.0); every item has 2,000+ valid answers in the Türkiye file.
+#
+# exclude: anchors that are near-duplicates of a held-out item. When that
+# held-out item is the probe's target, they never reach the prompt, so accuracy
+# isn't measured on an item the prompt has nearly answered already.
+
+exclude:
+  trust_government: [Q65, Q66, Q72, Q76, Q78, Q83, Q224, Q251, Q252]
+  trust_courts: [Q65, Q66, Q72, Q76, Q78, Q83, Q224, Q251, Q252]
+  trust_police: [Q65, Q66, Q72, Q76, Q78, Q83, Q224, Q251, Q252]
+  trust_parliament: [Q65, Q66, Q72, Q76, Q78, Q83, Q224, Q251, Q252]
+  happiness: [Q47, Q48, Q51, Q54, Q56]
+  life_satisfaction: [Q47, Q48, Q51, Q54, Q56]
+  financial_satisfaction: [Q47, Q48, Q51, Q54, Q56]
+  income_equality: [Q107, Q108, Q110]
+  competition: [Q107, Q108, Q110]
+  gender_jobs: [Q29, Q30, Q32]
+  gender_income: [Q29, Q30, Q32]
+  immigrant_jobs: [Q21, Q63, Q121, Q130]
+  science_life: [Q160, Q163, Q169]
+  science_future: [Q160, Q163, Q169]
+
+items:
+- code: Q1
+  name: important_family
+  title: 'Important in life: Family'
+  question: For each of the following aspects, indicate how important it is in your life. Would you say it is very important, rather important, not very important or not important at all? – Family
+  options:
+    1: Very important
+    2: Rather important
+    3: Not very important
+    4: Not at all important
+- code: Q4
+  name: important_politics
+  title: 'Important in life: Politics'
+  question: For each of the following aspects, indicate how important it is in your life. Would you say it is very important, rather important, not very important or not important at all? – Politics
+  options:
+    1: Very important
+    2: Rather important
+    3: Not very important
+    4: Not at all important
+- code: Q5
+  name: important_work
+  title: 'Important in life: Work'
+  question: For each of the following aspects, indicate how important it is in your life. Would you say it is very important, rather important, not very important or not important at all? – Work
+  options:
+    1: Very important
+    2: Rather important
+    3: Not very important
+    4: Not at all important
+- code: Q6
+  name: important_religion
+  title: 'Important in life: Religion'
+  question: For each of the following aspects, indicate how important it is in your life. Would you say it is very important, rather important, not very important or not important at all? – Religion
+  options:
+    1: Very important
+    2: Rather important
+    3: Not very important
+    4: Not at all important
+- code: Q8
+  name: child_independence
+  title: 'Important child qualities: Independence'
+  question: Here is a list of qualities that children can be encouraged to learn at home. Which, if any, do you consider to be especially important? Please choose up to five. – Independence 2.- Not mentioned
+  options:
+    2: Not mentioned
+    1: Important
+- code: Q15
+  name: child_religious_faith
+  title: 'Important child qualities: Religious faith'
+  question: Here is a list of qualities that children can be encouraged to learn at home. Which, if any, do you consider to be especially important? Please choose up to five. – Religious faith 2.- Not mentioned
+  options:
+    2: Not mentioned
+    1: Important
+- code: Q17
+  name: child_obedience
+  title: 'Important child qualities: Obedience'
+  question: Here is a list of qualities that children can be encouraged to learn at home. Which, if any, do you consider to be especially important? Please choose up to five. – Obedience 2.- Not mentioned
+  options:
+    2: Not mentioned
+    1: Important
+- code: Q19
+  name: neighbours_other_race
+  title: 'Neighbors: People of a different race'
+  question: On this list are various groups of people. Could you please mention any that you would not like to have as neighbors? - People of a different race
+  options:
+    1: Mentioned
+    2: Not mentioned
+- code: Q21
+  name: neighbours_immigrants
+  title: 'Neighbors: Immigrants/foreign workers'
+  question: On this list are various groups of people. Could you please mention any that you would not like to have as neighbors? – Immigrants/foreign workers
+  options:
+    1: Mentioned
+    2: Not mentioned
+- code: Q22
+  name: neighbours_homosexuals
+  title: 'Neighbors: Homosexuals'
+  question: On this list are various groups of people. Could you please mention any that you would not like to have as neighbors? – Homosexuals
+  options:
+    1: Mentioned
+    2: Not mentioned
+- code: Q29
+  name: men_better_leaders
+  title: Men make better political leaders than women do
+  question: For each of the following statements I read out, can you tell me how much you agree with each. Do you agree strongly, agree, disagree, or disagree strongly? - On the whole, men make better political
+    leaders than women do
+  options:
+    1: Agree strongly
+    2: Agree
+    3: Disagree
+    4: Strongly disagree
+- code: Q30
+  name: university_for_boys
+  title: University is more important for a boy than for a girl
+  question: For each of the following statements I read out, can you tell me how much you agree with each. Do you agree strongly, agree, disagree, or disagree strongly? - A university education is more
+    important for a boy than for a girl
+  options:
+    1: Agree strongly
+    2: Agree
+    3: Disagree
+    4: Strongly disagree
+- code: Q32
+  name: housewife_fulfilling
+  title: Being a housewife just as fulfilling
+  question: For each of the following statements I read out, can you tell me how much you agree with each. Do you agree strongly, agree, disagree, or disagree strongly? - Being a housewife is just as fulfilling
+    as working for pay
+  options:
+    1: Agree strongly
+    2: Agree
+    3: Disagree
+    4: Strongly disagree
+- code: Q37
+  name: duty_to_have_children
+  title: Duty towards society to have children
+  question: Do you agree, disagree or neither agree nor disagree with the following statements? – It is a duty towards society to have children
+  options:
+    1: Agree strongly
+    2: Agree
+    3: Neither agree nor disagree
+    4: Disagree
+    5: Disagree strongly
+- code: Q39
+  name: not_working_makes_lazy
+  title: People who don´t work turn lazy
+  question: Do you agree or disagree with the following statements? - People who don’t work turn lazy
+  options:
+    1: Strongly agree
+    2: Agree
+    3: Neither agree or disagree
+    4: Disagree
+    5: Strongly disagree
+- code: Q45
+  name: more_respect_for_authority
+  title: 'Future changes: Greater respect for authority'
+  question: I'm going to read out a list of various changes in our way of life that might take place in the near future. Please tell me for each one, if it were to happen, whether you think it would be
+    a good thing, a bad thing, or don't you mind? – Greater respect for authority
+  options:
+    1: Good thing
+    2: Don´t mind
+    3: Bad thing
+- code: Q47
+  name: health
+  title: State of health (subjective)
+  question: All in all, how would you describe your state of health these days? Would you say it is...
+  options:
+    1: Very good
+    2: Good
+    3: Fair
+    4: Poor
+    5: Very poor
+- code: Q48
+  name: freedom_of_choice
+  title: How much freedom of choice and control
+  question: Some people feel they have completely free choice and control over their lives, while other people feel that what they do has no real effect on what happens to them. Please use this scale where
+    1 means "none at all" and 10 means "a great deal" to indicate how much freedom of choice and control you feel you have over the way your life turns out. 10.- A great deal 9.- 9 8.- 8 7.- 7 6.- 6 5.-
+    5 4.- 4
+  options:
+    10: A great deal
+    9: '9'
+    8: '8'
+    7: '7'
+    6: '6'
+    5: '5'
+    4: '4'
+    3: '3'
+    2: '2'
+    1: None at all
+- code: Q51
+  name: went_without_food
+  title: 'Frequency you/family (last 12 month): Gone without enough food to eat'
+  question: 'In the last 12 months, how often have you or your family: Gone without enough food to eat'
+  options:
+    1: Often
+    2: Sometimes
+    3: Rarely
+    4: Never
+- code: Q54
+  name: went_without_cash_income
+  title: 'Frequency you/family (last 12 month): Gone without a cash income'
+  question: 'In the last 12 months, how often have you or your family: Gone without a cash income'
+  options:
+    1: Often
+    2: Sometimes
+    3: Rarely
+    4: Never
+- code: Q56
+  name: living_standard_vs_parents
+  title: Standard of living comparing with your parents
+  question: Comparing your standard of living with your parents’ standard of living when they were about your age, would you say that you are better off, worse off or about the same?
+  options:
+    1: Better off
+    2: Worse off
+    3: Or about the same
+- code: Q57
+  name: most_people_trusted
+  title: Most people can be trusted
+  question: Generally speaking, would you say that most people can be trusted or that you need to be very careful in dealing with people?
+  options:
+    1: Most people can be trusted
+    2: Need to be very careful
+- code: Q61
+  name: trust_strangers
+  title: 'Trust: People you meet for the first time'
+  question: I ‘d like to ask you how much you trust people from various groups. Could you tell me for each whether you trust people from this group completely, somewhat, not very much or not at all? People
+    you meet for the first time
+  options:
+    1: Trust completely
+    2: Trust somewhat
+    3: Do not trust very much
+    4: Do not trust at all
+- code: Q63
+  name: trust_other_nationality
+  title: 'Trust: People of another nationality'
+  question: I ‘d like to ask you how much you trust people from various groups. Could you tell me for each whether you trust people from this group completely, somewhat, not very much or not at all? People
+    of another nationality
+  options:
+    1: Trust completely
+    2: Trust somewhat
+    3: Do not trust very much
+    4: Do not trust at all
+- code: Q65
+  name: confidence_army
+  title: 'Confidence: Armed Forces'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? The armed forces'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q66
+  name: confidence_press
+  title: 'Confidence: The Press'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? The press'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q72
+  name: confidence_parties
+  title: 'Confidence: The Political Parties'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? Political Parties'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q76
+  name: confidence_elections
+  title: 'Confidence: Election'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? Elections'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q78
+  name: confidence_banks
+  title: 'Confidence: Banks'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? Banks'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q83
+  name: confidence_un
+  title: 'Confidence: The United Nations (UN)'
+  question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence you have in them: is it a great deal of confidence, quite a lot of confidence, not very much
+    confidence or none at all? The United Nations'
+  options:
+    1: A great deal
+    2: Quite a lot
+    3: Not very much
+    4: None at all
+- code: Q107
+  name: private_vs_state_ownership
+  title: Private vs state ownership of business
+  question: Now I'd like you to tell me your views on various issues. How would you place your views on this scale? 1 means you agree completely with the statement on the left; 10 means you agree completely
+    with the statement on the right; and if your views fall somewhere in between, you can choose any number in between.
+  options:
+    1: Private ownership of business should be increased
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Government ownership of business should be increased
+- code: Q108
+  name: government_vs_individual_responsibility
+  title: Government´s vs individual´s responsibility
+  question: Now I'd like you to tell me your views on various issues. How would you place your views on this scale? 1 means you agree completely with the statement on the left; 10 means you agree completely
+    with the statement on the right; and if your views fall somewhere in between, you can choose any number in between.
+  options:
+    1: The government should take more responsibility to ensure that everyone is
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: People should take more responsibility to provide for themselves
+- code: Q110
+  name: hard_work_vs_luck
+  title: 'Success: hard work vs luck'
+  question: Now I'd like you to tell me your views on various issues. How would you place your views on this scale? 1 means you agree completely with the statement on the left; 10 means you agree completely
+    with the statement on the right; and if your views fall somewhere in between, you can chose any number in between.
+  options:
+    1: In the long run, hard work usually brings a better life
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Hard work doesn´t generally bring success - it´s more a matter of luck and
+- code: Q111
+  name: environment_vs_growth
+  title: Protecting environment vs. Economic growth
+  question: Here are two statements people sometimes make when discussing the environment and economic growth. Which of them comes closer to your own point of view? A. Protecting the environment should
+    be given priority, even if it causes slower economic growth and some loss of jobs B. Economic growth and creating jobs should be the top priority, even if the environment suffers to som e extent
+  options:
+    1: 'A: Protect environment'
+    2: 'B: Economic growth'
+    3: Other answer
+- code: Q112
+  name: corruption_perception
+  title: Perceptions of corruption in the country
+  question: 'Now I''d like you to tell me your views on corruption – when people pay a bribe, give a gift or do a favor to other people in order to get the things they need done or the services they need.
+    How would you place your views on corruption in your country on a 10-point scale where “1” means “there is no corruption in this country” and “10” means “there is abundant corruption in this country”.
+    If your '
+  options:
+    1: '1'
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: '10'
+- code: Q121
+  name: immigrants_impact
+  title: Impact of immigrants on the development of the country
+  question: Now we would like to know your opinion about the people from other countries who come to live in this country - the immigrants. How would you evaluate the impact of these people on the development
+    of this country?
+  options:
+    1: Rather bad
+    2: Quite bad
+    3: Neither good, nor bad
+    4: Quite good
+    5: Very good
+- code: Q130
+  name: immigration_policy
+  title: Immigration policy preference
+  question: How about people from other countries coming here to work. Which one of the following do you think the government should do?
+  options:
+    1: Let anyone come who wants to
+    2: Let people come as long as there are jobs available
+    3: Place strict limits on the number of foreigners who can come here
+    4: Prohibit people coming here from other countries
+- code: Q131
+  name: secure_in_neighbourhood
+  title: Secure in neighborhood
+  question: Could you tell me how secure do you feel these days in your neighborhood?
+  options:
+    1: Very Secure
+    2: Quite secure
+    3: Not very secure
+    4: Not at all secure
+- code: Q142
+  name: worry_job_loss
+  title: 'Worries: Losing my job or not finding a job'
+  question: To what degree are you worried about the following situations? Losing my job or not finding a job
+  options:
+    1: Very much
+    2: A great deal
+    3: Not much
+    4: Not at all
+- code: Q146
+  name: worry_war
+  title: 'Worries: A war involving my country'
+  question: To what degree are you worried about the following situations? A war involving my country
+  options:
+    1: Very much
+    2: A great deal
+    3: Not much
+    4: Not at all
+- code: Q149
+  name: freedom_vs_equality
+  title: Freedom and Equality - Which more important
+  question: Most people consider both freedom and equality to be important, but if you had to choose between them, which one would you consider more important?
+  options:
+    1: Freedom
+    2: Equality
+- code: Q150
+  name: freedom_vs_security
+  title: Freedom and security - Which more important
+  question: Most people consider both freedom and security to be important, but if you had to choose between them, which one would you consider more important?
+  options:
+    1: Freedom
+    2: Security
+- code: Q151
+  name: willing_to_fight
+  title: Willingness to fight for country
+  question: Of course, we all hope that there will not be another war, but if it were to come to that, would you be willing to fight for your country?
+  options:
+    1: 'Yes'
+    2: 'No'
+- code: Q160
+  name: too_much_science_not_faith
+  title: We depend too much on science and not enough on faith
+  question: Now, I would like to read some statements and ask how much you agree or disagree with each of these statements. For these questions, a 1 means that you “completely disagree” and a 10 means that
+    you “completely agree.” We depend too much on science and not enough on faith
+  options:
+    1: Completely disagree
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Completely agree
+- code: Q163
+  name: world_better_by_science
+  title: The world is better off, or worse off, because of science and technology
+  question: 'All things considered, would you say that the world is better off, or worse off, because of science and technology? Please tell me which comes closest to your view on this scale: 1 means that
+    “the world is a lot worse off,” and 10 means that “the world is a lot better off.” The world is better off, or worse off, because of science and technology'
+  options:
+    1: A lot worse off
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: A lot better off
+- code: Q169
+  name: religion_right_over_science
+  title: Whenever science and religion conflict, religion is always right
+  question: 'Please tell us if you strongly agree, agree, disagree, or strongly disagree with the following statements: Whenever science and religion conflict, religion is always right'
+  options:
+    1: Strongly agree
+    2: Agree
+    3: Disagree
+    4: Strongly disagree
+- code: Q171
+  name: religious_attendance
+  title: How often do you attend religious services
+  question: Apart from weddings, funerals and christenings, about how often do you attend religious services these days?
+  options:
+    1: More than once a week
+    2: Once a week
+    3: Once a month
+    4: Only on special holy days
+    5: Once a year
+    6: Less often
+    7: Never, practically never
+- code: Q172
+  name: prayer_frequency
+  title: How often to you pray
+  question: Apart from weddings and funerals, about how often do you pray?
+  options:
+    1: Several times a day
+    2: Once a day
+    3: Several times each week
+    4: Only when attending religious services
+    5: Only on special holy days
+    6: Once a year
+    7: Less often
+    8: Never, practically never
+- code: Q180
+  name: justifiable_tax_cheating
+  title: 'Justifiable: Cheating on taxes'
+  question: Please tell me for each of the following statements whether you think it can always be justified, never be justified, or something in between, using this card. Cheating on taxes if you have
+    a chance
+  options:
+    1: Never justifiable
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Always justifiable
+- code: Q182
+  name: justifiable_homosexuality
+  title: 'Justifiable: Homosexuality'
+  question: Please tell me for each of the following statements whether you think it can always be justified, never be justified, or something in between, using this card. Homosexuality
+  options:
+    1: Never justifiable
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Always justifiable
+- code: Q184
+  name: justifiable_abortion
+  title: 'Justifiable: Abortion'
+  question: Please tell me for each of the following statements whether you think it can always be justified, never be justified, or something in between, using this card. Abortion
+  options:
+    1: Never justifiable
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Always justifiable
+- code: Q185
+  name: justifiable_divorce
+  title: 'Justifiable: Divorce'
+  question: Please tell me for each of the following statements whether you think it can always be justified, never be justified, or something in between, using this card. Divorce
+  options:
+    1: Never justifiable
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Always justifiable
+- code: Q195
+  name: justifiable_death_penalty
+  title: 'Justifiable: Death penalty'
+  question: Please tell me for each of the following statements whether you think it can always be justified, never be justified, or something in between, using this card. Death penalty
+  options:
+    1: Never justifiable
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Always justifiable
+- code: Q199
+  name: interest_in_politics
+  title: Interest in politics
+  question: How interested would you say you are in politics?
+  options:
+    1: Very interested
+    2: Somewhat interested
+    3: Not very interested
+    4: Not at all interested
+- code: Q202
+  name: news_from_tv
+  title: 'Information source: TV news'
+  question: 'People learn what is going on in this country and the world from various sources. For each of the following sources, please indicate whether you use it to obtain information daily, weekly,
+    monthly, less than monthly or never: TV news'
+  options:
+    1: Daily
+    2: Weekly
+    3: Monthly
+    4: Less than monthly
+    5: Never
+- code: Q207
+  name: news_from_social_media
+  title: 'Information source: Social media (Facebook, Twitter, etc.)'
+  question: 'People learn what is going on in this country and the world from various sources. For each of the following sources, please indicate whether you use it to obtain information daily, weekly,
+    monthly, less than monthly or never: Social media (Facebook, Twitter, etc.)'
+  options:
+    1: Daily
+    2: Weekly
+    3: Monthly
+    4: Less than monthly
+    5: Never
+- code: Q209
+  name: signed_petition
+  title: 'Political action: Signing a petition'
+  question: Now I'd like you to look at this card. I'm going to read out some different forms of political action that people can take, and I'd like you to tell me, for each one, whether you have actually
+    done any of these things, whether you might do it or would never, under any circumstances, do it. Signing a petition
+  options:
+    1: Have done
+    2: Might do
+    3: Would never do
+- code: Q211
+  name: attended_demonstration
+  title: 'Political action: attending lawful/peaceful demonstrations'
+  question: Now I'd like you to look at this card. I'm going to read out some different forms of political action that people can take, and I'd like you to tell me, for each one, whether you have actually
+    done any of these things, whether you might do it or would never, under any circumstances, do it. Attending peaceful demonstrations
+  options:
+    1: Have done
+    2: Might do
+    3: Would never do
+- code: Q224
+  name: votes_counted_fairly
+  title: 'How often in country´s elections: Votes are counted fairly'
+  question: In your view, how often do the following things occur in this country’s elections? Votes are counted fairly
+  options:
+    1: Very often
+    2: Fairly often
+    3: Not often
+    4: Not at all often
+- code: Q235
+  name: strong_leader_good
+  title: 'Political system: Having a strong leader who does not have to bother with'
+  question: parliament and elections I'm going to describe various types of political systems and ask what you think about each as a way of governing this country. For each one, would you say it is a very
+    good, fairly good, fairly bad or very bad way of governing this country? Having a strong leader who does not have to bother with parliament and elections
+  options:
+    1: Very good
+    2: Fairly good
+    3: Fairly bad
+    4: Very bad
+- code: Q238
+  name: democracy_good
+  title: 'Political system: Having a democratic political system'
+  question: I'm going to describe various types of political systems and ask what you think about each as a way of governing this country. For each one, would you say it is a very good, fairly good, fairly
+    bad or very bad way of governing this country? Having a democratic political system
+  options:
+    1: Very good
+    2: Fairly good
+    3: Fairly bad
+    4: Very bad
+- code: Q239
+  name: religious_law_good
+  title: 'Political system: Having a system governed by religious law in which there are no'
+  question: political parties or elections I'm going to describe various types of political systems and ask what you think about each as a way of governing this country. For each one, would you say it is
+    a very good, fairly good, fairly bad or very bad way of governing this country? Having a system governed by religious law in which there are no political parties or elections
+  options:
+    1: Very good
+    2: Fairly good
+    3: Bad
+    4: Very bad
+- code: Q250
+  name: importance_of_democracy
+  title: Importance of democracy
+  question: How important is it for you to live in a country that is governed democratically? On this scale where 1 means it is “not at all important” and 10 means “absolutely important” what position would
+    you choose?
+  options:
+    1: Not at all important
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Absolutely important
+- code: Q251
+  name: how_democratic_now
+  title: How democratically is this country being governed today
+  question: And how democratically is this country being governed today?. Again using a scale from 1 to 10, where 1 means that it is “not at all democratic” and 10 means that it is “completely democratic,”
+    what position would you choose?
+  options:
+    1: Not at all democratic
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Completely democratic
+- code: Q252
+  name: satisfaction_political_system
+  title: Satisfaction with the political system performance
+  question: How satisfied are you with how the political system is functioning in your country these days? On the scale from 1 to 10 below, 1 means not satisfied at all and 10 means completely satisfied.
+  options:
+    1: Not satisfied at all
+    2: '2'
+    3: '3'
+    4: '4'
+    5: '5'
+    6: '6'
+    7: '7'
+    8: '8'
+    9: '9'
+    10: Completely satisfied
+- code: Q254
+  name: national_pride
+  title: National pride
+  question: How proud are you to be of nationality of this country?
+  options:
+    1: Very proud
+    2: Quite proud
+    3: Not very proud
+    4: Not at all proud
+    5: I am not [nationality]

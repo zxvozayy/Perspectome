@@ -27,6 +27,8 @@ METHOD_LABELS = {
     "vanilla": "Vanilla (personasız)",
     "equation_baseline": "Denklem baseline",
     "ml_baseline": "ML baseline",
+    "engine_calibrated": "Engine (kalibre)",
+    "stacked": "Engine + ML",
 }
 # Never rendered: income needs Track C's confirmation in real data (no contract
 # field for that yet), and province-level cells are too thin by rule.
