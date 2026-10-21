@@ -360,6 +360,11 @@ def build(runs: list[dict], frame: pd.DataFrame,
         warnings.append("Only one model was run. Results may reflect that model's prior "
                         "rather than the population (rule 14: at least two models).")
 
+    refused = [r for r in runs if (r.get("metadata") or {}).get("refusals")]
+    if refused:
+        warnings.append(f"{len(refused)} run(s) had cells the model refused to answer; those personas are "
+                        "left out of that arm (metadata.refusals), so its distribution covers fewer people.")
+
     n_eff_cap = kish_n_eff(frame["weight"])  # effective size of the real respondents behind the personas
     if any((r.get("n_personas") or 0) > len(frame) for r in runs):
         warnings.append(f"Runs simulate more personas than there are real respondents ({len(frame)}); "
