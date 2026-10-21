@@ -22,7 +22,10 @@ def cache(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def site(cache):
+def site(cache, monkeypatch):
+    # the site reads real runs only; tests point it at the fabricated samples explicitly
+    monkeypatch.setenv("PERSPECTOME_RESULTS_DIR", str(paths.RESULTS_FIXTURES[0].parent))
+    monkeypatch.setenv("PERSPECTOME_COMPARISON", str(paths.COMPARISON_FIXTURE))
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     yield httpd.server_address[1]
@@ -108,3 +111,14 @@ def test_chart_tabs_hold_all_four_views():
     run = bundle.runs("scenario")[0]
     html = render.chart_tabs("k", run, bundle.scored(run["scenario_id"]))
     assert html.count('class="tab-panel"') == 4 and html.count(" hidden") == 3
+
+
+def test_ask_with_no_runs_shows_no_numbers(site, monkeypatch, tmp_path):
+    monkeypatch.setenv("PERSPECTOME_RESULTS_DIR", str(tmp_path))
+    monkeypatch.setenv("PERSPECTOME_COMPARISON", str(tmp_path / "none.json"))
+    form = {"Content-Type": "application/x-www-form-urlencoded"}
+    _, headers, _ = call(site, "POST", "/kayit", "ad=bos&sifre=uzun-bir-sifre&sifre2=uzun-bir-sifre", form)
+    cookie = {"Cookie": headers["Set-Cookie"].split(";")[0]}
+    status, _, body = call(site, "POST", "/api/ask", json.dumps({"q": "İşsizlik artarsa?"}),
+                           {**cookie, "Content-Type": "application/json"})
+    assert status == 200 and "Etki" not in json.loads(body)["html"]
