@@ -16,9 +16,9 @@ from src.common.labels import answer_label
 PERSONAS_FIXTURE = paths.PERSONAS_FIXTURE
 HELDOUT_FIXTURE = paths.HELDOUT_FIXTURE
 
-# Held-out items whose options have a natural order (Wasserstein applies).
-# religious_identity (religious / not / atheist) is nominal.
-NOMINAL_ITEMS = ("religious_identity",)
+# Held-out items without a natural option order (Wasserstein doesn't apply).
+# Every current held-out item is ordinal.
+NOMINAL_ITEMS: tuple = ()
 
 
 def is_ordinal(item: str) -> bool:

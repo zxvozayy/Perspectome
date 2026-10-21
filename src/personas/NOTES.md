@@ -93,13 +93,19 @@ used to calibrate:
 | topic        | fit                      | test                         |
 |--------------|--------------------------|------------------------------|
 | institutions | trust_government (Q71), trust_courts (Q70) | trust_police (Q69), trust_parliament (Q73) |
-| religion     | religiosity (Q164)       | religious_identity (Q173)    |
 | wellbeing    | happiness (Q46)          | life_satisfaction (Q49)      |
 | economy      | income_equality (Q106)   | competition (Q109)           |
-| politics     | —                        | political_leaning (Q240)     |
 | finances     | —                        | financial_satisfaction (Q50) |
+| gender roles | gender_jobs (Q33)        | gender_income (Q35)          |
+| migration    | —                        | immigrant_jobs (Q34)         |
+| science      | science_life (Q158)      | science_future (Q159)        |
 
-- Trust items and religious_identity are stored as **categorical** labels, not
+Religiosity (Q164) and left–right (Q240) are **conditioning** fields since
+2026-10-21 (`religiosity_band`, `political_leaning_band`; project-lead decision),
+so personas carry values, not only demographics. Q173 left the held-out set with
+them because it is a near-duplicate of Q164.
+
+- Trust items are stored as **categorical** labels, not
   averaged and not reverse-coded (Hasan). Other held-out fields keep their **raw
   survey scale** (no rescaling) so Track C validates on the original scale.
 - **Dropped:** `risk_tolerance` (Q47 is self-reported health, not risk -- no

@@ -17,16 +17,16 @@ coarse ISCED grouping) is used only for calibration, never written out.
 from __future__ import annotations
 
 import argparse
+import sys
 import logging
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from src.common import paths, schema, stats
 from src.common.hashing import file_hash
-from src.personas import ingest
-from src.personas.sources import eurostat, wvs
+from src.personas import attach, ingest, synth
+from src.personas.sources import eurostat, lits, wvs
 
 log = logging.getLogger(__name__)
 
@@ -106,20 +106,51 @@ def weight_diagnostics(weights: pd.Series, frame: pd.DataFrame) -> dict:
     }
 
 
-def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DIR,
-             seed: int = 0) -> dict:
-    """Full pipeline: ingest -> rake -> write frozen personas.csv / heldout.csv.
+def _joint_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Composite keys so the two joint target tables can be raked like one-way margins."""
+    return pd.DataFrame({
+        "region_age_sex": frame["region"] + "|" + frame["age_band"] + "|" + frame["gender"],
+        "age_sex_edu": frame["age_band"] + "|" + frame["gender"] + "|" + frame["edu3"],
+    }, index=frame.index)
 
-    Deterministic: no sampling, so the same raw file + seed yield an identical
-    persona_set_hash. ``seed`` is recorded for lineage and reserved for an
-    optional future resample step.
+
+def _joint_targets(year: int) -> dict:
+    j = eurostat.joint_targets(year)
+    ras, ase = j["region_age_sex"], j["age_sex_edu"]
+    return {
+        "region_age_sex": dict(zip(ras["region"] + "|" + ras["age_band"] + "|" + ras["gender"], ras["share"])),
+        "age_sex_edu": dict(zip(ase["age_band"] + "|" + ase["gender"] + "|" + ase["edu3"], ase["share"])),
+    }
+
+
+def synthesize(core: pd.DataFrame, raw: pd.DataFrame, n: int, seed: int, year: int) -> tuple[pd.DataFrame, dict]:
+    """``n`` synthetic personas raked to the joint targets, with every attached field."""
+    core = core.assign(edu3=raw[wvs.SRC["education"]].map(wvs.edu3_from_isced).values)
+    syn = synth.synthesize(core, n, seed=seed)
+    joint = _joint_frame(syn)
+    targets = _joint_targets(year)
+    weights = rake(joint, targets, dims=tuple(targets))
+    syn["weight"] = weights.round(4).values
+    syn = attach.attach(syn, lits.load(), seed=seed)
+    fit = marginal_fit(joint, weights, targets, dims=tuple(targets))
+    columns = [*schema.PERSONA_COLUMNS, *schema.SYNTHETIC_FIELDS]
+    return syn[columns], {"max_calibration_error": float(fit["abs_error"].max()),
+                          "weights": weight_diagnostics(weights, syn), "assumptions": list(attach.ASSUMPTIONS)}
+
+
+def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DIR,
+             seed: int = 0, synthetic: int = 20000, year: int = eurostat.DEFAULT_YEAR) -> dict:
+    """ingest -> rake the real core -> (optionally) synthesize; write the frozen sets.
+
+    personas.csv / heldout.csv are the real WVS-7 respondents (deterministic, no
+    sampling). personas_synthetic.csv holds ``synthetic`` personas drawn from
+    the core (seeded); ``synthetic=0`` writes the core only.
     """
-    np.random.seed(seed)
     raw = ingest.recode_missing(ingest.load_raw(turkey_csv))
     personas, heldout = ingest.to_personas_and_heldout(raw)
 
     frame = _raking_frame(personas, raw)
-    targets = eurostat.target_margins()
+    targets = eurostat.target_margins(year)
     weights = rake(frame, targets)
 
     personas = personas.copy()
@@ -128,37 +159,49 @@ def generate(turkey_csv=paths.DATA_RAW / "wvs7_turkey.csv", out_dir=PROCESSED_DI
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    personas_path = out_dir / "personas.csv"
-    heldout_path = out_dir / "heldout.csv"
+    personas_path = out_dir / paths.PERSONAS_CSV.name
+    heldout_path = out_dir / paths.HELDOUT_CSV.name
     personas.to_csv(personas_path, index=False)
     heldout.to_csv(heldout_path, index=False)
 
     fit = marginal_fit(frame, weights, targets)
-    return {
+    summary = {
         "n_personas": len(personas),
         "personas_path": str(personas_path),
         "heldout_path": str(heldout_path),
         "persona_set_hash": file_hash(personas_path),
         "seed": seed,
+        "targets_year": year,
         "max_calibration_error": float(fit["abs_error"].max()),
         "weights": weight_diagnostics(weights, frame),
         "fit": fit,
+        "synthetic": None,
     }
+    if synthetic:
+        syn, info = synthesize(personas, raw, synthetic, seed, year)
+        syn_path = out_dir / paths.PERSONAS_SYNTHETIC_CSV.name
+        syn.to_csv(syn_path, index=False)
+        summary["synthetic"] = {"n": len(syn), "path": str(syn_path), "persona_set_hash": file_hash(syn_path),
+                                "core_set_hash": summary["persona_set_hash"], **info}
+    return summary
 
 
 def main():
     """Documented, reproducible generation command (issue #14).
 
-        python -m src.personas.generator            # default seed 0
-        python -m src.personas.generator --seed 0
+        python -m src.personas.generator                  # real core + 20,000 synthetic, seed 0
+        python -m src.personas.generator --synthetic 0    # real core only
     """
     ap = argparse.ArgumentParser(description="Generate the frozen persona set.")
     ap.add_argument("--turkey-csv", default=str(paths.DATA_RAW / "wvs7_turkey.csv"))
     ap.add_argument("--out-dir", default=str(PROCESSED_DIR))
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--synthetic", type=int, default=20000, help="synthetic personas (0 = real core only)")
+    ap.add_argument("--year", type=int, default=eurostat.DEFAULT_YEAR, help="Eurostat target year")
     args = ap.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # TÜİK, İstanbul on a cp1252 console
 
-    s = generate(args.turkey_csv, args.out_dir, args.seed)
+    s = generate(args.turkey_csv, args.out_dir, args.seed, args.synthetic, args.year)
     print(f"n_personas        : {s['n_personas']}")
     print(f"seed              : {s['seed']}")
     print(f"max_calib_error   : {s['max_calibration_error']*100:.4f} pp")
@@ -169,8 +212,16 @@ def main():
         print(f"  {band:6} n={r['n']:4}  mean weight {r['mean_weight']:.2f}  max {r['max_weight']:.2f}")
     print(f"personas          : {s['personas_path']}")
     print(f"heldout           : {s['heldout_path']}")
-    print(f"persona_set_hash  : {s['persona_set_hash']}")
-    print("Track B pins this persona_set_hash on every run; regenerating is a PR.")
+    print(f"persona_set_hash  : {s['persona_set_hash']}  (real core, targets {s['targets_year']})")
+    if s["synthetic"]:
+        syn = s["synthetic"]
+        print(f"synthetic         : {syn['n']} -> {syn['path']}")
+        print(f"  joint calib err : {syn['max_calibration_error']*100:.4f} pp; "
+              f"Kish n_eff {syn['weights']['n_eff']:.0f} of {syn['n']}")
+        print(f"  persona_set_hash: {syn['persona_set_hash']}")
+        for line in syn["assumptions"]:
+            print(f"  assumption      : {line}")
+    print("Track B pins the persona_set_hash it ran on; regenerating is a PR.")
 
 
 if __name__ == "__main__":

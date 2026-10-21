@@ -41,24 +41,28 @@ _CONDITIONING = {
     "marital_status": ("marital", wvs.map_marital),
     "employment_status": ("employment", wvs.map_employment),
     "income_decile": ("income", wvs.map_income_decile),
+    "religiosity_band": ("religiosity", wvs.map_religiosity_band),
+    "political_leaning_band": ("political", wvs.map_political_band),
 }
 
 # held-out field -> (raw WVS column, mapper). One field per column, no
-# aggregation (Track C sign-off). Trust/religious_identity are categorical;
-# the rest keep their raw survey scale via wvs.keep_scale.
+# aggregation (Track C sign-off). Trust items are categorical; the rest keep
+# their raw survey scale via wvs.keep_scale.
 HELDOUT_SRC = {
     "trust_government": ("Q71", wvs.map_confidence),
     "trust_courts": ("Q70", wvs.map_confidence),
     "trust_police": ("Q69", wvs.map_confidence),
     "trust_parliament": ("Q73", wvs.map_confidence),
-    "religiosity": ("Q164", wvs.keep_scale),
-    "religious_identity": ("Q173", wvs.map_religious_identity),
     "happiness": ("Q46", wvs.keep_scale),
     "life_satisfaction": ("Q49", wvs.keep_scale),
     "income_equality": ("Q106", wvs.keep_scale),
     "competition": ("Q109", wvs.keep_scale),
-    "political_leaning": ("Q240", wvs.keep_scale),
     "financial_satisfaction": ("Q50", wvs.keep_scale),
+    "gender_jobs": ("Q33", wvs.keep_scale),
+    "gender_income": ("Q35", wvs.keep_scale),
+    "immigrant_jobs": ("Q34", wvs.keep_scale),
+    "science_life": ("Q158", wvs.keep_scale),
+    "science_future": ("Q159", wvs.keep_scale),
 }
 
 

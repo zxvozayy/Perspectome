@@ -6,7 +6,8 @@ shared copies live. Each track pushes what it owns and pulls what it reads:
     python -m src.common.db status
     python -m src.common.db push-personas --personas data/processed/personas.csv \
         --heldout data/processed/heldout.csv --source "WVS-7 Turkey" --seed 0     # Track A
-    python -m src.common.db pull-personas --out data/processed/personas.csv      # B, C
+    python -m src.common.db pull-personas --out data/processed/personas.csv      # B, C (real core)
+    python -m src.common.db pull-personas --kind synthetic --out data/processed/personas_synthetic.csv
     python -m src.common.db pull-heldout  --out data/processed/heldout.csv       # C only
     python -m src.common.db push-runs results/*.json                             # Track B
     python -m src.common.db pull-runs --out-dir results                          # C, D
@@ -223,8 +224,18 @@ def status(conn) -> dict:
 # --- Track A ------------------------------------------------------------------------
 
 def push_personas(conn, personas_path, heldout_path=None, source: str = "",
-                  seed: Optional[int] = None, notes: Optional[str] = None) -> str:
-    """Publish a frozen persona set (and its held-out answers). Returns its hash."""
+                  seed: Optional[int] = None, notes: Optional[str] = None,
+                  kind: str = "core", core_set_hash: Optional[str] = None) -> str:
+    """Publish a frozen persona set (and its held-out answers). Returns its hash.
+
+    ``kind="synthetic"`` sets are drawn from a real core (``core_set_hash``) and
+    never carry held-out answers. Columns outside schema.PERSONA_COLUMNS
+    (schema.SYNTHETIC_FIELDS) are stored per persona in ``attrs``.
+    """
+    if kind not in ("core", "synthetic"):
+        raise ValueError(f"unknown persona set kind {kind!r}")
+    if kind == "synthetic" and (heldout_path or not core_set_hash):
+        raise ValueError("a synthetic set needs --core-hash and has no held-out answers")
     raw = Path(personas_path).read_bytes()
     rows = read_csv_rows(raw)
     problems = validate_personas(rows)
@@ -240,16 +251,18 @@ def push_personas(conn, personas_path, heldout_path=None, source: str = "",
         if cur.fetchone():
             raise ValueError(f"Persona set {h} already exists (a frozen set is never overwritten).")
         cur.execute("insert into personas.persona_sets (persona_set_hash, personas_csv, seed, source, "
-                    "n_personas, notes) values (%s, %s, %s, %s, %s, %s)",
-                    (h, raw, seed, source, len(rows), notes))
+                    "n_personas, notes, kind, core_set_hash) values (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    (h, raw, seed, source, len(rows), notes, kind, core_set_hash))
         cols = schema.PERSONA_COLUMNS
-        with cur.copy(f"copy personas.personas (persona_set_hash, {', '.join(cols)}) from stdin") as cp:
+        extra = [c for c in rows[0] if c not in cols]
+        with cur.copy(f"copy personas.personas (persona_set_hash, {', '.join(cols)}, attrs) from stdin") as cp:
             for r in rows:
                 values = {c: answer_label(r.get(c)) for c in cols}
                 values["weight"] = float(r["weight"])
                 if values["income_decile"] is not None:
                     values["income_decile"] = int(values["income_decile"])
-                cp.write_row((h, *(values[c] for c in cols)))
+                attrs = json.dumps({c: answer_label(r.get(c)) for c in extra}, ensure_ascii=False) if extra else None
+                cp.write_row((h, *(values[c] for c in cols), attrs))
         if held:
             with cur.copy("copy heldout.answers (persona_set_hash, persona_id, item, value) "
                           "from stdin") as cp:
@@ -259,16 +272,17 @@ def push_personas(conn, personas_path, heldout_path=None, source: str = "",
     return h
 
 
-def latest_persona_set(conn) -> Optional[str]:
+def latest_persona_set(conn, kind: str = "core") -> Optional[str]:
     with conn.cursor() as cur:
-        cur.execute("select persona_set_hash from personas.persona_sets order by created_at desc limit 1")
+        cur.execute("select persona_set_hash from personas.persona_sets where kind = %s "
+                    "order by created_at desc limit 1", (kind,))
         row = cur.fetchone()
     return row[0] if row else None
 
 
-def pull_personas(conn, out_path, persona_set_hash: Optional[str] = None) -> str:
+def pull_personas(conn, out_path, persona_set_hash: Optional[str] = None, kind: str = "core") -> str:
     """Write the exact personas.csv bytes back out, so its hash is unchanged."""
-    h = persona_set_hash or latest_persona_set(conn)
+    h = persona_set_hash or latest_persona_set(conn, kind)
     with conn.cursor() as cur:
         cur.execute("select personas_csv from personas.persona_sets where persona_set_hash = %s", (h,))
         row = cur.fetchone()
@@ -375,10 +389,14 @@ def main(argv=None):
     pp.add_argument("--source", required=True)
     pp.add_argument("--seed", type=int)
     pp.add_argument("--notes")
+    pp.add_argument("--kind", choices=("core", "synthetic"), default="core")
+    pp.add_argument("--core-hash", help="persona_set_hash of the core a synthetic set was drawn from")
     for name in ("pull-personas", "pull-heldout"):
         s = sub.add_parser(name)
         s.add_argument("--out", required=True)
         s.add_argument("--hash", help="persona_set_hash (default: latest)")
+        if name == "pull-personas":
+            s.add_argument("--kind", choices=("core", "synthetic"), default="core")
     pr = sub.add_parser("push-runs")
     pr.add_argument("files", nargs="+")
     pl = sub.add_parser("pull-runs")
@@ -408,10 +426,10 @@ def main(argv=None):
             else:
                 print("all logins already exist (use --reset for new passwords)")
         elif args.cmd == "push-personas":
-            print("pushed persona set", push_personas(conn, args.personas, args.heldout,
-                                                      args.source, args.seed, args.notes))
+            print("pushed persona set", push_personas(conn, args.personas, args.heldout, args.source, args.seed,
+                                                      args.notes, args.kind, args.core_hash))
         elif args.cmd == "pull-personas":
-            print("pulled", pull_personas(conn, args.out, args.hash), "->", args.out)
+            print("pulled", pull_personas(conn, args.out, args.hash, args.kind), "->", args.out)
         elif args.cmd == "pull-heldout":
             print("pulled held-out for", pull_heldout(conn, args.out, args.hash), "->", args.out)
         elif args.cmd == "push-runs":

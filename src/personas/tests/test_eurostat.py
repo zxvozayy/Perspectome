@@ -41,6 +41,10 @@ def test_joint_targets_sum_to_one_and_cover_every_cell(tables):
     assert j["region_age_sex"]["share"].sum() == pytest.approx(1.0)
     assert j["age_sex_edu"]["share"].sum() == pytest.approx(1.0)
     assert len(j["age_sex_edu"]) == len(schema.AGE_BANDS) * len(schema.GENDERS) * 3
+    # one row per schema region x age x sex, even though 12 NUTS-1 regions collapse onto 7
+    keys = j["region_age_sex"][["region", "age_band", "gender"]]
+    assert not keys.duplicated().any()
+    assert len(keys) == len(schema.REGIONS) * len(schema.AGE_BANDS) * len(schema.GENDERS)
 
 
 def test_65_plus_education_is_derived_from_55_74_minus_55_64(tables):

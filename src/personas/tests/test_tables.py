@@ -26,3 +26,10 @@ def test_unverified_tables_are_refused_as_targets():
     with pytest.raises(ValueError, match="not verified"):
         tables.get(unverified, verified_only=True)
     assert tables.get(unverified)["id"] == unverified
+
+
+@pytest.mark.parametrize("table_id", sorted(ALL))
+def test_category_keys_are_strings(table_id):
+    """YAML 1.1 reads bare yes/no as booleans; every category must stay a string."""
+    for dist in tables.distributions(ALL[table_id]):
+        assert all(isinstance(k, str) for k in dist)

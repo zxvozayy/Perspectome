@@ -20,7 +20,7 @@ def test_fixture_personas_pass_validation():
 def test_validation_blocks_leaked_heldout_field():
     rows = db.read_csv_rows(PERSONAS.read_bytes())
     for r in rows:
-        r["political_leaning"] = "5"
+        r["gender_income"] = "5"
     assert any("held-out" in p for p in db.validate_personas(rows))
 
 
@@ -40,10 +40,10 @@ def test_heldout_unknown_column_and_orphans():
 
 
 def test_heldout_long_keeps_only_schema_items_and_nulls_blanks():
-    rows = [{"persona_id": "p1", "trust_police": "none", "religiosity": "", "life_satisfaction": "7.0", "extra": "x"}]
+    rows = [{"persona_id": "p1", "trust_police": "none", "science_life": "", "life_satisfaction": "7.0", "extra": "x"}]
     out = db.heldout_long(rows)
     assert ("p1", "trust_police", "none") in out
-    assert ("p1", "religiosity", None) in out
+    assert ("p1", "science_life", None) in out
     assert ("p1", "life_satisfaction", "7") in out
     assert all(item in schema.HELDOUT_FIELDS for _, item, _ in out)
 

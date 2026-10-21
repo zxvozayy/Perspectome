@@ -38,9 +38,9 @@ BASE = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data"
 DIR = paths.DATA_RAW / "eurostat"
 TR_NUTS1 = tuple(wvs.NUTS1_ALPHA_TO_REGION)
 
-# Year of the targets behind the frozen persona set. Moving to a newer year
+# Year of the targets behind the frozen persona sets. Moving to a newer year
 # re-weights every persona, so it changes persona_set_hash (a PR, not a rerun).
-DEFAULT_YEAR = 2024
+DEFAULT_YEAR = 2025
 
 # schema age_band -> (eurostat age code, weight) components, 18+ only.
 AGE_BAND_COMPONENTS = {
@@ -166,7 +166,9 @@ def target_margins(year: int = DEFAULT_YEAR) -> dict:
 def joint_targets(year: int = DEFAULT_YEAR) -> dict[str, pd.DataFrame]:
     """Joint 18+ targets: region x age_band x gender, and age_band x gender x edu3 (shares)."""
     cells = population_cells(year)
-    region_age_sex = cells.assign(share=cells["count"] / cells["count"].sum()).drop(columns="count")
+    # several NUTS-1 regions collapse onto one schema region: sum them first
+    region_age_sex = cells.groupby(["region", "age_band", "gender"], as_index=False)["count"].sum()
+    region_age_sex = region_age_sex.assign(share=region_age_sex["count"] / region_age_sex["count"].sum()).drop(columns="count")
 
     edu = _edu_pct(year)
     by_band = cells.groupby(["age_band", "gender"])["count"].sum()
