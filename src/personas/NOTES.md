@@ -40,7 +40,7 @@ committed.
   account, and LiTS shows "Data Access Not Available" on IHSN (EBRD/WB route is
   gated). These stay manual downloads into `data/raw/{tuik,issp,lits}/`.
 - **Eurostat** IS registration-free and fetchable via its REST API
-  (`src/personas/fetch_eurostat_margins.py`). It reports Turkey at **NUTS-1**,
+  (`python -m src.personas.sources.eurostat --year <YYYY>`; files are named by year). It reports Turkey at **NUTS-1**,
   the same level as WVS `N_REG_NUTS1`, so region cells line up exactly. Pulled:
   - `data/raw/eurostat/tr_population_age_sex_nuts1.csv` — pop by 5-yr age ×
     sex × 12 NUTS-1 regions (2024)
@@ -111,3 +111,27 @@ used to calibrate:
   conditioning fields did not change).
 
 - WVS Turkey fieldwork is 2018 — note time drift wherever results are shown.
+
+## Sources and consistency rules (P1, 2026-10-21)
+
+Every external source has one loader under `src/personas/sources/`:
+
+| Module | Source | Use |
+|---|---|---|
+| `wvs.py` | WVS-7 Türkiye 2018 (n=2,415) | conditioning fields + held-out answers; the one NUTS-1 table (WVS code, Eurostat code, Turkish name, schema region) |
+| `eurostat.py` | Eurostat `demo_r_pjangrp3`, `edat_lfse_03` (2024, 2025) | one-way targets (frozen set uses 2024) and joint targets region×age×sex, age×sex×edu3 |
+| `lits.py` | EBRD LiTS IV 2022–23, Türkiye (n=1,109) | household size, tenure, sector, informality, joint with demographics |
+| `tables.yaml` | published bulletin figures (TÜİK, KONDA) with year, url, `verified` flag | priors for lifestyle features; unverified tables are refused as targets |
+
+LiTS IV Türkiye, weighted (`weight_trt`), compared with official figures:
+- 65+ is 12.9% of respondents (WVS-7: 1.2%) — the most useful thing LiTS adds.
+- Household size 3.47 (TÜİK ADNKS 2025: 3.08); owners 68.7% (TÜİK GYKA 2025: 57.1%).
+- `urbanity` says 98.6% urban (TÜİK density classes: ≈83% urban) — not used.
+- Work questions are asked only of people who have worked, so the employment
+  distribution is selected (94% "employed"); only `sector` and `informal` among
+  workers are used. Informal (no social security) is 47.7% of 390 workers vs
+  TÜİK ≈25.5% — the question differs; not a target.
+- Use LiTS for relationships between fields; take the levels from official figures.
+
+`rules.yaml` lists hard (impossible → resample) and soft (rare → compare with the
+real share) consistency rules; real respondents are only warned about, never dropped.

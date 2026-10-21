@@ -207,24 +207,25 @@ def map_income_decile(code) -> Optional[int]:
 # region variable. The 792NN -> NUTS-1 order below is the standard İBBS Düzey-1
 # numbering, corroborated by the response counts (79201 = İstanbul is the
 # largest cell). Double-check against the WVS region annex if a count looks off.
-# (WVS code, Eurostat alpha code, schema region) for the 12 NUTS-1 regions.
+# (WVS code, Eurostat alpha code, Turkish NUTS-1 name, schema region) for the 12 NUTS-1 regions.
 _NUTS1 = (
-    (79201, "TR1", "Marmara"),            # İstanbul
-    (79202, "TR2", "Marmara"),            # Batı Marmara
-    (79203, "TR3", "Ege"),                # Ege
-    (79204, "TR4", "Marmara"),            # Doğu Marmara
-    (79205, "TR5", "Ic Anadolu"),         # Batı Anadolu (Ankara/Konya)
-    (79206, "TR6", "Akdeniz"),            # Akdeniz
-    (79207, "TR7", "Ic Anadolu"),         # Orta Anadolu
-    (79208, "TR8", "Karadeniz"),          # Batı Karadeniz
-    (79209, "TR9", "Karadeniz"),          # Doğu Karadeniz
-    (79210, "TRA", "Dogu Anadolu"),       # Kuzeydoğu Anadolu
-    (79211, "TRB", "Dogu Anadolu"),       # Ortadoğu Anadolu
-    (79212, "TRC", "Guneydogu Anadolu"),  # Güneydoğu Anadolu
+    (79201, "TR1", "İstanbul", "Marmara"),
+    (79202, "TR2", "Batı Marmara", "Marmara"),
+    (79203, "TR3", "Ege", "Ege"),
+    (79204, "TR4", "Doğu Marmara", "Marmara"),
+    (79205, "TR5", "Batı Anadolu", "Ic Anadolu"),          # Ankara/Konya
+    (79206, "TR6", "Akdeniz", "Akdeniz"),
+    (79207, "TR7", "Orta Anadolu", "Ic Anadolu"),
+    (79208, "TR8", "Batı Karadeniz", "Karadeniz"),
+    (79209, "TR9", "Doğu Karadeniz", "Karadeniz"),
+    (79210, "TRA", "Kuzeydoğu Anadolu", "Dogu Anadolu"),
+    (79211, "TRB", "Ortadoğu Anadolu", "Dogu Anadolu"),
+    (79212, "TRC", "Güneydoğu Anadolu", "Guneydogu Anadolu"),
 )
-assert {r for _, _, r in _NUTS1} == set(schema.REGIONS)
-REGION_MAP = {code: region for code, _, region in _NUTS1}
-NUTS1_ALPHA_TO_REGION = {alpha: region for _, alpha, region in _NUTS1}
+assert {r for *_, r in _NUTS1} == set(schema.REGIONS)
+REGION_MAP = {code: region for code, _, _, region in _NUTS1}
+NUTS1_ALPHA_TO_REGION = {alpha: region for _, alpha, _, region in _NUTS1}
+NUTS1_NAME_TO_ALPHA = {name: alpha for _, alpha, name, _ in _NUTS1}
 
 
 def map_region(code) -> Optional[str]:

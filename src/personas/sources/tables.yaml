@@ -1,0 +1,121 @@
+# Published Türkiye figures used to attach lifestyle/context features to personas.
+#
+#   verified: true  -> read in the primary source (bulletin, API, report PDF).
+#   verified: false -> taken from news reports of an official release (several
+#                      outlets agree) or a secondary source. Usable as a prior for
+#                      attaching features, never as a raking target, until checked
+#                      against the primary source.
+#   values:          shares in [0, 1] keyed by the table's dimensions
+#                    (category -> share, or group -> {category -> share}).
+# Research notes: tmp/persona-research-2026-10.md (local).
+
+- id: daily_smoking_by_sex
+  title: Daily tobacco use, age 15+
+  publisher: TÜİK Türkiye Sağlık Araştırması
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  dims: [gender, smoker]
+  values:
+    male: {daily: 0.429, not_daily: 0.571}
+    female: {daily: 0.175, not_daily: 0.825}
+
+- id: alcohol_last_year_by_sex
+  title: Alcohol use in the last 12 months, age 15+
+  publisher: TÜİK Türkiye Sağlık Araştırması
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  dims: [gender, alcohol]
+  values:
+    male: {yes: 0.187, no: 0.813}
+    female: {yes: 0.066, no: 0.934}
+
+- id: obesity_by_sex
+  title: Obese (BMI 30+), age 15+
+  publisher: TÜİK Türkiye Sağlık Araştırması
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  dims: [gender, obese]
+  values:
+    male: {yes: 0.187, no: 0.813}
+    female: {yes: 0.248, no: 0.752}
+
+- id: genai_use_by_age_sex
+  title: Used generative AI in the last 3 months, age 16-74
+  publisher: TÜİK Hanehalkı Bilişim Teknolojileri Kullanım Araştırması
+  year: 2026
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  note: TÜİK reports 16-24; used for the 18-24 band. 65-74 is used for 65+.
+  dims: [age_band, gender, genai_user]
+  values:
+    "18-24":
+      female: {yes: 0.684, no: 0.316}
+      male: {yes: 0.616, no: 0.384}
+    "25-34":
+      female: {yes: 0.571, no: 0.429}
+      male: {yes: 0.544, no: 0.456}
+    "35-44":
+      female: {yes: 0.366, no: 0.634}
+      male: {yes: 0.396, no: 0.604}
+    "45-54":
+      female: {yes: 0.195, no: 0.805}
+      male: {yes: 0.216, no: 0.784}
+    "55-64":
+      female: {yes: 0.097, no: 0.903}
+      male: {yes: 0.115, no: 0.885}
+    "65+":
+      female: {yes: 0.049, no: 0.951}
+      male: {yes: 0.053, no: 0.947}
+
+- id: internet_use_by_sex
+  title: Internet use, age 16-74
+  publisher: TÜİK Hanehalkı Bilişim Teknolojileri Kullanım Araştırması
+  year: 2026
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  dims: [gender, internet_user]
+  values:
+    male: {yes: 0.948, no: 0.052}
+    female: {yes: 0.899, no: 0.101}
+
+- id: housing_tenure
+  title: Households by tenure
+  publisher: TÜİK Gelir ve Yaşam Koşulları Araştırması
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  note: lodging (lojman, 0.9%) merged into rent_free.
+  dims: [tenure]
+  values: {owner: 0.571, tenant: 0.270, rent_free: 0.159}
+
+- id: household_type
+  title: Households by type
+  publisher: TÜİK İstatistiklerle Aile (ADNKS)
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  dims: [household_type]
+  values: {single_person: 0.205, nuclear_family: 0.627, extended_family: 0.135, other: 0.033}
+
+- id: religiosity_self_description
+  title: Self-described religiosity, adults
+  publisher: KONDA Hayat Tarzları (n=6,137, Oct 2024)
+  year: 2024
+  url: https://kontent.konda.com.tr
+  verified: false
+  note: raking target candidate for religiosity_band (P2); needs the report itself.
+  dims: [religiosity]
+  values: {devout: 0.12, religious: 0.46, believer: 0.34, non_believer: 0.08}
+
+- id: top_problem
+  title: Most important problem of Türkiye, age 18+
+  publisher: TÜİK Yaşam Memnuniyeti Araştırması
+  year: 2025
+  url: https://veriportali.tuik.gov.tr/
+  verified: false
+  note: only the three largest shares are published in the news; the rest is grouped.
+  dims: [concern]
+  values: {cost_of_living: 0.313, poverty: 0.165, education: 0.161, other: 0.361}

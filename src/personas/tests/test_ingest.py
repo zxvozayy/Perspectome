@@ -14,7 +14,8 @@ import pandas as pd
 import pytest
 
 from src.common import schema
-from src.personas import ingest, wvs
+from src.personas import ingest
+from src.personas.sources import wvs
 
 FIXTURE = Path(__file__).parent / "fixtures" / "wvs_raw.sample.csv"
 
@@ -171,7 +172,7 @@ def test_inconsistency_warns_but_keeps_row(recoded, caplog):
     with caplog.at_level(logging.WARNING):
         personas, _ = ingest.to_personas_and_heldout(recoded)
     # row 1008: retired at age 23 -> warned, but still present
-    assert any("retired aged 18-24" in r.message for r in caplog.records)
+    assert any("retired_under_35" in r.getMessage() and "p1008" in r.getMessage() for r in caplog.records)
     assert "p1008" in set(personas["persona_id"])
 
 
