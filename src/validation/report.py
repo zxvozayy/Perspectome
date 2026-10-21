@@ -1,7 +1,6 @@
 """Build ``reports/comparison.json`` -- the contract Track D renders.
 
-    python -m src.validation.report                      # real inputs if present, else fixtures
-    python -m src.validation.report --fixtures           # force the fixture inputs
+    python -m src.validation.report                      # results/ + data/processed/
     python -m src.validation.report --results-dir results --personas data/processed/personas.csv \
         --heldout data/processed/heldout.csv --out reports/comparison.json
 
@@ -29,9 +28,6 @@ from src.common import paths, schema
 from src.common.stats import kish_n_eff
 from src.validation import baselines, calibration, metrics, real
 
-RESULTS_FIXTURES = paths.RESULTS_FIXTURES
-REAL_PERSONAS = paths.PERSONAS_CSV
-REAL_HELDOUT = paths.HELDOUT_CSV
 DEFAULT_OUT = paths.COMPARISON_JSON
 MIN_RANK_ITEMS = 3
 
@@ -344,14 +340,12 @@ def score_scenarios(runs: list[dict], noise: Optional[float], n_eff_cap: float,
 
 # --- top level --------------------------------------------------------------------
 
-def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
+def build(runs: list[dict], frame: pd.DataFrame,
           params: Optional[dict] = None, persona_realism: Optional[dict] = None,
           calibration_params: Optional[dict] = None) -> dict:
     """``persona_realism`` (realism.report output) is attached when the runs used a synthetic set.
     ``calibration_params`` defaults to calibration_params.yaml when it exists."""
     warnings: list[str] = []
-    if fixtures:
-        warnings.append("Built from fixture data: every number here is fabricated for development.")
 
     hashes = {r.get("metadata", {}).get("persona_set_hash") for r in runs}
     if len(hashes) > 1:
@@ -396,25 +390,16 @@ def build(runs: list[dict], frame: pd.DataFrame, fixtures: bool = False,
 
 def main():
     ap = argparse.ArgumentParser(description="Build reports/comparison.json")
-    ap.add_argument("--results-dir", help="directory of results/*.json (default: results/ or fixtures)")
-    ap.add_argument("--personas")
-    ap.add_argument("--heldout")
+    ap.add_argument("--results-dir", default=str(paths.RESULTS_DIR))
+    ap.add_argument("--personas", default=str(paths.PERSONAS_CSV))
+    ap.add_argument("--heldout", default=str(paths.HELDOUT_CSV))
     ap.add_argument("--out", default=str(DEFAULT_OUT))
-    ap.add_argument("--fixtures", action="store_true", help="force fixture inputs")
     args = ap.parse_args()
 
-    results_dir = Path(args.results_dir) if args.results_dir else paths.RESULTS_DIR
-    result_files = sorted(results_dir.glob("*.json")) if results_dir.is_dir() else []
-    use_fixtures = args.fixtures or not result_files
-    if use_fixtures:
-        result_files = list(RESULTS_FIXTURES)
-
-    personas = Path(args.personas) if args.personas else (
-        REAL_PERSONAS if REAL_PERSONAS.exists() and not use_fixtures else real.PERSONAS_FIXTURE)
-    heldout = Path(args.heldout) if args.heldout else (
-        REAL_HELDOUT if REAL_HELDOUT.exists() and not use_fixtures else real.HELDOUT_FIXTURE)
-
-    report = build(load_runs(result_files), real.load(personas, heldout), fixtures=use_fixtures)
+    result_files = sorted(Path(args.results_dir).glob("*.json"))
+    if not result_files:
+        raise SystemExit(f"No runs in {args.results_dir} (python -m src.pipeline).")
+    report = build(load_runs(result_files), real.load(args.personas, args.heldout))
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")

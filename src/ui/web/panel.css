@@ -7,7 +7,6 @@
 .side__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 64px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--line); }
 .side__nav { flex: 1; overflow-y: auto; padding: 12px 10px; }
 .side__foot { display: grid; gap: 6px; padding: 10px; border-top: 1px solid var(--line); }
-.side__foot .badge { justify-self: start; margin: 0 8px 4px; }
 .nav-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 7px 10px; border: 0; border-radius: 9px;
   background: none; color: var(--ink-2); font-size: .84rem; font-weight: 500; text-align: left; text-decoration: none; cursor: pointer;
   transition: background-color .15s, color .15s; }
@@ -27,9 +26,6 @@
 :root[data-theme="dark"] .side .nav-item[aria-current="true"] { background: #2F7BFF; color: #FFFFFF; }
 .page-head { background: linear-gradient(90deg, #FFFFFF, #EAF1FF); }
 :root[data-theme="dark"] .page-head { background: linear-gradient(90deg, #0A111C, #0B1D3A); }
-
-.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--warn-line); border-radius: 999px; background: var(--warn-soft);
-  color: var(--warn-ink); font-size: .66rem; font-weight: 600; letter-spacing: .04em; white-space: nowrap; }
 
 .main { display: flex; flex-direction: column; min-width: 0; }
 .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 var(--gutter);

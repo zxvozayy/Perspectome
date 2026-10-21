@@ -105,6 +105,7 @@ def build_prompts_for_arm(
     """
     question = scenario["question"]
     options = scenario["options"]
+    shown = scenario.get("option_labels") or options  # text in the prompt; results keep the option keys
 
     if arm == "treatment":
         scenario_text = scenario.get("treatment_text")
@@ -129,7 +130,7 @@ def build_prompts_for_arm(
             persona_block=persona_block,
             scenario_text=scenario_text,
             question=question,
-            options=options,
+            options=shown,
             reverse_options=reverse,
         )
 

@@ -165,6 +165,17 @@ Use [`../personas/fixtures/personas.sample.csv`](../personas/fixtures/personas.s
 and a `mock` model to develop against. You don't need Track A's real
 pipeline or any API key to build and test the whole three-round loop.
 
+## Live runs
+
+`--live --model <snapshot>` calls a real model, capped by `--max-calls`.
+`claude-*` snapshots go to the Anthropic API (`pip install -e ".[llm]"`), with
+the key in the git-ignored `.env` as `ANTHROPIC_API_KEY` or `CLAUDE_API_KEY`
+(plus `ANTHROPIC_WORKSPACE_ID` if the key isn't scoped to a workspace). The
+API gives no log-probabilities, so each cell samples `--n-repeats` answers at
+temperature 1. Every held-out item has a probe in `scenarios/` with the WVS-7
+wording; `option_labels` is the text shown to the model, `options` the keys
+that match `heldout.csv`.
+
 ## If you need to change the contract
 
 Open a PR and say so in the team channel — Tracks C and D are coding against

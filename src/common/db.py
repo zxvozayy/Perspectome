@@ -29,14 +29,13 @@ import argparse
 import csv
 import io
 import json
-import os
 import re
 import secrets
 from pathlib import Path
 from typing import Iterable, Optional
 from urllib.parse import quote, urlsplit, urlunsplit
 
-from src.common import paths, schema
+from src.common import env, paths, schema
 from src.common.hashing import sha256_bytes
 from src.common.labels import answer_label
 
@@ -49,15 +48,9 @@ PEOPLE = {"fatmanur": "track_a", "yigithan": "track_b", "hasan": "track_c", "ezg
 
 # --- connection ----------------------------------------------------------------
 
-def database_url(env_file: Path = paths.REPO / ".env") -> str:
+def database_url(env_file: Path = env.ENV_FILE) -> str:
     """DATABASE_URL from the environment, else from the git-ignored .env file."""
-    url = os.environ.get("DATABASE_URL")
-    if not url and env_file.exists():
-        for line in env_file.read_text(encoding="utf-8-sig").splitlines():
-            line = line.strip()
-            if line.startswith("DATABASE_URL="):
-                url = line.split("=", 1)[1].strip().strip("'\"")
-                break
+    url = env.get("DATABASE_URL", env_file)
     if not url:
         raise RuntimeError("DATABASE_URL is not set (environment or .env). See docs/database.md.")
     return url

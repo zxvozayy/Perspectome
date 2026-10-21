@@ -217,3 +217,11 @@ def test_context_follows_the_persona_block():
                                     contexts={"c1": "Survey answers of people like you."})
     assert "You are a male.\n\nSurvey answers of people like you." in prompts[0]["prompt"]
     assert "Survey answers" not in prompts[1]["prompt"]
+
+
+def test_option_labels_are_shown_but_keys_are_kept():
+    scenario = load_scenario(paths.SCENARIOS_DIR / "probe_life_satisfaction.yaml")
+    prompts = build_prompts_for_arm("treatment", scenario, {"c1": {"gender": "male"}, "c2": {"gender": "female"}})
+    assert "A) 1 (Completely dissatisfied)" in prompts[0]["prompt"]
+    assert "A) 10 (Completely satisfied)" in prompts[1]["prompt"]  # second cell: reversed order
+    assert prompts[1]["options_order"][0] == "10"

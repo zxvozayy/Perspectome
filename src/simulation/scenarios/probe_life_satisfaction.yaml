@@ -1,0 +1,30 @@
+# WVS-7 Q49. Wording from the WVS-7 questionnaire as given in the codebook (Variables report v6.0).
+scenario_id: probe_life_satisfaction
+run_type: probe
+question: All things considered, how satisfied are you with your life as a whole these days? Use a scale
+  from 1 to 10.
+options:
+- '1'
+- '2'
+- '3'
+- '4'
+- '5'
+- '6'
+- '7'
+- '8'
+- '9'
+- '10'
+option_labels:
+- 1 (Completely dissatisfied)
+- '2'
+- '3'
+- '4'
+- '5'
+- '6'
+- '7'
+- '8'
+- '9'
+- 10 (Completely satisfied)
+treatment_text: null
+placebo_text: null
+target_item: life_satisfaction

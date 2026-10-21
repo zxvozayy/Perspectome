@@ -1,16 +1,19 @@
+# WVS-7 Q69. Wording from the WVS-7 questionnaire as given in the codebook (Variables report v6.0).
 scenario_id: probe_trust_police
 run_type: probe
-
-question: >
-  How much confidence do you have in the police: a great deal, quite a lot,
-  not very much, or none at all?
-
+question: 'I am going to name a number of organizations. For each one, could you tell me how much confidence
+  you have in them: is it a great deal of confidence, quite a lot of confidence, not very much confidence
+  or none at all? The police'
 options:
-  - "a_great_deal"
-  - "quite_a_lot"
-  - "not_very_much"
-  - "none"
-
+- a_great_deal
+- quite_a_lot
+- not_very_much
+- none
+option_labels:
+- A great deal
+- Quite a lot
+- Not very much
+- None at all
 treatment_text: null
 placebo_text: null
 target_item: trust_police

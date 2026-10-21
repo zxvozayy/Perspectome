@@ -17,10 +17,14 @@ CONTRACT_SCENARIO = {"scenario_id", "effect_vs_placebo", "effect_tvd", "measurab
 OPTS = ["support", "oppose", "uncertain"]
 
 
+def _fixture_frame():
+    return real.load(paths.PERSONAS_FIXTURE, paths.HELDOUT_FIXTURE)
+
+
 @pytest.fixture
 def fixture_report():
-    runs = report.load_runs(report.RESULTS_FIXTURES)
-    return report.build(runs, real.load(), fixtures=True)
+    runs = report.load_runs(paths.RESULTS_FIXTURES)
+    return report.build(runs, _fixture_frame())
 
 
 def test_fixture_report_matches_contract(fixture_report):
@@ -35,9 +39,9 @@ def test_fixture_report_matches_contract(fixture_report):
     json.dumps(fixture_report)  # serializable
 
 
-def test_fixture_report_is_honest_about_its_inputs(fixture_report):
+def test_report_is_honest_about_its_inputs(fixture_report):
     text = " ".join(fixture_report["warnings"])
-    assert "fixture" in text and "Noise floor unknown" in text and "one model" in text
+    assert "Noise floor unknown" in text and "one model" in text
 
 
 def test_scenarios_never_carry_absolute_shares(fixture_report):
@@ -154,8 +158,8 @@ def test_models_agree_flag():
 
 
 def test_rank_agreement_needs_three_items_then_scores_perfect_order():
-    base = report.load_runs(report.RESULTS_FIXTURES[1:])[0]
-    frame = real.load()
+    base = report.load_runs(paths.RESULTS_FIXTURES[1:])[0]
+    frame = _fixture_frame()
     runs = []
     for item in ("trust_police", "trust_courts", "trust_government"):
         r = copy.deepcopy(base)
@@ -186,7 +190,7 @@ def test_end_to_end_on_simulation_runner(tmp_path):
             runner.run_simulation(paths.PERSONAS_FIXTURE, paths.SCENARIOS_DIR / name,
                                   output_dir=tmp_path, seed=seed)
     runs = report.load_runs(sorted(tmp_path.glob("*.json")))
-    out = report.build(runs, real.load())
+    out = report.build(runs, _fixture_frame())
     assert out["noise_floor_tvd"] is not None
     assert [p["item"] for p in out["probes"]] == ["trust_police"]
     assert out["scenarios"][0]["scenario_id"] == "unemployment_shock_v1"

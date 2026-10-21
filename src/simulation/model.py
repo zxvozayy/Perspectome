@@ -1,9 +1,14 @@
-"""Model clients: mock (default) and OpenAI (--live only)."""
+"""Model clients: mock (default), OpenAI and Anthropic (--live only)."""
 
 from __future__ import annotations
 
 import hashlib
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
 import numpy as np
+
+from src.common import env
 
 
 class MockModel:
@@ -71,16 +76,22 @@ class OpenAIModel:
         self._max_calls = max_calls
         self._call_count = 0
         self._logprobs_supported = True
+        self._lock = threading.Lock()
+        self.workers = 1  # parallel repeats per query
         self.stats = {"logprob_queries": 0, "sampled_queries": 0, "parse_failures": 0,
                       "low_coverage": 0, "coverage": []}
 
+    def _reserve(self):
+        with self._lock:
+            if self._call_count >= self._max_calls:
+                raise RuntimeError(
+                    f"Hard call cap reached ({self._max_calls}). "
+                    "Aborting to prevent runaway spend."
+                )
+            self._call_count += 1
+
     def _call(self, prompt: str, **kwargs):
-        if self._call_count >= self._max_calls:
-            raise RuntimeError(
-                f"Hard call cap reached ({self._max_calls}). "
-                "Aborting to prevent runaway spend."
-            )
-        self._call_count += 1
+        self._reserve()
         return self._client.chat.completions.create(
             model=self._model,
             messages=[{"role": "user", "content": prompt}],
@@ -116,11 +127,15 @@ class OpenAIModel:
         self.stats["logprob_queries"] += 1
         return {letter: m / coverage for letter, m in mass.items()}
 
+    def _sample_text(self, prompt: str, seed: int) -> str:
+        return self._call(prompt, seed=seed).choices[0].message.content or ""
+
     def _from_samples(self, prompt: str, letters: str, n_repeats: int, seed: int):
         counts = {letter: 0 for letter in letters}
-        for i in range(n_repeats):
-            resp = self._call(prompt, seed=seed + i)
-            letter = self._letter(resp.choices[0].message.content or "", letters)
+        with ThreadPoolExecutor(self.workers) as pool:
+            texts = list(pool.map(lambda i: self._sample_text(prompt, seed + i), range(n_repeats)))
+        for text in texts:
+            letter = self._letter(text, letters)
             if letter:
                 counts[letter] += 1
             else:
@@ -153,3 +168,45 @@ class OpenAIModel:
             "mean_coverage": round(float(np.mean(cov)), 4) if cov else None,
             "calls": self._call_count,
         }
+
+
+class AnthropicModel(OpenAIModel):
+    """Claude through the Anthropic API (--live with a ``claude-*`` snapshot).
+
+    The API returns no log-probabilities, so every query samples ``n_repeats``
+    answers at temperature 1 (in parallel) and counts the letters. The key is
+    ANTHROPIC_API_KEY or CLAUDE_API_KEY (environment or .env); a key that isn't
+    scoped to a workspace also needs ANTHROPIC_WORKSPACE_ID. Never printed.
+    """
+
+    def __init__(self, model_snapshot: str, max_calls: int = 200, client=None, workers: int = 8):
+        if client is None:
+            try:
+                import anthropic
+            except ImportError:
+                raise ImportError("anthropic package required for live mode. "
+                                  "Install with: pip install perspectome[llm]")
+            key = env.get("ANTHROPIC_API_KEY") or env.get("CLAUDE_API_KEY")
+            if not key:
+                raise RuntimeError("Set ANTHROPIC_API_KEY or CLAUDE_API_KEY (environment or .env).")
+            workspace = env.get("ANTHROPIC_WORKSPACE_ID")
+            client = anthropic.Anthropic(api_key=key, max_retries=8,
+                                         default_headers={"anthropic-workspace-id": workspace} if workspace else None)
+        super().__init__(model_snapshot, max_calls, client=client)
+        self._logprobs_supported = False
+        self.workers = workers
+        self.stats.update(input_tokens=0, output_tokens=0)
+
+    def _sample_text(self, prompt: str, seed: int) -> str:
+        self._reserve()
+        # sampling temperature is the API default, 1
+        resp = self._client.messages.create(model=self._model, max_tokens=1,
+                                            messages=[{"role": "user", "content": prompt}])
+        with self._lock:
+            self.stats["input_tokens"] += resp.usage.input_tokens
+            self.stats["output_tokens"] += resp.usage.output_tokens
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def summary(self) -> dict:
+        return {**super().summary(), "input_tokens": self.stats["input_tokens"],
+                "output_tokens": self.stats["output_tokens"]}

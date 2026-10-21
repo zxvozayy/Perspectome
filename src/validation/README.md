@@ -153,8 +153,8 @@ an ODE has no input to work with. The equation baseline is scenario-only
 ## How to run
 
 ```bash
-python -m src.validation.report              # results/*.json + data/processed/* if present, else fixtures
-python -m src.validation.report --fixtures   # force fixture inputs
+python -m src.validation.report              # results/*.json + data/processed/* (real data only)
+python -m src.validation.calibration         # fit engine_calibrated / stacked on fit-role probes
 python -m pytest src/validation              # statistics core, baselines, report
 ```
 

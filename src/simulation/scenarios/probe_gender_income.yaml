@@ -1,0 +1,20 @@
+# WVS-7 Q35. Wording from the WVS-7 questionnaire as given in the codebook (Variables report v6.0).
+scenario_id: probe_gender_income
+run_type: probe
+question: Do you agree, disagree or neither agree nor disagree with the following statement? If a woman
+  earns more money than her husband, it's almost certain to cause problems.
+options:
+- '1'
+- '2'
+- '3'
+- '4'
+- '5'
+option_labels:
+- Agree strongly
+- Agree
+- Neither agree nor disagree
+- Disagree
+- Disagree strongly
+treatment_text: null
+placebo_text: null
+target_item: gender_income

@@ -51,6 +51,10 @@ def load_scenario(path: str | Path) -> dict:
             f"target_item '{target}' not in HELDOUT_FIELDS: {HELDOUT_FIELDS}"
         )
 
+    labels = scenario.get("option_labels")
+    if labels is not None and len(labels) != len(scenario["options"]):
+        raise ValueError("option_labels must have one label per option")
+
     cells = scenario.get("cell_fields")
     if cells is not None and cells != "auto" and not (isinstance(cells, list) and set(cells) <= set(CATEGORIES)):
         raise ValueError(f"cell_fields must be 'auto' or a list of {sorted(CATEGORIES)}, got {cells!r}")

@@ -73,16 +73,18 @@ Shared ground for all tracks:
 ## Quick start
 
 ```bash
-pip install pandas numpy pyyaml pytest
-python -m src.demo          # personas -> simulation (mock model, 2 seeds) -> validation report
+pip install -e ".[dev,llm,ml]"
+python -m src.common.db pull-personas --out data/processed/personas.csv   # or python -m src.personas.generator
+python -m src.pipeline --model claude-haiku-4-5-20251001   # real personas -> live model (2 seeds) -> report
 python -m src.ui.server     # dashboard on http://localhost:8501
 python -m pytest            # all tests
 ```
 
-The demo runs on the fabricated fixtures, and the dashboard says so.
-`python -m src.demo --real` uses the real core persona set under `data/processed/`,
-`python -m src.demo --synthetic` simulates the 20,000 synthetic personas
-(pull them with `python -m src.common.db pull-personas [--kind synthetic]`).
+Everything runs on real data only: the pipeline needs the persona files under
+`data/processed/` and an API key in `.env` (see `src/simulation/README.md`),
+and the site shows nothing until a real run exists. `--synthetic` simulates the
+20,000 synthetic personas, `--cells auto` uses question-specific cells. The
+small fabricated files under `*/fixtures/` exist only for the automated tests.
 
 ## Status
 

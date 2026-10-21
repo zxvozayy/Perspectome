@@ -100,3 +100,38 @@ class TestOpenAIModelAnswers:
         client = _FakeClient(logprobs=[("A", math.log(0.9)), ("B", math.log(0.1))])
         dist = self._model(client).query("p", ["oppose", "support"], n_repeats=1, seed=1)
         assert dist["oppose"] == pytest.approx(0.9)
+
+
+class _FakeAnthropic:
+    """Stands in for anthropic.Anthropic: replies with the next scripted answer."""
+
+    def __init__(self, answers):
+        from types import SimpleNamespace
+        self._answers, self.requests, self._ns = list(answers), [], SimpleNamespace
+        self.messages = self
+
+    def create(self, **kwargs):
+        self.requests.append(kwargs)
+        text = self._answers.pop(0)
+        return self._ns(content=[self._ns(type="text", text=text)],
+                        usage=self._ns(input_tokens=10, output_tokens=1))
+
+
+class TestAnthropicModel:
+    def _model(self, answers, cap=50):
+        from src.simulation.model import AnthropicModel
+        client = _FakeAnthropic(answers)
+        return AnthropicModel(model_snapshot="claude-test", max_calls=cap, client=client, workers=1), client
+
+    def test_samples_letters_and_counts_tokens(self):
+        model, client = self._model(["A", "B", "?", "A"])
+        dist = model.query("p", ["yes", "no"], n_repeats=4, seed=1)
+        assert dist == {"yes": 2 / 3, "no": 1 / 3}
+        summary = model.summary()
+        assert summary["parse_failures"] == 1 and summary["input_tokens"] == 40 and summary["calls"] == 4
+        assert all(r["max_tokens"] == 1 and r["model"] == "claude-test" for r in client.requests)
+
+    def test_call_cap_holds(self):
+        model, _ = self._model(["A"] * 10, cap=3)
+        with pytest.raises(RuntimeError, match="cap"):
+            model.query("p", ["yes", "no"], n_repeats=5, seed=1)

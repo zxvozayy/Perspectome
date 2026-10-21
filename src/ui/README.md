@@ -70,13 +70,12 @@ You don't define a contract; you're a pure consumer.
 
 ## Don't wait for anyone
 
-Everything you need already exists as fixtures:
+The tests use small fabricated samples of both inputs:
 - [`../simulation/fixtures/results.sample.json`](../simulation/fixtures/results.sample.json) — a scenario run
 - [`../simulation/fixtures/results.probe.sample.json`](../simulation/fixtures/results.probe.sample.json) — a probe run
 - [`../validation/fixtures/comparison.sample.json`](../validation/fixtures/comparison.sample.json) — Track C's report
 
-Swap in real files once Tracks B and C produce them; the dashboard code
-shouldn't change, only its inputs.
+The site itself never shows them.
 
 ## How to run
 
@@ -92,9 +91,10 @@ this machine; questions and answers are not stored. It is a local dashboard, not
 something to expose to the internet.
 Set `PORT` to use another port.
 
-With no `results/*.json` at the repo root the panel reads the fixtures and
-shows a "Fixture verisi" badge. Point it at real output with
-`PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`.
+The panel reads `results/*.json` and `reports/comparison.json` at the repo
+root (written by `python -m src.pipeline`), or the folders in
+`PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`. With no real run it
+shows nothing; it never falls back to example data.
 
 Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
 the server), `answers.py` (question → run), `auth.py`, `web/`
