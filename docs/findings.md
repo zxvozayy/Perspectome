@@ -66,14 +66,64 @@ Newest at the bottom. Write the success criterion **before** the run
     checked against the WVS-7 codebook and asked in the Türkiye file: gender roles
     Q33 (fit) / Q35 (test), migration Q34 (test), science Q158 (fit) / Q159 (test).
     P1 now needs 5 of 8 test items.*
-- Config: to be filled on the first real run (model snapshots, seeds,
-  persona_set_hash, n, arms).
-- Result: —
-- Status: pre-registered
+- Config: claude-haiku-4-5-20251001 and claude-haiku-5-5 (Anthropic API, thinking off,
+  10 answers sampled per cell at temperature 1; the API has no log-probabilities),
+  seeds 1 and 2, real core `sha256:6c6addff…f770` (2,415 personas, 35 age × gender ×
+  education cells), arms treatment + vanilla (probes) and + placebo (scenarios),
+  14 probes with WVS-7 wording + 2 scenarios. 2026-10-21. Report built per model.
+- Result (TVD to the real weighted distribution; noise floor = largest gap between
+  two seeds of the same config: Haiku 4.5 0.050, Haiku 5.5 0.078):
+
+  | test item | 4.5 engine | 4.5 vanilla | 5.5 engine | 5.5 vanilla |
+  |---|---|---|---|---|
+  | trust_police | 0.387 | 0.411 | 0.528 | 0.533 |
+  | trust_parliament | 0.708 | 0.523 | 0.295 | 0.708 |
+  | life_satisfaction | 0.590 | 0.785 | 0.520 | 0.917 |
+  | competition | 0.487 | 0.751 | 0.529 | 0.896 |
+  | financial_satisfaction | 0.501 | refused | 0.501 | refused |
+  | gender_income | 0.721 | 0.919 | 0.462 | 0.817 |
+  | immigrant_jobs | 0.463 | 0.805 | 0.583 | 0.829 |
+  | science_future | 0.736 | 0.883 | 0.714 | 0.714 |
+
+  - **P1 ✓ (both models):** engine beats vanilla by more than the noise floor on
+    5 of 8 test items for each model, but not the same five (4.5: competition,
+    gender_income, immigrant_jobs, life_satisfaction, science_future; 5.5: the same
+    minus science_future, plus trust_parliament). financial_satisfaction can't
+    count: without a persona both models refuse ("I'm an AI and don't have a
+    household"), so vanilla has no answer.
+  - **P2 ✗ (reported only):** median test TVD 0.546 (4.5) / 0.524 (5.5) against
+    0.005 for the ML baseline. See notes: P2 as registered can't be met by design.
+  - **P3 partial:** tau on the four 1–10 test items is 1.0 for both models
+    (≥ 0.6, the n = 4 "significant" level). "Higher than vanilla's tau" can't be
+    checked: vanilla has no answer on financial_satisfaction, so it has no ranking
+    of the four.
+  - **P4:** P1 holds for both models; P3's first half holds for both.
+  - Scenarios (Haiku 4.5): unemployment shock moves "support" by +55 points,
+    AI adoption moves "oppose" by −29, both measurable (above the noise floor,
+    placebo share inside 10–90 %, above the MDD). No real before/after data.
+- Status: partial (P1 and P4 met; P3's vanilla comparison not determinable)
 - Notes: TVD is order-blind; for ordinal items `comparison.json` also carries
   Wasserstein distance, which recent survey-simulation papers report next to
   TVD. If Wasserstein and TVD disagree on P1, both are reported and P1 is
   judged on TVD as registered here.
+  - **Measurement bug found and fixed before this result:** answers were read from
+    one output token, so a refusal starting "I can't…" or "I appreciate…" counted
+    as option **I**, which is "9" on the 1–10 items. The first Haiku 4.5 run had
+    financial_satisfaction vanilla at 100 % "9" this way. Answers now get three
+    tokens and must be a bare letter; a cell refused in every repeat is left out
+    and recorded (`metadata.refusals`). Every 10-option run was re-run; the
+    numbers above are from the fixed code only.
+  - Refusals are themselves a result: Haiku 5.5 refused some persona cells on 8
+    of 14 probes (seed 1) (e.g. gender_jobs 10 cells / 767 personas, happiness 7 / 446),
+    calling persona answers "fabricated"; Haiku 4.5 refused only the persona-less
+    household question.
+  - Absolute error is large (TVD ~0.5): both models put most cells on one or two
+    options. Rankings come out right, shares don't (rule 1).
+  - P2 design flaw, noticed only on the first run: the ML baseline is a model of
+    the same item's real answers, and its weighted population average is the
+    real marginal by construction (TVD ≈ 0.005). It is a ceiling only at the
+    subgroup level; at population level the comparison says nothing about the
+    engine. Not changed here; a subgroup-level P2 would be a new finding.
 
 ### F-2 — Real persona set: calibration and weight cost  (2026-10-21, Hasan)
 - Question: how well does the frozen persona set match the population margins,
@@ -176,9 +226,25 @@ Newest at the bottom. Write the success criterion **before** the run
   on title + wording), 3 fields, MIN_CELL_N 30, anchors and exclusions as in
   `src/answering/anchors.yaml` at this commit. Any change to these is tuned on
   `fit` items only and recorded here before test items are scored.
-- Config: to be filled on the first real run.
-- Result: —
-- Status: pre-registered
+- Config: claude-haiku-4-5-20251001, seeds 1 and 2, real core `sha256:6c6addff…f770`,
+  same probes and sampling as F-1; `cell_fields: auto` (42–49 cells per probe,
+  fields always region + religiosity, plus left–right or income). Compared with
+  F-1's Haiku 4.5 default-cell runs. 2026-10-21.
+- Result (test items, TVD default → auto; noise floor 0.050 default, 0.046 auto):
+  trust_police 0.387 → 0.318, trust_parliament 0.708 → 0.600, life_satisfaction
+  0.590 → 0.434, competition 0.487 → 0.406, financial_satisfaction 0.501 → 0.243,
+  gender_income 0.721 → 0.279, immigrant_jobs 0.463 → 0.298, science_future
+  0.736 → 0.610.
+  - **A1 ✓:** lower by more than the noise floor on 8 of 8 test items.
+  - **A2 ✓:** median test TVD 0.546 → 0.362.
+  - **A3 ✓:** tau on the 1–10 test group 1.0, same as default.
+  - **A4 not yet run:** the auto-cell runs exist for Haiku 4.5 only.
+- Status: partial (A1–A3 met on one model; A4 pending a Haiku 5.5 auto run)
+- Confound, stated before anyone reads more into it: auto mode changes two things
+  at once (which fields define the cells, and the anchor answers in the prompt),
+  and makes more cells (42–49 vs 35). Which of these helps is not separated here;
+  a fields-only run (`cell_fields: [region, religiosity_band, ...]`, no anchors)
+  would be the next finding.
 - Notes:
   - Leakage guards: anchors are neither held-out items nor conditioning fields
     (test); every held-out target excludes its near-duplicate anchors (e.g. the
@@ -219,10 +285,21 @@ Newest at the bottom. Write the success criterion **before** the run
   objective mean TVD, one parameter pair per answer-scale size (4, 5, 10 options;
   fit items: trust_government, trust_courts, happiness | gender_jobs |
   income_equality, science_life), ties broken toward no correction.
-- Config: to be filled on the first real run (one fit per model snapshot; a
-  calibration fitted on one model is never applied to another).
-- Result: —
-- Status: pre-registered
+- Config: fitted on F-1's Haiku 4.5 default-cell runs, fit items only
+  (`src/validation/calibration_params.yaml`); scored on the 8 test items of the same
+  runs. Not applied to Haiku 5.5 (fitted on another model). 2026-10-21.
+- Result: temperature 5.0 for every scale size (4, 5, 10 options), stack weight 0.
+  - **C1 ✓:** median test TVD 0.546 (raw) → 0.367 (calibrated), a 0.18 gain over
+    a 0.050 noise floor. Largest gains: immigrant_jobs 0.463 → 0.144, competition
+    0.487 → 0.173, trust_police 0.387 → 0.177.
+  - **C2 ✓:** tau on the 1–10 test group 1.0, same as raw.
+  - **C3 ✗:** every stack weight is 0, so `stacked` = `ml_baseline` (0.005). With the
+    ML baseline at the real marginal (see F-1's P2 note) this is expected, and says
+    the engine adds nothing at population level beyond what that baseline holds.
+- Status: valid (C1 + C2 met)
+- The temperature sits on the upper edge of the frozen grid (5.0) for every scale:
+  the optimum may be higher, and the raw answers are that over-confident. Widening
+  the grid now would be tuning after seeing test items, so it is a new finding.
 - Notes: `stacked` uses the ML baseline, which is trained on the item's real
   answers; it can't be used for a question without survey data, and is only a
   measure of what the engine adds. results.json stays raw; calibration lives in
