@@ -93,3 +93,38 @@ def test_no_real_runs_means_nothing_shown(tmp_path):
     """The site never falls back to fabricated example data."""
     empty = load(results_dir=tmp_path, comparison_path=tmp_path / "none.json")
     assert empty.results == {} and empty.comparison is None
+
+
+def _run(sid: str, snapshot: str, seed: int) -> dict:
+    return {"run_id": f"{sid}-{snapshot}-{seed}", "run_type": "scenario", "scenario_id": sid, "options": ["a"],
+            "arms": {}, "metadata": {"model_snapshot": snapshot, "seed": seed}}
+
+
+def test_scenario_charts_the_run_track_c_scores():
+    """Two models, two seeds: the chart shows the model with the most runs, lowest seed."""
+    from src.ui.data import Bundle
+    runs = [_run("unemployment_shock_v1", m, s) for m, s in (("b", 2), ("b", 1), ("a", 1), ("b", 3))]
+    bundle = Bundle(results={r["run_id"]: r for r in runs})
+    assert answers.route("İşsizlik artarsa?", bundle)["run_id"] == "unemployment_shock_v1-b-1"
+    assert "seed 1" in views.chart_source(runs[1], 4) and "4 çalıştırması" in views.chart_source(runs[1], 4)
+
+
+def test_probe_role_refusal_and_scales_are_shown(bundle):
+    probe = copy.deepcopy(bundle.comparison["probes"][0])
+    probe["role"] = "fit"
+    probe["methods"].pop("vanilla", None)
+    html = views.tvd_bars(probe, 0.05)
+    assert "fit maddesi" in html and "Vanilla kolunun bu maddede dağılımı yok" in html
+
+    rank = {"metric": "kendall_tau", "methods": {"engine": 1.0}, "scales": [
+        {"options": ["1", "2", "3", "4"], "items": ["x", "y", "z"], "n_items": 3, "test_only": True,
+         "methods": {"engine": 1.0}},
+        {"options": ["a", "b"], "items": ["p", "q", "r"], "n_items": 3, "test_only": False,
+         "methods": {"engine": 0.333}},
+    ]}
+    html = views.rank_table(rank)
+    assert "4 seçenekli ölçek · yalnızca test maddeleri" in html and "geliştirme kontrolü" in html
+
+    run = copy.deepcopy(bundle.runs("probe")[0])
+    run["metadata"]["refusals"] = {"vanilla": {"cells": ["c1", "c2"], "n_personas": 40}}
+    assert "Vanilla: 2 hücre, 40 persona" in views.run_details(run)

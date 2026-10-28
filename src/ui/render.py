@@ -63,6 +63,7 @@ def scenario(key: str, msg: dict, bundle: Bundle) -> str:
         prose(views.scenario_text(run, scored, noise))
         + views.warnings(bundle.warnings, scenario_caveat=True)
         + views.effect_headline(scored, noise)
+        + views.chart_source(run, sum(r.get("scenario_id") == run["scenario_id"] for r in bundle.runs("scenario")))
         + chart_tabs(key, run, scored)
         + views.subgroups(scored)
         + details(run)
@@ -76,7 +77,8 @@ def validation(bundle: Bundle) -> str:
         return prose("Track C'nin karşılaştırma raporu henüz yok.")
     noise = comparison.get("noise_floor_tvd")
     out = prose(views.validation_text(comparison)) + views.warnings(bundle.warnings)
-    for probe in comparison.get("probes") or []:
+    # test items first: they are the ones the pass/fail is judged on
+    for probe in sorted(comparison.get("probes") or [], key=lambda p: p.get("role") != "test"):
         out += views.dist_lines(probe) + views.tvd_bars(probe, noise)
         out += "".join(details(r) for r in bundle.runs("probe") if r.get("target_item") == probe["item"])
     return out + views.rank_table(comparison.get("rank_agreement")) + views.models(comparison) + views.footnote()
