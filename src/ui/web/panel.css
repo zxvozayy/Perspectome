@@ -146,6 +146,7 @@
 .pt-warn { margin-bottom: 14px; padding: 12px 16px; border: 1px solid var(--warn-line); border-radius: 12px; background: var(--warn-soft); }
 .pt-warn .pt-eyebrow { color: var(--warn-ink); }
 .pt-warn ul { margin: 4px 0 0; padding-left: 18px; font-size: .84rem; }
+.pt-refused { margin: 4px 0 0; padding-left: 18px; font-size: .84rem; }
 .pt-warn li { margin: 2px 0; }
 
 .pt-big { margin: 4px 0 2px; font-size: 2.2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
@@ -195,9 +196,10 @@
 .pt-svg .pt-late { animation: pt-fade .4s ease 1s both; }
 
 .pt-tvd { display: grid; grid-template-columns: 150px 1fr; gap: 9px 12px; align-items: center; }
-.pt-tvd .trk { position: relative; height: 13px; margin-right: 52px; }
+.pt-tvd .trk { position: relative; height: 13px; margin-right: 112px; }
 .pt-tvd .bar { height: 100%; width: var(--w); min-width: 2px; border-radius: 0 4px 4px 0; animation: pt-w .9s var(--ease) both; }
-.pt-tvd .v { position: absolute; left: calc(var(--w) + 8px); top: -3px; font-size: .78rem; }
+.pt-tvd .v { position: absolute; left: calc(var(--w) + 8px); top: -3px; font-size: .78rem; white-space: nowrap; }
+.pt-tvd .w { color: var(--muted); }
 .pt-tvd .floor { position: absolute; left: var(--f); top: -5px; bottom: -5px; width: 0; border-left: 1px dashed var(--muted); }
 
 .pt-table { width: 100%; border-collapse: collapse; }

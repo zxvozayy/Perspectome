@@ -30,6 +30,7 @@ METHOD_LABELS = {
     "engine_calibrated": "Engine (kalibre)",
     "stacked": "Engine + ML",
 }
+ROLE_LABELS = {"test": "test maddesi", "fit": "fit maddesi"}
 # Never rendered: income needs Track C's confirmation in real data (no contract
 # field for that yet), and province-level cells are too thin by rule.
 HIDDEN_DIMENSIONS = ("income", "province", "city", "district")
@@ -417,10 +418,15 @@ def dist_lines(probe: dict) -> str:
     legend.insert(0, legend.pop())  # real first
     return card(
         f'<svg class="pt-svg" viewBox="0 0 {w} {h}" role="img">{marks}</svg>{_legend(legend)}',
-        f"Probe · {probe['item']}",
+        probe_eyebrow(probe),
         "Gerçek dağılım ve her yöntemin tahmini",
         hint=TIPS["probe"],
     )
+
+
+def probe_eyebrow(probe: dict) -> str:
+    role = ROLE_LABELS.get(probe.get("role"), "")
+    return f"Probe · {probe['item']}" + (f" · {role}" if role else "")
 
 
 def tvd_bars(probe: dict, noise_floor: float | None) -> str:
@@ -432,35 +438,62 @@ def tvd_bars(probe: dict, noise_floor: float | None) -> str:
     floor = f'<div class="floor" style="--f:{noise_floor / full * 100:.1f}%"></div>' if noise_floor else ""
     rows = ""
     for k, (name, tvd) in enumerate(tvds.items()):
+        w = methods[name].get("wasserstein")
+        extra = f' <span class="w">· W {dec(w)}</span>' if w is not None else ""
         rows += (
             f"<div>{esc(_method_label(name))}</div>"
             f'<div class="trk" style="--w:{tvd / full * 100:.1f}%">'
             f'<div class="bar" style="background:{theme.series_color(name, k)};animation-delay:{k * .1:.1f}s"></div>'
-            f'{floor}<span class="v num">{dec(tvd)}</span></div>'
+            f'{floor}<span class="v num">{dec(tvd)}{extra}</span></div>'
         )
     note = "TVD: gerçek dağılıma uzaklık — düşük olan gerçeğe daha yakın."
     if noise_floor:
         note += f" Kesikli çizgi gürültü tabanı ({dec(noise_floor)})."
+    if any(m.get("wasserstein") is not None for m in methods.values()):
+        note += " W: Wasserstein, sıralı maddelerde seçeneklerin sırasını da hesaba katan uzaklık."
+    if "vanilla" not in methods:
+        note += " Vanilla kolunun bu maddede dağılımı yok: personasız model yanıt vermedi."
+    if probe.get("role") == "fit":
+        note += " Bu madde kalibrasyonda kullanıldı; başarı yalnızca test maddelerinde değerlendirilir."
     return card(
         f'<div class="pt-tvd">{rows}</div><div class="pt-note num">{note}</div>',
-        f"Probe · {probe['item']}",
+        probe_eyebrow(probe),
         "Gerçeğe uzaklık (TVD)",
         hint=TIPS["tvd"],
     )
 
 
-def rank_table(rank: dict | None) -> str:
-    if not rank or not rank.get("methods"):
-        return ""
-    rows = "".join(
+def _rank_rows(methods: dict) -> str:
+    return "".join(
         f'<tr><td>{esc(_method_label(name))}</td><td class="r num">{dec(v)}</td></tr>'
-        for name, v in rank["methods"].items()
+        for name, v in methods.items()
     )
+
+
+def rank_table(rank: dict | None) -> str:
+    """Kendall tau per answer scale, as Track C groups them; items on different scales are never ranked together."""
+    if not rank:
+        return ""
+    scales = [s for s in rank.get("scales") or [] if s.get("methods")]
+    if not scales:
+        if not rank.get("methods"):
+            return ""
+        scales = [{"items": rank.get("items") or [], "n_items": rank.get("n_items"), "test_only": True,
+                   "methods": rank["methods"]}]
+    body = ""
+    for s in scales:
+        options = s.get("options") or []
+        scale = f"{len(options)} seçenekli ölçek" if options else "Ölçek"
+        kind = "yalnızca test maddeleri" if s.get("test_only") else "fit maddeleri de dahil — geliştirme kontrolü"
+        body += (
+            f'<div class="pt-eyebrow" style="margin-top:10px">{esc(scale)} · {esc(kind)}</div>'
+            f'<table class="pt-table"><tr><th>Yöntem</th><th class="r">{esc(rank.get("metric", ""))}</th></tr>'
+            f"{_rank_rows(s['methods'])}</table>"
+            f'<div class="pt-note">{esc(s.get("n_items", "?"))} madde: {esc(", ".join(s.get("items") or []))}</div>'
+        )
     return card(
-        f'<table class="pt-table"><tr><th>Yöntem</th><th class="r">{esc(rank.get("metric", ""))}</th></tr>'
-        f"{rows}</table>"
-        f'<div class="pt-note">{esc(rank.get("n_items", "?"))} madde üzerinden. 1 = gerçek sıralamayla '
-        "aynı, 0 = ilişkisiz.</div>",
+        body + '<div class="pt-note">1 = gerçek sıralamayla aynı, 0 = ilişkisiz. Farklı ölçeklerdeki maddeler '
+        "birbiriyle sıralanmaz.</div>",
         "Sıralama uyumu",
         "Maddeleri doğru sıraya koyuyor mu?",
         hint=TIPS["rank"],
@@ -537,7 +570,25 @@ def run_details(run: dict) -> str:
             '<div class="pt-eyebrow" style="margin-top:16px">option_usage — her seçenek kaç kez seçildi</div>'
             f'<table class="pt-table"><tr><th>Seçenek</th>{head}</tr>{rows}</table>'
         )
-    return f'<div class="pt"><dl class="pt-dl">{dl}</dl>{table}</div>'
+    refused = ""
+    for arm, r in (meta.get("refusals") or {}).items():
+        refused += (
+            f"<li>{esc(ARM_LABELS.get(arm, arm))}: {esc(len(r.get('cells') or []))} hücre, "
+            f"{esc(r.get('n_personas', 0))} persona — model yanıt vermedi, bu kolun dağılımına girmedi.</li>"
+        )
+    if refused:
+        refused = f'<div class="pt-eyebrow" style="margin-top:16px">Reddedilen hücreler</div><ul class="pt-refused">{refused}</ul>'
+    return f'<div class="pt"><dl class="pt-dl">{dl}</dl>{table}{refused}</div>'
+
+
+def chart_source(run: dict, n_runs: int) -> str:
+    """Which single run the arm charts show, next to Track C's effect over every seed."""
+    meta = run.get("metadata") or {}
+    text = f"Grafikler tek çalıştırmayı gösteriyor: {meta.get('model_snapshot', '?')}, seed {meta.get('seed', '?')}."
+    if n_runs > 1:
+        text += (f" Bu senaryonun {n_runs} çalıştırması var; etki kartı Track C'nin en çok çalıştırılan modeldeki "
+                 "tüm seed'lerin ortalamasıdır.")
+    return f'<div class="pt pt-note">{esc(text)}</div>'
 
 
 # --------------------------------------------------------------- answer texts

@@ -96,6 +96,27 @@ root (written by `python -m src.pipeline`), or the folders in
 `PERSPECTOME_RESULTS_DIR` and `PERSPECTOME_COMPARISON`. With no real run it
 shows nothing; it never falls back to example data.
 
+### On real pipeline output
+
+The shared runs and the latest report live in the database
+([`docs/database.md`](../../docs/database.md)); put your `DATABASE_URL` in `.env` once, then:
+
+```bash
+pip install "psycopg[binary]>=3.1"
+python -m src.common.db pull-report --out reports/comparison.json
+python -m src.common.db pull-runs   --out-dir results
+python -m src.ui.server               # → http://localhost:8501, sign up once at /giris
+```
+
+Ask *"Bu sonuçlara ne kadar güvenebiliriz?"* for the validation view and
+*"İşsizlik artarsa tutumlar nasıl değişir?"* for a scenario. With several
+models and seeds in `results/`, the scenario charts show one run (the model
+with the most runs, lowest seed — the one Track C scores) and say so; the
+effect headline is Track C's mean over that model's seeds. Probes list test
+items first, label each as test or fit, and show Wasserstein next to TVD on
+ordinal items. Rank agreement is shown per answer scale. Cells the model
+refused are listed in the run details.
+
 Layout: `server.py` (routes), `render.py` + `views.py` (answer HTML, built on
 the server), `answers.py` (question → run), `auth.py`, `web/`
 (pages, CSS, a few lines of JS, `people.js` for the walking people band, IBM Plex

@@ -8,6 +8,7 @@ gets an honest "nothing has been run for that".
 from __future__ import annotations
 
 import re
+from collections import Counter
 
 from src.ui.data import Bundle
 
@@ -63,10 +64,20 @@ def _score(question: str, scenario_id: str) -> int:
     return score
 
 
+def _representative(runs: list[dict]) -> dict:
+    """One run of a scenario to chart: the model with the most runs (Track C scores that one), lowest seed."""
+    snap = lambda r: str((r.get("metadata") or {}).get("model_snapshot") or "")  # noqa: E731
+    counts = Counter(snap(r) for r in runs)
+    return min(runs, key=lambda r: (-counts[snap(r)], snap(r), (r.get("metadata") or {}).get("seed") or 0))
+
+
 def _best_scenario(question: str, bundle: Bundle) -> dict | None:
     scored = [(_score(question, r["scenario_id"]), r) for r in bundle.runs("scenario")]
     scored = [x for x in scored if x[0] > 0]
-    return max(scored, key=lambda x: x[0])[1] if scored else None
+    if not scored:
+        return None
+    sid = max(scored, key=lambda x: x[0])[1]["scenario_id"]
+    return _representative([r for r in bundle.runs("scenario") if r["scenario_id"] == sid])
 
 
 def suggestions(bundle: Bundle) -> list[str]:
